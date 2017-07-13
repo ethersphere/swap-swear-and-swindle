@@ -1,0 +1,469 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "USkefO0g1U9mr+8hagv3fpSkrxg=",
+			"origin": "github.com/jaakmusic/vendor/github.com/aristanetworks/goarista/monotime",
+			"path": "github.com/aristanetworks/goarista/monotime",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "AuHybHQgFdFa0lsXSjo2ElpDWo8=",
+			"origin": "github.com/jaakmusic/vendor/github.com/btcsuite/btcd/btcec",
+			"path": "github.com/btcsuite/btcd/btcec",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "zYnPsNAVm1/ViwCkN++dX2JQhBo=",
+			"origin": "github.com/jaakmusic/vendor/github.com/edsrzf/mmap-go",
+			"path": "github.com/edsrzf/mmap-go",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "8Ot7dGVhDbiVEdxIyOpw3Pl9j0U=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum",
+			"path": "github.com/ethereum/go-ethereum",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "eemuWfG9PeJfK78X5MFYcHkoAg8=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/accounts",
+			"path": "github.com/ethereum/go-ethereum/accounts",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "uu6q9ghzQxaixsmZMjaxRegueX0=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/accounts/abi",
+			"path": "github.com/ethereum/go-ethereum/accounts/abi",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "+W0yg6B5HJ28WGMG6OE8tSnnGAU=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/accounts/abi/bind",
+			"path": "github.com/ethereum/go-ethereum/accounts/abi/bind",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "API2zkoWk/E30PdBTGyz49Zbxx4=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/accounts/abi/bind/backends",
+			"path": "github.com/ethereum/go-ethereum/accounts/abi/bind/backends",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "Y1GFSPbwYjGIWg8Sj2eUTlBOOxE=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/accounts/keystore",
+			"path": "github.com/ethereum/go-ethereum/accounts/keystore",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "SEMDqO7IecRBrp3omgLIlOZbgI0=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/common",
+			"path": "github.com/ethereum/go-ethereum/common",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "ijvJ3fmnC9uBVXHPG0jPH+YyJCM=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/common/bitutil",
+			"path": "github.com/ethereum/go-ethereum/common/bitutil",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "NIN7nslnw4fUJlVcuxf5anvxAKQ=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/common/hexutil",
+			"path": "github.com/ethereum/go-ethereum/common/hexutil",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "2wSfa0pklHZ5ty52XuJOtZFIQfQ=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/common/math",
+			"path": "github.com/ethereum/go-ethereum/common/math",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "auKC662e4M4mXDReh+667bhRdfU=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/common/mclock",
+			"path": "github.com/ethereum/go-ethereum/common/mclock",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "Tbe23SZhkJNkb6woYsx9GLNQi3o=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/consensus",
+			"path": "github.com/ethereum/go-ethereum/consensus",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "fEWIMjSbEWw408pmAybwMt95vfg=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/consensus/ethash",
+			"path": "github.com/ethereum/go-ethereum/consensus/ethash",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "D4hWOdVhAmhGx7AzCWQBUXtNr0w=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/consensus/misc",
+			"path": "github.com/ethereum/go-ethereum/consensus/misc",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "UtkwwR1OKlNFO2Vq5h+5TBmxxqs=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/contracts/ens/contract",
+			"path": "github.com/ethereum/go-ethereum/contracts/ens/contract",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "VwADNH1WnINwcxq0LiQ1gRCLNBw=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/core",
+			"path": "github.com/ethereum/go-ethereum/core",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "cQ/KTLN+VuWuwTUr5EjWemAuzAE=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/core/state",
+			"path": "github.com/ethereum/go-ethereum/core/state",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "DAEij1dH2LwKfzIh7W5xCKptv20=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/core/types",
+			"path": "github.com/ethereum/go-ethereum/core/types",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "2qXSi4uCIsdtUA5yi/s3tmj39vA=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/core/vm",
+			"path": "github.com/ethereum/go-ethereum/core/vm",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "nBhXdtdJ2zsZ8VLueR/0MdQSI0M=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/crypto",
+			"path": "github.com/ethereum/go-ethereum/crypto",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "W0XLNKJu61SBJW5LfVR3tG+U7ro=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/crypto/randentropy",
+			"path": "github.com/ethereum/go-ethereum/crypto/randentropy",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "VsqOiLFDRSDa67wPeqlxKJmE0XE=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/crypto/secp256k1",
+			"path": "github.com/ethereum/go-ethereum/crypto/secp256k1",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "yunX3AjO6JiMz0NSY/krvG3VWsk=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/crypto/sha3",
+			"path": "github.com/ethereum/go-ethereum/crypto/sha3",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "ym9PB+feuxzh1fjkVsvp0rapw/g=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/ethdb",
+			"path": "github.com/ethereum/go-ethereum/ethdb",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "O56Cc6a0S2pK0oO9wZYO71xXeRM=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/event",
+			"path": "github.com/ethereum/go-ethereum/event",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "NbRntdNRuwam0wGGNJ6HrR83P0M=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/log",
+			"path": "github.com/ethereum/go-ethereum/log",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "LnUcnRFuZD3J8fsevk5kAJ+DlmU=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/metrics",
+			"path": "github.com/ethereum/go-ethereum/metrics",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "UqI6x08JLpLnp6h/uJyzF8ozTEI=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/params",
+			"path": "github.com/ethereum/go-ethereum/params",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "ERaBPyDJCbMQRJsR6Kpqkr7dqfg=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/rlp",
+			"path": "github.com/ethereum/go-ethereum/rlp",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "pTGix4MhHbpvyahRO/TCBx+mZ+I=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/rpc",
+			"path": "github.com/ethereum/go-ethereum/rpc",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "j1QluMBF4VhPg6Jmxh16Q6RyF0Q=",
+			"origin": "github.com/jaakmusic/vendor/github.com/ethereum/go-ethereum/trie",
+			"path": "github.com/ethereum/go-ethereum/trie",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "VcLNrvCcnZuSnebTxMRyNtzY3ZY=",
+			"origin": "github.com/jaakmusic/vendor/github.com/go-stack/stack",
+			"path": "github.com/go-stack/stack",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "p/8vSviYF91gFflhrt5vkyksroo=",
+			"origin": "github.com/jaakmusic/vendor/github.com/golang/snappy",
+			"path": "github.com/golang/snappy",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "d9PxF1XQGLMJZRct2R8qVM/eYlE=",
+			"origin": "github.com/jaakmusic/vendor/github.com/hashicorp/golang-lru",
+			"path": "github.com/hashicorp/golang-lru",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "9hffs0bAIU6CquiRhKQdzjHnKt0=",
+			"origin": "github.com/jaakmusic/vendor/github.com/hashicorp/golang-lru/simplelru",
+			"path": "github.com/hashicorp/golang-lru/simplelru",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "Se195FlZ160eaEk/uVx4KdTPSxU=",
+			"origin": "github.com/jaakmusic/vendor/github.com/pborman/uuid",
+			"path": "github.com/pborman/uuid",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "KAzbLjI9MzW2tjfcAsK75lVRp6I=",
+			"origin": "github.com/jaakmusic/vendor/github.com/rcrowley/go-metrics",
+			"path": "github.com/rcrowley/go-metrics",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "q/d9nXRQYKEJ/EWn+5y6jL8rPGs=",
+			"origin": "github.com/jaakmusic/vendor/github.com/rcrowley/go-metrics/exp",
+			"path": "github.com/rcrowley/go-metrics/exp",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "yOMpVYuaPAtsMIo9DvQP8WZqxQs=",
+			"origin": "github.com/jaakmusic/vendor/github.com/rjeczalik/notify",
+			"path": "github.com/rjeczalik/notify",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "LjPdvMphElL0GOVNQCsmZMVgWIw=",
+			"origin": "github.com/jaakmusic/vendor/github.com/rs/cors",
+			"path": "github.com/rs/cors",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "hCRfPlNpqv8tvVivLzmXsoUOf1c=",
+			"origin": "github.com/jaakmusic/vendor/github.com/rs/xhandler",
+			"path": "github.com/rs/xhandler",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "QvOrAO5S37PL/6XZVWIVGyAbn60=",
+			"origin": "github.com/jaakmusic/vendor/github.com/syndtr/goleveldb/leveldb",
+			"path": "github.com/syndtr/goleveldb/leveldb",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "EKIow7XkgNdWvR/982ffIZxKG8Y=",
+			"origin": "github.com/jaakmusic/vendor/github.com/syndtr/goleveldb/leveldb/cache",
+			"path": "github.com/syndtr/goleveldb/leveldb/cache",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "5KPgnvCPlR0ysDAqo6jApzRQ3tw=",
+			"origin": "github.com/jaakmusic/vendor/github.com/syndtr/goleveldb/leveldb/comparer",
+			"path": "github.com/syndtr/goleveldb/leveldb/comparer",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "1DRAxdlWzS4U0xKN/yQ/fdNN7f0=",
+			"origin": "github.com/jaakmusic/vendor/github.com/syndtr/goleveldb/leveldb/errors",
+			"path": "github.com/syndtr/goleveldb/leveldb/errors",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "eqKeD6DS7eNCtxVYZEHHRKkyZrw=",
+			"origin": "github.com/jaakmusic/vendor/github.com/syndtr/goleveldb/leveldb/filter",
+			"path": "github.com/syndtr/goleveldb/leveldb/filter",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "8dXuAVIsbtaMiGGuHjzGR6Ny/5c=",
+			"origin": "github.com/jaakmusic/vendor/github.com/syndtr/goleveldb/leveldb/iterator",
+			"path": "github.com/syndtr/goleveldb/leveldb/iterator",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "gJY7bRpELtO0PJpZXgPQ2BYFJ88=",
+			"origin": "github.com/jaakmusic/vendor/github.com/syndtr/goleveldb/leveldb/journal",
+			"path": "github.com/syndtr/goleveldb/leveldb/journal",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "j+uaQ6DwJ50dkIdfMQu1TXdlQcY=",
+			"origin": "github.com/jaakmusic/vendor/github.com/syndtr/goleveldb/leveldb/memdb",
+			"path": "github.com/syndtr/goleveldb/leveldb/memdb",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "UmQeotV+m8/FduKEfLOhjdp18rs=",
+			"origin": "github.com/jaakmusic/vendor/github.com/syndtr/goleveldb/leveldb/opt",
+			"path": "github.com/syndtr/goleveldb/leveldb/opt",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "/Wvv9HeJTN9UUjdjwUlz7X4ioIo=",
+			"origin": "github.com/jaakmusic/vendor/github.com/syndtr/goleveldb/leveldb/storage",
+			"path": "github.com/syndtr/goleveldb/leveldb/storage",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "JTJA+u8zk7EXy1UUmpFPNGvtO2A=",
+			"origin": "github.com/jaakmusic/vendor/github.com/syndtr/goleveldb/leveldb/table",
+			"path": "github.com/syndtr/goleveldb/leveldb/table",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "4zil8Gwg8VPkDn1YzlgCvtukJFU=",
+			"origin": "github.com/jaakmusic/vendor/github.com/syndtr/goleveldb/leveldb/util",
+			"path": "github.com/syndtr/goleveldb/leveldb/util",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "1MGpGDQqnUoRpv7VEcQrXOBydXE=",
+			"origin": "github.com/jaakmusic/vendor/golang.org/x/crypto/pbkdf2",
+			"path": "golang.org/x/crypto/pbkdf2",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "y/oIaxq2d3WPizRZfVjo8RCRYTU=",
+			"origin": "github.com/jaakmusic/vendor/golang.org/x/crypto/ripemd160",
+			"path": "golang.org/x/crypto/ripemd160",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "E8pDMGySfy5Mw+jzXOkOxo35bww=",
+			"origin": "github.com/jaakmusic/vendor/golang.org/x/crypto/scrypt",
+			"path": "golang.org/x/crypto/scrypt",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "Y+HGqEkYM15ir+J93MEaHdyFy0c=",
+			"origin": "github.com/jaakmusic/vendor/golang.org/x/net/context",
+			"path": "golang.org/x/net/context",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "7EZyXN0EmZLgGxZxK01IJua4c8o=",
+			"origin": "github.com/jaakmusic/vendor/golang.org/x/net/websocket",
+			"path": "golang.org/x/net/websocket",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "ikor+YKJu2eKwyFteBWhsb8IGy8=",
+			"origin": "github.com/jaakmusic/vendor/golang.org/x/tools/go/ast/astutil",
+			"path": "golang.org/x/tools/go/ast/astutil",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "xjVB7omkAIcSpN5SDff09GRrD5I=",
+			"origin": "github.com/jaakmusic/vendor/golang.org/x/tools/imports",
+			"path": "golang.org/x/tools/imports",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "NGg7/qIJVUfXi7xnEyyDLocdi6Y=",
+			"origin": "github.com/jaakmusic/vendor/gopkg.in/fatih/set.v0",
+			"path": "gopkg.in/fatih/set.v0",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "DQXNV0EivoHm4q+bkdahYXrjjfE=",
+			"origin": "github.com/jaakmusic/vendor/gopkg.in/karalabe/cookiejar.v2/collections/prque",
+			"path": "gopkg.in/karalabe/cookiejar.v2/collections/prque",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		},
+		{
+			"checksumSHA1": "0xgs8lwcWLUffemlj+SsgKlxvDU=",
+			"origin": "github.com/jaakmusic/vendor/gopkg.in/natefinch/npipe.v2",
+			"path": "gopkg.in/natefinch/npipe.v2",
+			"revision": "1051f54611cff2b864bc00420e096872ca3bc484",
+			"revisionTime": "2017-05-13T22:05:11Z"
+		}
+	],
+	"rootPath": "github.com/jaakmusic/courtroom-contract-suite"
+}
