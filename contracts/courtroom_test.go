@@ -523,7 +523,7 @@ func Namehash(name string) (node common.Hash) {
 	return
 }
 
-// Cheque represents a payment promise to a single beneficiary.
+// Promise represents a promise from the service to serve the client up to a certain blocknumber.
 type Promise struct {
 	Contract    common.Address // address of swearGame contract, needed to avoid cross-contract submission
 	Beneficiary common.Address // address of Beneficiary (client)
@@ -531,9 +531,9 @@ type Promise struct {
 	Sig         []byte         // signature Sign(Keccak256(contract, beneficiary, blocknumber), prvKey)
 }
 
-//Issue creates a promise signed by the serive's private key .
+//issuePromise creates a promise signed by the serive's private key .
 //this signed promise could later be submited by the client of the service as an evident that the service promise to serve it
-func Issue(prvKey *ecdsa.PrivateKey, beneficiary common.Address, blockNumber *big.Int, contractAddress common.Address) (promise *Promise, err error) {
+func issuePromise(prvKey *ecdsa.PrivateKey, beneficiary common.Address, blockNumber *big.Int, contractAddress common.Address) (promise *Promise, err error) {
 
 	sig, err := crypto.Sign(sigHash(beneficiary, contractAddress, blockNumber), prvKey)
 	if err == nil {
