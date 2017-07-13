@@ -1,4 +1,4 @@
-# courtroom-contract-suite
+# swap-swear-and-swindle-suite
 
 This repository include a basic example of a courtroom contracts game.
 
