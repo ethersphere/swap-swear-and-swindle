@@ -129,7 +129,8 @@ func deposit(t *testing.T, backend *backends.SimulatedBackend, sampleToken *Samp
 
 	//deposit 50 token to the contract
 	opts = bind.NewKeyedTransactor(serviceKey)
-	_, err = swearGame.Deposit(opts, big.NewInt(serviceDeposit))
+	opts.Value = big.NewInt(serviceDeposit)
+	_, err = swearGame.SwearGameTransactor.contract.Transfer(opts)
 	if err != nil {
 		t.Fatalf("depost tokens to contract: expected no error, got %v", err)
 	}
@@ -164,10 +165,11 @@ func openClaimForReflectorGame(t *testing.T, clientContent string, serviceConten
 	if err != nil {
 		t.Fatal("registerENSRecord", "client.game", "fail")
 	}
-	amountStakedBefore, err := swearGame.AmountStaked(&bind.CallOpts{})
+	depositBefore, err := swearGame.Deposit(&bind.CallOpts{})
 	if err != nil {
 		t.Fatalf("AmountStaked : expected no error, got %v", err)
 	}
+	t.Log("deposit", depositBefore)
 	balanceOfClientBefore, err := sampleToken.BalanceOf(&bind.CallOpts{}, clientAddr)
 	if err != nil {
 		t.Fatalf("balanceOfClientBefore : expected no error, got %v", err)
@@ -176,24 +178,24 @@ func openClaimForReflectorGame(t *testing.T, clientContent string, serviceConten
 
 	promise, err := issuePromise(serviceKey, clientAddr, big.NewInt(int64(blockNumber+PromiseTillNextBlocks)), swearGameContractAddress)
 	if err != nil {
-		t.Fatalf("OpenNewClaim: issuePromise expected no error, got %v", err)
+		t.Fatalf("NewCase: issuePromise expected no error, got %v", err)
 	}
 	v, r, s := sig2vrs(promise.Sig)
 
 	for i := 0; i < numberOfBlocksToWait; i++ {
 		commit(backend)
 	}
-	_, err = swearGame.OpenNewClaim(opts, promise.Beneficiary, promise.BlockNumber, v, r, s, [32]byte{1})
+	_, err = swearGame.NewCase(opts, promise.Beneficiary, promise.BlockNumber, v, r, s, [32]byte{1})
 
 	if err != nil {
-		t.Fatalf("OpenNewClaim: expected no error, got %v", err)
+		t.Fatalf("NewCase: expected no error, got %v", err)
 	}
 	commit(backend)
 
-	claimid, err := swearGame.ClientsClaimsIds(&bind.CallOpts{}, clientAddr, big.NewInt(0))
+	claimid, err := swearGame.Ids(&bind.CallOpts{}, clientAddr, big.NewInt(0))
 	t.Log("claim", claimid)
 
-	amountStakedAfter, err := swearGame.AmountStaked(&bind.CallOpts{})
+	depositAfter, err := swearGame.Deposit(&bind.CallOpts{})
 	if err != nil {
 		t.Fatalf("AmountStaked : expected no error, got %v", err)
 	}
@@ -201,16 +203,18 @@ func openClaimForReflectorGame(t *testing.T, clientContent string, serviceConten
 	if err != nil {
 		t.Fatalf("balanceOfClientBefore : expected no error, got %v", err)
 	}
+	//If the client submit a claim a valid claim (ens are not equal) and the claim is within the time period the service promised
+	//so it is a valid claim
 	if (clientContent != serviceContent) && (numberOfBlocksToWait <= PromiseTillNextBlocks) {
-		if amountStakedBefore.Int64()-amountStakedAfter.Int64() != int64(compensationAmount) {
-			t.Fatalf("After a valid claim proccess : amountStaked at the contract should reduce by %d  ( got %d)", compensationAmount, (amountStakedBefore.Int64() - amountStakedAfter.Int64()))
+		if depositBefore.Int64()-depositAfter.Int64() != int64(compensationAmount) {
+			t.Fatalf("After a valid claim proccess : deposit at the contract should reduce by %d  ( got %d)", compensationAmount, (depositBefore.Int64() - depositAfter.Int64()))
 		}
 		if balanceOfClientAfter.Int64()-balanceOfClientBefore.Int64() != int64(compensationAmount) {
 			t.Fatalf("After a valid claim proccess : the balance of client should increase by %d   ( got %d)", compensationAmount, (balanceOfClientAfter.Int64() - balanceOfClientBefore.Int64()))
 		}
 	} else {
-		if amountStakedBefore.Int64() != amountStakedAfter.Int64() {
-			t.Fatalf("non valid claim proccess : amountStaked at the contract should be the same as before  ( got %d)", (amountStakedBefore.Int64() - amountStakedAfter.Int64()))
+		if depositBefore.Int64() != depositAfter.Int64() {
+			t.Fatalf("non valid claim proccess : deposit at the contract should be the same as before  ( got %d)", (depositBefore.Int64() - depositAfter.Int64()))
 		}
 		if balanceOfClientAfter.Int64() != balanceOfClientBefore.Int64() {
 			t.Fatalf("non valid  claim proccess should end by no change to the client balance   ( got %d)", (balanceOfClientAfter.Int64() - balanceOfClientBefore.Int64()))
@@ -218,23 +222,26 @@ func openClaimForReflectorGame(t *testing.T, clientContent string, serviceConten
 	}
 
 }
-func TestOpenNoneValidClaimDueWaitToLong(t *testing.T) {
+func TestPromiseOk(t *testing.T) {
 	//client and service content are diffrent  but number of block to wait is 6
 	// the service promise to serve client for the next PromiseTillNextBlocks(5) blocks.
+	//This test will fail if client will  get compensated for its claim.
 	openClaimForReflectorGame(t, "1234", "4567", 6)
 }
 
 func TestOpenValidClaim(t *testing.T) {
-	//client and service content are diffrent  and number of block to wait is 0
+	//client and service content are diffrent and number of block to wait is 0
+	//This test will fail if client will not get compensated for its claim.
 	openClaimForReflectorGame(t, "1234", "4567", 0)
 }
 
 func TestOpenNoneValidClaim(t *testing.T) {
 	//client and service content are the same and number of blocks to wait is 0
+	//This test will fail if client will get compensated for its claim.
 	openClaimForReflectorGame(t, "1234", "1234", 0)
 }
 
-func TestRegisterAndOpenNewClaim(t *testing.T) {
+func TestRegisterAndNewCase(t *testing.T) {
 	backend := newTestBackend()
 
 	swearGameContractAddress, swearGame, sampleToken := deployTheGame(t, backend)
@@ -272,17 +279,17 @@ func TestRegisterAndOpenNewClaim(t *testing.T) {
 	opts = bind.NewKeyedTransactor(clientKey)
 	promise, err := issuePromise(serviceKey, clientAddr, big.NewInt(int64(blockNumber+5)), swearGameContractAddress)
 	if err != nil {
-		t.Fatalf("OpenNewClaim: issuePromise expected no error, got %v", err)
+		t.Fatalf("NewCase: issuePromise expected no error, got %v", err)
 	}
 	v, r, s := sig2vrs(promise.Sig)
-	_, err = swearGame.OpenNewClaim(opts, promise.Beneficiary, promise.BlockNumber, v, r, s, [32]byte{1})
+	_, err = swearGame.NewCase(opts, promise.Beneficiary, promise.BlockNumber, v, r, s, [32]byte{1})
 
 	if err != nil {
 		t.Fatalf("Register: expected no error, got %v", err)
 	}
 	commit(backend)
 
-	claimid, err := swearGame.ClientsClaimsIds(&bind.CallOpts{}, clientAddr, big.NewInt(0))
+	claimid, err := swearGame.Ids(&bind.CallOpts{}, clientAddr, big.NewInt(0))
 	t.Log("claim", claimid)
 	counter := 0
 	for i := 0; i < 32; i++ {
@@ -296,7 +303,7 @@ func TestRegisterAndOpenNewClaim(t *testing.T) {
 	}
 }
 
-func TestOpenNewClaimNotRegister(t *testing.T) {
+func TestNewCaseNotRegister(t *testing.T) {
 	backend := newTestBackend()
 
 	swearGameContractAddress, swearGame, _ := deployTheGame(t, backend)
@@ -311,16 +318,15 @@ func TestOpenNewClaimNotRegister(t *testing.T) {
 	opts := bind.NewKeyedTransactor(clientKey)
 	promise, err := issuePromise(serviceKey, clientAddr, big.NewInt(int64(blockNumber+5)), swearGameContractAddress)
 	if err != nil {
-		t.Fatalf("OpenNewClaim: issuePromise expected no error, got %v", err)
+		t.Fatalf("NewCase: issuePromise expected no error, got %v", err)
 	}
 	v, r, s := sig2vrs(promise.Sig)
-	_, err = swearGame.OpenNewClaim(opts, promise.Beneficiary, promise.BlockNumber, v, r, s, [32]byte{1})
+	_, err = swearGame.NewCase(opts, promise.Beneficiary, promise.BlockNumber, v, r, s, [32]byte{1})
 
 	if err != nil {
 		t.Fatalf("Register: expected no error, got %v", err)
 	}
-	commit(backend)
-	claimid, err := swearGame.ClientsClaimsIds(&bind.CallOpts{}, clientAddr, big.NewInt(0))
+	claimid, err := swearGame.Ids(&bind.CallOpts{}, clientAddr, big.NewInt(0))
 	for i := 0; i < 32; i++ {
 		if claimid[i] != 0 {
 			t.Fatalf("ClaimId: expected 0, got %v", claimid)
@@ -346,13 +352,13 @@ func TestDoubleRegistration(t *testing.T) {
 		t.Fatalf("Register: expected no error, got %v", err)
 	}
 	commit(backend)
-	registerPlayerCounter, err := swearGame.RegisteredPlayersCounter(&bind.CallOpts{})
+	registerPlayerCounter, err := swearGame.PlayerCount(&bind.CallOpts{})
 	if err != nil {
-		t.Fatalf("RegisteredPlayersCounter : expected no error, got %v", err)
+		t.Fatalf("PlayerCount : expected no error, got %v", err)
 	}
 	t.Log("registerPlayerCounter", registerPlayerCounter)
 	if registerPlayerCounter.Int64() == 2 {
-		t.Fatalf("RegisteredPlayersCounter : should not be 2 because cannot allowed multiple registeration for the same client ")
+		t.Fatalf("PlayerCount : should not be 2 because cannot allowed multiple registeration for the same client ")
 	}
 
 }
@@ -372,13 +378,13 @@ func TestRegisterFromClient(t *testing.T) {
 	}
 	commit(backend)
 
-	registerPlayerCounter, err := swearGame.RegisteredPlayersCounter(&bind.CallOpts{})
+	PlayerCount, err := swearGame.PlayerCount(&bind.CallOpts{})
 	if err != nil {
-		t.Fatalf("RegisteredPlayersCounter : expected no error, got %v", err)
+		t.Fatalf("PlayerCount : expected no error, got %v", err)
 	}
-	t.Log("registerPlayerCounter", registerPlayerCounter)
-	if registerPlayerCounter.Int64() == 1 {
-		t.Fatalf("RegisteredPlayersCounter : should not be 1 because client cannot register ")
+
+	if PlayerCount.Int64() == 1 {
+		t.Fatalf("PlayerCount : should not be 1 because client cannot register ")
 	}
 }
 func TestRegisterAndLeave(t *testing.T) {
@@ -391,13 +397,13 @@ func TestRegisterAndLeave(t *testing.T) {
 	}
 	commit(backend)
 
-	registerPlayerCounter, err := swearGame.RegisteredPlayersCounter(&bind.CallOpts{})
+	registerPlayerCounter, err := swearGame.PlayerCount(&bind.CallOpts{})
 	if err != nil {
-		t.Fatalf("RegisteredPlayersCounter : expected no error, got %v", err)
+		t.Fatalf("PlayerCount : expected no error, got %v", err)
 	}
 	t.Log("registerPlayerCounter", registerPlayerCounter)
 	if registerPlayerCounter.Int64() == 1 {
-		t.Fatalf("RegisteredPlayersCounter : should not be 1 because there is no amount staked yet")
+		t.Fatalf("PlayerCount : should not be 1 because there is no amount staked yet")
 	}
 	deposit(t, backend, sampleToken, swearGame)
 	//try to register again
@@ -408,13 +414,13 @@ func TestRegisterAndLeave(t *testing.T) {
 	}
 	commit(backend)
 
-	registerPlayerCounter, err = swearGame.RegisteredPlayersCounter(&bind.CallOpts{})
+	registerPlayerCounter, err = swearGame.PlayerCount(&bind.CallOpts{})
 	if err != nil {
-		t.Fatalf("RegisteredPlayersCounter : expected no error, got %v", err)
+		t.Fatalf("PlayerCount : expected no error, got %v", err)
 	}
 	t.Log("registerPlayerCounter", registerPlayerCounter)
 	if registerPlayerCounter.Int64() != 1 {
-		t.Fatalf("RegisteredPlayersCounter : should  be 1 but got ", registerPlayerCounter.Int64())
+		t.Fatalf("PlayerCount : should  be 1 but got ", registerPlayerCounter.Int64())
 	}
 	//try to register with the same address again
 	_, err = swearGame.Register(opts, clientAddr)
@@ -423,13 +429,13 @@ func TestRegisterAndLeave(t *testing.T) {
 	}
 	commit(backend)
 
-	registerPlayerCounter, err = swearGame.RegisteredPlayersCounter(&bind.CallOpts{})
+	registerPlayerCounter, err = swearGame.PlayerCount(&bind.CallOpts{})
 	if err != nil {
-		t.Fatalf("RegisteredPlayersCounter : expected no error, got %v", err)
+		t.Fatalf("PlayerCount : expected no error, got %v", err)
 	}
 	t.Log("registerPlayerCounter", registerPlayerCounter)
 	if registerPlayerCounter.Int64() != 1 {
-		t.Fatalf("RegisteredPlayersCounter : should  be 1 but got ", registerPlayerCounter.Int64())
+		t.Fatalf("PlayerCount : should  be 1 but got ", registerPlayerCounter.Int64())
 	}
 
 	_, err = swearGame.LeaveGame(opts, clientAddr)
@@ -437,13 +443,13 @@ func TestRegisterAndLeave(t *testing.T) {
 		t.Fatalf("LeaveGame : expected no error, got %v", err)
 	}
 	commit(backend)
-	registerPlayerCounter, err = swearGame.RegisteredPlayersCounter(&bind.CallOpts{})
+	registerPlayerCounter, err = swearGame.PlayerCount(&bind.CallOpts{})
 	if err != nil {
-		t.Fatalf("RegisteredPlayersCounter : expected no error, got %v", err)
+		t.Fatalf("PlayerCount : expected no error, got %v", err)
 	}
 	t.Log("registerPlayerCounter", registerPlayerCounter)
 	if registerPlayerCounter.Int64() != 0 {
-		t.Fatalf("RegisteredPlayersCounter : should  be 0 but got ", registerPlayerCounter.Int64())
+		t.Fatalf("PlayerCount : should  be 0 but got ", registerPlayerCounter.Int64())
 	}
 }
 
@@ -458,36 +464,38 @@ func TestDeposit(t *testing.T) {
 	}
 	commit(backend)
 	opts = bind.NewKeyedTransactor(serviceKey)
+	opts.Value = big.NewInt(serviceDeposit)
+	_, err = swearGame.SwearGameTransactor.contract.Transfer(opts)
 
-	_, err = swearGame.Deposit(opts, big.NewInt(serviceDeposit))
 	if err != nil {
 		t.Fatalf("depost tokens to contract: expected no error, got %v", err)
 	}
 	commit(backend)
 
-	amountStaked, err := swearGame.AmountStaked(&bind.CallOpts{})
+	deposit, err := swearGame.Deposit(&bind.CallOpts{})
 	if err != nil {
 		t.Fatalf("AmountStaked : expected no error, got %v", err)
 	}
 
-	if amountStaked.Int64() != big.NewInt(serviceDeposit).Int64() {
-		t.Fatalf("AmountStaked ", amountStaked.Int64(), "is not equal to the deposit amount", big.NewInt(serviceDeposit))
+	if deposit.Int64() != big.NewInt(serviceDeposit).Int64() {
+		t.Fatalf("AmountStaked ", deposit.Int64(), "is not equal to the deposit amount", big.NewInt(serviceDeposit))
 	}
 
-	_, err = swearGame.Deposit(opts, big.NewInt(serviceDeposit))
+	opts.Value = big.NewInt(serviceDeposit)
+	_, err = swearGame.SwearGameTransactor.contract.Transfer(opts)
 	if err != nil {
 		t.Fatalf("depost tokens to contract: expected no error, got %v", err)
 	}
 	commit(backend)
-	amountStaked, err = swearGame.AmountStaked(&bind.CallOpts{})
+	deposit, err = swearGame.Deposit(&bind.CallOpts{})
 	if err != nil {
 		t.Fatalf("AmountStaked : expected no error, got %v", err)
 	}
 	//test it accumulate the deposits
-	if amountStaked.Int64() != big.NewInt(serviceDeposit).Int64()*2 {
-		t.Fatalf("AmountStaked ", amountStaked.Int64(), "is not equal to the deposit amount", big.NewInt(serviceDeposit))
+	if deposit.Int64() != big.NewInt(serviceDeposit).Int64()*2 {
+		t.Fatalf("AmountStaked ", deposit.Int64(), "is not equal to the deposit amount", big.NewInt(serviceDeposit))
 	}
-	t.Log("amountstaked", amountStaked)
+	t.Log("amountstaked", deposit)
 
 }
 
