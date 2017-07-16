@@ -136,7 +136,7 @@ func deposit(t *testing.T, backend *backends.SimulatedBackend, sampleToken *Samp
 	}
 	commit(backend)
 }
-func openClaimForReflectorGame(t *testing.T, clientContent string, serviceContent string, numberOfBlocksToWait int) {
+func openClaimForMirrorGame(t *testing.T, clientContent string, serviceContent string, numberOfBlocksToWait int) {
 	backend := newTestBackend()
 
 	swearGameContractAddress, swearGame, sampleToken := deployTheGame(t, backend)
@@ -226,19 +226,19 @@ func TestPromiseOk(t *testing.T) {
 	//client and service content are diffrent  but number of block to wait is 6
 	// the service promise to serve client for the next PromiseTillNextBlocks(5) blocks.
 	//This test will fail if client will  get compensated for its claim.
-	openClaimForReflectorGame(t, "1234", "4567", 6)
+	openClaimForMirrorGame(t, "1234", "4567", 6)
 }
 
 func TestOpenValidClaim(t *testing.T) {
 	//client and service content are diffrent and number of block to wait is 0
 	//This test will fail if client will not get compensated for its claim.
-	openClaimForReflectorGame(t, "1234", "4567", 0)
+	openClaimForMirrorGame(t, "1234", "4567", 0)
 }
 
 func TestOpenNoneValidClaim(t *testing.T) {
 	//client and service content are the same and number of blocks to wait is 0
 	//This test will fail if client will get compensated for its claim.
-	openClaimForReflectorGame(t, "1234", "1234", 0)
+	openClaimForMirrorGame(t, "1234", "1234", 0)
 }
 
 func TestRegisterAndNewCase(t *testing.T) {
