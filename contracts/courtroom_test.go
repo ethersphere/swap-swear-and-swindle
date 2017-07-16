@@ -1,19 +1,3 @@
-// Copyright 2016 The go-ethereum Authors
-// This file is part of the go-ethereum library.
-//
-// The go-ethereum library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-ethereum library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
-
 package contracts
 
 //go:generate abigen --sol ./courtroom.sol --pkg contracts --out ./courtroom.go
@@ -33,12 +17,16 @@ import (
 )
 
 var (
-	serviceKey, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291") //service
-	ethKey, _     = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
-	clientKey, _  = crypto.HexToECDSA("49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee")
-	serviceAddr   = crypto.PubkeyToAddress(serviceKey.PublicKey)
-	ethAddr       = crypto.PubkeyToAddress(ethKey.PublicKey)
-	clientAddr    = crypto.PubkeyToAddress(clientKey.PublicKey)
+	serviceKey, _         = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291") //service
+	ethKey, _             = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
+	clientKey, _          = crypto.HexToECDSA("49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee")
+	serviceAddr           = crypto.PubkeyToAddress(serviceKey.PublicKey)
+	ethAddr               = crypto.PubkeyToAddress(ethKey.PublicKey)
+	clientAddr            = crypto.PubkeyToAddress(clientKey.PublicKey)
+	blockNumber           = 0
+	compensationAmount    = int64(5)
+	PromiseTillNextBlocks = 5
+	serviceDeposit        = int64(50)
 )
 
 func newTestBackend() *backends.SimulatedBackend {
@@ -47,6 +35,13 @@ func newTestBackend() *backends.SimulatedBackend {
 		ethAddr:     {Balance: big.NewInt(1000000000)},
 		clientAddr:  {Balance: big.NewInt(1000000000)},
 	})
+}
+
+//commit new block to the backends.SimulatedBackend
+//the blockcount is increment on each commit.
+func commit(b *backends.SimulatedBackend) {
+	b.Commit()
+	blockNumber++
 }
 
 func deployCaseContract(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, error) {
@@ -58,7 +53,7 @@ func deployCaseContract(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *back
 	if err != nil {
 		return common.Address{}, err
 	}
-	backend.Commit()
+	commit(backend)
 	return addr, nil
 }
 
@@ -71,7 +66,7 @@ func deploySwearGame(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backend
 	if err != nil {
 		return common.Address{}, nil, err
 	}
-	backend.Commit()
+	commit(backend)
 	return addr, swearGame, nil
 }
 
@@ -84,7 +79,7 @@ func deploySampleTokenContract(prvKey *ecdsa.PrivateKey, amount *big.Int, backen
 	if err != nil {
 		return common.Address{}, nil, err
 	}
-	backend.Commit()
+	commit(backend)
 	return addr, sampleToken, nil
 }
 
@@ -97,13 +92,13 @@ func deployENS(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.Simu
 	if err != nil {
 		return common.Address{}, common.Address{}, nil, nil, err
 	}
-	backend.Commit()
+	commit(backend)
 
 	addr, _, publicResolver, err := contract.DeployPublicResolver(deployTransactor, backend, ensAddress)
 	if err != nil {
 		return common.Address{}, common.Address{}, nil, nil, err
 	}
-	backend.Commit()
+	commit(backend)
 
 	//setting up .game domain
 
@@ -112,13 +107,13 @@ func deployENS(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.Simu
 	if err != nil {
 		return common.Address{}, common.Address{}, nil, nil, err
 	}
-	backend.Commit()
+	commit(backend)
 	_, err = ens.SetSubnodeOwner(deployTransactor, common.Hash{}, SHA3("game"), ethAddr)
 
 	if err != nil {
 		return common.Address{}, common.Address{}, nil, nil, err
 	}
-	backend.Commit()
+	commit(backend)
 
 	return ensAddress, addr, ens, publicResolver, nil
 }
@@ -130,20 +125,20 @@ func deposit(t *testing.T, backend *backends.SimulatedBackend, sampleToken *Samp
 	if err != nil {
 		t.Fatalf("trasfer tokens to service: expected no error, got %v", err)
 	}
-	backend.Commit()
+	commit(backend)
 
 	//deposit 50 token to the contract
 	opts = bind.NewKeyedTransactor(serviceKey)
-	_, err = swearGame.Deposit(opts, big.NewInt(50))
+	_, err = swearGame.Deposit(opts, big.NewInt(serviceDeposit))
 	if err != nil {
 		t.Fatalf("depost tokens to contract: expected no error, got %v", err)
 	}
-	backend.Commit()
+	commit(backend)
 }
-func openClaimForReflectorGame(t *testing.T, clientContent string, serviceContent string) {
+func openClaimForReflectorGame(t *testing.T, clientContent string, serviceContent string, numberOfBlocksToWait int) {
 	backend := newTestBackend()
 
-	_, swearGame, sampleToken := deployTheGame(t, backend)
+	swearGameContractAddress, swearGame, sampleToken := deployTheGame(t, backend)
 
 	deposit(t, backend, sampleToken, swearGame)
 
@@ -152,7 +147,7 @@ func openClaimForReflectorGame(t *testing.T, clientContent string, serviceConten
 	if err != nil {
 		t.Fatalf("Register: expected no error, got %v", err)
 	}
-	backend.Commit()
+	commit(backend)
 
 	ensAddress, resolverAddr, ens, publicResolver, err := deployENS(ethKey, big.NewInt(0), backend, ethAddr)
 	t.Log("ensAddress", ensAddress.String(), resolverAddr.String())
@@ -178,11 +173,23 @@ func openClaimForReflectorGame(t *testing.T, clientContent string, serviceConten
 		t.Fatalf("balanceOfClientBefore : expected no error, got %v", err)
 	}
 	opts = bind.NewKeyedTransactor(clientKey)
-	_, err = swearGame.OpenNewClaim(opts, [32]byte{1})
+
+	promise, err := issuePromise(serviceKey, clientAddr, big.NewInt(int64(blockNumber+PromiseTillNextBlocks)), swearGameContractAddress)
+	if err != nil {
+		t.Fatalf("OpenNewClaim: issuePromise expected no error, got %v", err)
+	}
+	v, r, s := sig2vrs(promise.Sig)
+
+	for i := 0; i < numberOfBlocksToWait; i++ {
+		commit(backend)
+	}
+	_, err = swearGame.OpenNewClaim(opts, promise.Beneficiary, promise.BlockNumber, v, r, s, [32]byte{1})
+
 	if err != nil {
 		t.Fatalf("OpenNewClaim: expected no error, got %v", err)
 	}
-	backend.Commit()
+	commit(backend)
+
 	claimid, err := swearGame.ClientsClaimsIds(&bind.CallOpts{}, clientAddr, big.NewInt(0))
 	t.Log("claim", claimid)
 
@@ -194,16 +201,16 @@ func openClaimForReflectorGame(t *testing.T, clientContent string, serviceConten
 	if err != nil {
 		t.Fatalf("balanceOfClientBefore : expected no error, got %v", err)
 	}
-	if clientContent != serviceContent {
-		if amountStakedBefore.Int64()-amountStakedAfter.Int64() != 5 {
-			t.Fatalf("After a valid claim proccess : amountStaked at the contract should reduce by 5  ( got %d)", (amountStakedBefore.Int64() - amountStakedAfter.Int64()))
+	if (clientContent != serviceContent) && (numberOfBlocksToWait <= PromiseTillNextBlocks) {
+		if amountStakedBefore.Int64()-amountStakedAfter.Int64() != int64(compensationAmount) {
+			t.Fatalf("After a valid claim proccess : amountStaked at the contract should reduce by %d  ( got %d)", compensationAmount, (amountStakedBefore.Int64() - amountStakedAfter.Int64()))
 		}
-		if balanceOfClientAfter.Int64()-balanceOfClientBefore.Int64() != 5 {
-			t.Fatalf("After a valid claim proccess : the balance of client should increase by 5   ( got %d)", (balanceOfClientAfter.Int64() - balanceOfClientBefore.Int64()))
+		if balanceOfClientAfter.Int64()-balanceOfClientBefore.Int64() != int64(compensationAmount) {
+			t.Fatalf("After a valid claim proccess : the balance of client should increase by %d   ( got %d)", compensationAmount, (balanceOfClientAfter.Int64() - balanceOfClientBefore.Int64()))
 		}
 	} else {
 		if amountStakedBefore.Int64() != amountStakedAfter.Int64() {
-			t.Fatalf("non valid claim proccess : amountStaked at the contract should reduce by 5  ( got %d)", (amountStakedBefore.Int64() - amountStakedAfter.Int64()))
+			t.Fatalf("non valid claim proccess : amountStaked at the contract should be the same as before  ( got %d)", (amountStakedBefore.Int64() - amountStakedAfter.Int64()))
 		}
 		if balanceOfClientAfter.Int64() != balanceOfClientBefore.Int64() {
 			t.Fatalf("non valid  claim proccess should end by no change to the client balance   ( got %d)", (balanceOfClientAfter.Int64() - balanceOfClientBefore.Int64()))
@@ -211,19 +218,26 @@ func openClaimForReflectorGame(t *testing.T, clientContent string, serviceConten
 	}
 
 }
+func TestOpenNoneValidClaimDueWaitToLong(t *testing.T) {
+	//client and service content are diffrent  but number of block to wait is 6
+	// the service promise to serve client for the next PromiseTillNextBlocks(5) blocks.
+	openClaimForReflectorGame(t, "1234", "4567", 6)
+}
+
 func TestOpenValidClaim(t *testing.T) {
-	//client and service content are diffrent
-	openClaimForReflectorGame(t, "1234", "4567")
+	//client and service content are diffrent  and number of block to wait is 0
+	openClaimForReflectorGame(t, "1234", "4567", 0)
 }
 
 func TestOpenNoneValidClaim(t *testing.T) {
-	//client and service content are the same
-	openClaimForReflectorGame(t, "1234", "1234")
+	//client and service content are the same and number of blocks to wait is 0
+	openClaimForReflectorGame(t, "1234", "1234", 0)
 }
+
 func TestRegisterAndOpenNewClaim(t *testing.T) {
 	backend := newTestBackend()
 
-	_, swearGame, sampleToken := deployTheGame(t, backend)
+	swearGameContractAddress, swearGame, sampleToken := deployTheGame(t, backend)
 
 	deposit(t, backend, sampleToken, swearGame)
 
@@ -232,7 +246,7 @@ func TestRegisterAndOpenNewClaim(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Register: expected no error, got %v", err)
 	}
-	backend.Commit()
+	commit(backend)
 
 	ensAddress, resolverAddr, ens, publicResolver, err := deployENS(ethKey, big.NewInt(0), backend, ethAddr)
 	t.Log("ensAddress", ensAddress.String(), resolverAddr.String())
@@ -256,11 +270,17 @@ func TestRegisterAndOpenNewClaim(t *testing.T) {
 	}
 
 	opts = bind.NewKeyedTransactor(clientKey)
-	_, err = swearGame.OpenNewClaim(opts, [32]byte{1})
+	promise, err := issuePromise(serviceKey, clientAddr, big.NewInt(int64(blockNumber+5)), swearGameContractAddress)
+	if err != nil {
+		t.Fatalf("OpenNewClaim: issuePromise expected no error, got %v", err)
+	}
+	v, r, s := sig2vrs(promise.Sig)
+	_, err = swearGame.OpenNewClaim(opts, promise.Beneficiary, promise.BlockNumber, v, r, s, [32]byte{1})
+
 	if err != nil {
 		t.Fatalf("Register: expected no error, got %v", err)
 	}
-	backend.Commit()
+	commit(backend)
 
 	claimid, err := swearGame.ClientsClaimsIds(&bind.CallOpts{}, clientAddr, big.NewInt(0))
 	t.Log("claim", claimid)
@@ -279,21 +299,27 @@ func TestRegisterAndOpenNewClaim(t *testing.T) {
 func TestOpenNewClaimNotRegister(t *testing.T) {
 	backend := newTestBackend()
 
-	_, swearGame, _ := deployTheGame(t, backend)
+	swearGameContractAddress, swearGame, _ := deployTheGame(t, backend)
 
 	_, _, _, _, err := deployENS(ethKey, big.NewInt(0), backend, ethAddr)
 
 	if err != nil {
 		t.Fatalf("deployENS: expected no error, got %v", err)
 	}
-	backend.Commit()
+	commit(backend)
 
 	opts := bind.NewKeyedTransactor(clientKey)
-	_, err = swearGame.OpenNewClaim(opts, [32]byte{1})
+	promise, err := issuePromise(serviceKey, clientAddr, big.NewInt(int64(blockNumber+5)), swearGameContractAddress)
+	if err != nil {
+		t.Fatalf("OpenNewClaim: issuePromise expected no error, got %v", err)
+	}
+	v, r, s := sig2vrs(promise.Sig)
+	_, err = swearGame.OpenNewClaim(opts, promise.Beneficiary, promise.BlockNumber, v, r, s, [32]byte{1})
+
 	if err != nil {
 		t.Fatalf("Register: expected no error, got %v", err)
 	}
-	backend.Commit()
+	commit(backend)
 	claimid, err := swearGame.ClientsClaimsIds(&bind.CallOpts{}, clientAddr, big.NewInt(0))
 	for i := 0; i < 32; i++ {
 		if claimid[i] != 0 {
@@ -313,13 +339,13 @@ func TestDoubleRegistration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Register: expected no error, got %v", err)
 	}
-	backend.Commit()
+	commit(backend)
 	opts = bind.NewKeyedTransactor(serviceKey)
 	_, err = swearGame.Register(opts, clientAddr)
 	if err != nil {
 		t.Fatalf("Register: expected no error, got %v", err)
 	}
-	backend.Commit()
+	commit(backend)
 	registerPlayerCounter, err := swearGame.RegisteredPlayersCounter(&bind.CallOpts{})
 	if err != nil {
 		t.Fatalf("RegisteredPlayersCounter : expected no error, got %v", err)
@@ -344,7 +370,7 @@ func TestRegisterFromClient(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Register: expected no error, got %v", err)
 	}
-	backend.Commit()
+	commit(backend)
 
 	registerPlayerCounter, err := swearGame.RegisteredPlayersCounter(&bind.CallOpts{})
 	if err != nil {
@@ -363,7 +389,7 @@ func TestRegisterAndLeave(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Register: expected no error, got %v", err)
 	}
-	backend.Commit()
+	commit(backend)
 
 	registerPlayerCounter, err := swearGame.RegisteredPlayersCounter(&bind.CallOpts{})
 	if err != nil {
@@ -380,7 +406,7 @@ func TestRegisterAndLeave(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Register: expected no error, got %v", err)
 	}
-	backend.Commit()
+	commit(backend)
 
 	registerPlayerCounter, err = swearGame.RegisteredPlayersCounter(&bind.CallOpts{})
 	if err != nil {
@@ -395,7 +421,7 @@ func TestRegisterAndLeave(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Register: expected no error, got %v", err)
 	}
-	backend.Commit()
+	commit(backend)
 
 	registerPlayerCounter, err = swearGame.RegisteredPlayersCounter(&bind.CallOpts{})
 	if err != nil {
@@ -410,7 +436,7 @@ func TestRegisterAndLeave(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LeaveGame : expected no error, got %v", err)
 	}
-	backend.Commit()
+	commit(backend)
 	registerPlayerCounter, err = swearGame.RegisteredPlayersCounter(&bind.CallOpts{})
 	if err != nil {
 		t.Fatalf("RegisteredPlayersCounter : expected no error, got %v", err)
@@ -430,36 +456,36 @@ func TestDeposit(t *testing.T) {
 	if err != nil {
 		t.Fatalf("trasfer tokens to service: expected no error, got %v", err)
 	}
-	backend.Commit()
+	commit(backend)
 	opts = bind.NewKeyedTransactor(serviceKey)
 
-	_, err = swearGame.Deposit(opts, big.NewInt(50))
+	_, err = swearGame.Deposit(opts, big.NewInt(serviceDeposit))
 	if err != nil {
 		t.Fatalf("depost tokens to contract: expected no error, got %v", err)
 	}
-	backend.Commit()
+	commit(backend)
 
 	amountStaked, err := swearGame.AmountStaked(&bind.CallOpts{})
 	if err != nil {
 		t.Fatalf("AmountStaked : expected no error, got %v", err)
 	}
 
-	if amountStaked.Int64() != big.NewInt(50).Int64() {
-		t.Fatalf("AmountStaked ", amountStaked.Int64(), "is not equal to the deposit amount", big.NewInt(50))
+	if amountStaked.Int64() != big.NewInt(serviceDeposit).Int64() {
+		t.Fatalf("AmountStaked ", amountStaked.Int64(), "is not equal to the deposit amount", big.NewInt(serviceDeposit))
 	}
 
-	_, err = swearGame.Deposit(opts, big.NewInt(50))
+	_, err = swearGame.Deposit(opts, big.NewInt(serviceDeposit))
 	if err != nil {
 		t.Fatalf("depost tokens to contract: expected no error, got %v", err)
 	}
-	backend.Commit()
+	commit(backend)
 	amountStaked, err = swearGame.AmountStaked(&bind.CallOpts{})
 	if err != nil {
 		t.Fatalf("AmountStaked : expected no error, got %v", err)
 	}
 	//test it accumulate the deposits
-	if amountStaked.Int64() != big.NewInt(50).Int64()*2 {
-		t.Fatalf("AmountStaked ", amountStaked.Int64(), "is not equal to the deposit amount", big.NewInt(50))
+	if amountStaked.Int64() != big.NewInt(serviceDeposit).Int64()*2 {
+		t.Fatalf("AmountStaked ", amountStaked.Int64(), "is not equal to the deposit amount", big.NewInt(serviceDeposit))
 	}
 	t.Log("amountstaked", amountStaked)
 
@@ -477,7 +503,7 @@ func deployTheGame(t *testing.T, backend *backends.SimulatedBackend) (swearGameC
 		t.Fatalf("deploy contract: expected no error, got %v", err)
 	}
 
-	swearGameContractAddress, swearGame, err = deploySwearGame(serviceKey, big.NewInt(0), backend, caseContractAddress, sampleTokenAddress, big.NewInt(5))
+	swearGameContractAddress, swearGame, err = deploySwearGame(serviceKey, big.NewInt(0), backend, caseContractAddress, sampleTokenAddress, big.NewInt(compensationAmount))
 	if err != nil {
 		t.Fatalf("deploy contract: expected no error, got %v", err)
 	}
@@ -493,17 +519,17 @@ func registerENSRecord(t *testing.T, backend *backends.SimulatedBackend, name, c
 	if err != nil {
 		return err
 	}
-	backend.Commit()
+	commit(backend)
 	_, err = ens.SetResolver(opts, Namehash(name), resolverAddr)
 	if err != nil {
 		return err
 	}
-	backend.Commit()
+	commit(backend)
 	_, err = resolver.SetContent(opts, Namehash(name), common.HexToHash(contentHash))
 	if err != nil {
 		return err
 	}
-	backend.Commit()
+	commit(backend)
 
 	return nil
 }
@@ -535,7 +561,7 @@ type Promise struct {
 //this signed promise could later be submited by the client of the service as an evident that the service promise to serve it
 func issuePromise(prvKey *ecdsa.PrivateKey, beneficiary common.Address, blockNumber *big.Int, contractAddress common.Address) (promise *Promise, err error) {
 
-	sig, err := crypto.Sign(sigHash(beneficiary, contractAddress, blockNumber), prvKey)
+	sig, err := crypto.Sign(sigHash(contractAddress, beneficiary, blockNumber), prvKey)
 	if err == nil {
 		promise = &Promise{
 			Contract:    contractAddress,
@@ -558,4 +584,12 @@ func sigHash(beneficiary common.Address, contractAddress common.Address, blockNu
 	input := append(beneficiary.Bytes(), contractAddress.Bytes()...)
 	input = append(input, blocknumber32[:]...)
 	return crypto.Keccak256(input)
+}
+
+// v/r/s representation of signature
+func sig2vrs(sig []byte) (v byte, r, s [32]byte) {
+	v = sig[64] + 27
+	copy(r[:], sig[:32])
+	copy(s[:], sig[32:64])
+	return
 }

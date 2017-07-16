@@ -7,16 +7,24 @@ import "./ensabstract.sol";
 
 contract CaseContract is Owned {
 
+  struct promise{
+		address beneficiary;
+		uint256 blockNumber;
+		uint8 sig_v;
+		bytes32 sig_r;
+		bytes32 sig_s;
+	}
 	struct claim {
 		bytes32 claimId;
 		address plaintiff;
 		bytes32[] evidence;
+		promise   servicePromise;
 		uint status;
 		bool valid;
 	}
 
 	//claimid map to claim
-  mapping(bytes32 => claim) public OpenClaims;
+  mapping(bytes32 => claim)  OpenClaims;
 
 
 	function CaseContract() {
@@ -24,7 +32,7 @@ contract CaseContract is Owned {
 
 	function newClaim(address _plaintiff, bytes32 _evidence) returns (bytes32 claimId) {
 
-	  claim clm;
+	  claim storage clm;
 		clm.claimId = sha3(_plaintiff, _evidence, now);
 		clm.plaintiff = _plaintiff;
 		clm.evidence.push(_evidence);
@@ -37,13 +45,28 @@ contract CaseContract is Owned {
 		return clm.claimId;
 	}
 
-
 	function submitEvidence(bytes32 _claimId,bytes32 _evident) returns (uint status) {
 
 		// Maximum amount of evidence has been submitted
 		require(OpenClaims[_claimId].evidence.length < 4);
 
 		OpenClaims[_claimId].evidence.push(_evident);
+
+		return OpenClaims[_claimId].status;
+
+	}
+
+	function submitPromise(bytes32 _claimId,address beneficiary, uint256 blockNumber,
+			uint8 sig_v, bytes32 sig_r, bytes32 sig_s) returns (uint status) {
+
+		promise  storage prm;
+		prm.beneficiary = beneficiary;
+		prm.blockNumber = blockNumber;
+		prm.sig_v = sig_v;
+		prm.sig_r = sig_r;
+		prm.sig_s = sig_s;
+
+		OpenClaims[_claimId].servicePromise = prm;
 
 		return OpenClaims[_claimId].status;
 
@@ -67,8 +90,16 @@ contract CaseContract is Owned {
 		OpenClaims[_claimId].valid = false;
 
 	}
-	function getClaim(bytes32 _claimId) returns (address plaintiff,bool valid) {
-        return (OpenClaims[_claimId].plaintiff ,OpenClaims[_claimId].valid);
+	function getClaim(bytes32 _claimId) returns (address plaintiff,bool valid,address beneficiary, uint256 blockNumber,
+			uint8 sig_v, bytes32 sig_r, bytes32 sig_s) {
+        return (OpenClaims[_claimId].plaintiff,
+                OpenClaims[_claimId].valid,
+                OpenClaims[_claimId].servicePromise.beneficiary,
+                OpenClaims[_claimId].servicePromise.blockNumber,
+                OpenClaims[_claimId].servicePromise.sig_v,
+                OpenClaims[_claimId].servicePromise.sig_r,
+                OpenClaims[_claimId].servicePromise.sig_s
+                );
     }
 
   function setClaimValid(bytes32 _claimId)  {
@@ -98,6 +129,9 @@ contract SwearGame is Owned {
 
 	}
 
+
+
+
 	function deposit(uint256 _depositAmount) onlyOwner payable public returns(bool){
 
 		require(sampleToken.balanceOf(owner) >= _depositAmount);
@@ -116,19 +150,20 @@ contract SwearGame is Owned {
 	function makeJudgement(bytes32 _claimId) private returns(bool) {
 
 	  bool claimantCompensated;
+    bool decision = false;
 
     require(caseContract.getStatus(_claimId) != 0);
 		// Somehow come to a resolution...
-		var(plaintiff,valid) = caseContract.getClaim(_claimId);
+		var(plaintiff,valid,beneficiary,blockNumber,sig_v,sig_r,sig_s) = caseContract.getClaim(_claimId);
 
 		// Case has already been compensated for
 		require(!valid);
 
-	  bool decision = takeDecision();
+    decision = (validatePromise(beneficiary,blockNumber,sig_v,sig_r,sig_s) && takeDecision());
 
     caseContract.setClaimValid(_claimId);
 
-    if (decision == false){
+    if (decision == true){
 	    claimantCompensated = compensate(plaintiff);
 			caseContract.resolveClaim(_claimId);
     }
@@ -183,20 +218,41 @@ contract SwearGame is Owned {
 		registeredPlayersCounter--;
 
 	}
-
-
-	function openNewClaim(bytes32 _evidence) public returns (bool) {
+	function openNewClaim(address beneficiary, uint256 blockNumber,
+			uint8 sig_v, bytes32 sig_r, bytes32 sig_s,bytes32 _evidence) public returns (bool) {
 
 		require(registeredPlayers[msg.sender]);
 
-		 claimId  = caseContract.newClaim(msg.sender, _evidence);
+		claimId  = caseContract.newClaim(msg.sender,bytes32(_evidence));
+
+		caseContract.submitPromise(claimId,beneficiary, blockNumber,sig_v, sig_r, sig_s);
 
 		clientsClaimsIds[msg.sender].push(claimId);
 
 		makeJudgement(claimId);
 
 		return true;
+	}
 
+	/// @notice Cash cheque
+	///
+	/// @param beneficiary beneficiary address
+	/// @param blockNumber the promise is valid until this block number
+	/// @param sig_v signature parameter v
+	/// @param sig_r signature parameter r
+	/// @param sig_s signature parameter s
+	/// The digital signature is calculated on the concatenated triplet of contract address,beneficiary and blockNumber
+	function validatePromise(address beneficiary, uint256 blockNumber,
+			uint8 sig_v, bytes32 sig_r, bytes32 sig_s) private returns (bool){
+
+		  //check the exitance of the proof
+      if (beneficiary == 0x0) return false;
+      //check current block number is less than the promise blocknumber
+      if (block.number >= blockNumber ) return false;
+      // Check the digital signature of the promise.
+			bytes32 hash = sha3(address(this), beneficiary, blockNumber);
+			if(owner != ecrecover(hash, sig_v, sig_r, sig_s)) return false;
+		  return true;
 	}
 	//This is the specific game logic "reflector"
 	//specific game "reflector"
@@ -205,6 +261,7 @@ contract SwearGame is Owned {
 	bytes32 constant clientENSNameHash = 0x94c4860d894e91f2df683b61455630d721209c6265d2e80c86a1f92cab14b370;
 	//reflector.game namehash
 	bytes32 constant reflectorENSNameHash = 0xacd7f5ed7d93b1526477b93e6c7def60c40420a868e7f694a7671413d89bb9a5;
+
 	address public ensAddress = 0x8163bc885c2b14478b75f178ca76f31581dc967f;
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	function ensResolve(bytes32 node) private constant returns(bytes32) {
@@ -220,12 +277,12 @@ contract SwearGame is Owned {
 			ens = ENSAbstract(ensAddress);
 			bytes32 contentHash1 = ensResolve(clientENSNameHash);
 			bytes32 contentHash2 = ensResolve(reflectorENSNameHash);
-			bool res = (contentHash1 == contentHash2);
+			bool res = (contentHash1 != contentHash2);
 			if (res){
-				Decision("not guilty");
+				Decision("guilty");
 			}
 			else {
-				Decision("guilty");
+				Decision("not guilty");
 			}
 			return res;
 	}
