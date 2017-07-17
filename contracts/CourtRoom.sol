@@ -127,7 +127,6 @@ contract SwearGame is Owned {
   /* The function without name is the default function that is called whenever anyone sends funds to a contract */
     function () payable {
         uint amount = msg.value;
-        require(token.balanceOf(owner) >= amount);
     		require(token.transferFrom(owner, address(this), amount));
     		deposit += amount;
     		DepositStaked(amount, deposit);
