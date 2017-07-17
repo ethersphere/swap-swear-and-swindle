@@ -146,6 +146,7 @@ contract SwearGame is Owned {
     if (decision == true){
 	    caseCompensated = compensate(plaintiff);
 			caseContract.resolveClaim(_id);
+      leaveGame(plaintiff);
     }
 
 		ClaimResolved(_id, plaintiff, reward);
@@ -153,9 +154,9 @@ contract SwearGame is Owned {
 
 	}
 
-	function compensate(address __Caseant) private returns(bool compensated) {
+	function compensate(address _beneficiary) private returns(bool compensated) {
 
-		compensated = token.transferFrom(address(this), __Caseant, reward);
+		compensated = token.transferFrom(address(this), _beneficiary, reward);
 
 		require(compensated);
 
@@ -186,18 +187,15 @@ contract SwearGame is Owned {
 
 	}
 
-
-	function leaveGame(address _player) onlyOwner public {
-
-		// If the player is not registered to the game throw
-		require(players[_player]);
+  function leaveGame(address _player) private {
+    require(players[_player]);
 
 		PlayerLeftGame(_player);
 
 		players[_player] = false;
 		playerCount--;
+  }
 
-	}
 	function newCase(address beneficiary, uint256 blockNumber,
 			uint8 sig_v, bytes32 sig_r, bytes32 sig_s,bytes32 _evidence) public returns (bool) {
 
