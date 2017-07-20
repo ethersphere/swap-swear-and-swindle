@@ -1,6 +1,6 @@
 pragma solidity ^0.4.0;
 
-import "./abstract/witnessabstract.sol";
+import "./abstracts/witnessabstract.sol";
 import "./owned.sol";
 
 contract PromiseValidator is WitnessAbstract,Owned {

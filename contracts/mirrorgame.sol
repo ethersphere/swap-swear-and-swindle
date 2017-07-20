@@ -1,7 +1,7 @@
 pragma solidity ^0.4.0;
 
-import "./abstract/witnessabstract.sol";
-import "./abstract/ensabstract.sol";
+import "./abstracts/witnessabstract.sol";
+import "./abstracts/ensabstract.sol";
 
 contract Mirror is WitnessAbstract{
 

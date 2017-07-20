@@ -8,7 +8,7 @@ If you deploy this, you won't have anything useful.)
 Implements ERC 20 Token standard: https://github.com/ethereum/EIPs/issues/20
 .*/
 
-import "./abstract/token.sol";
+import "./abstracts/token.sol";
 
 contract StandardToken is Token {
 

@@ -2,7 +2,7 @@ pragma solidity ^0.4.0;
 
 import "./owned.sol";
 import "./sampletoken.sol";
-import "./abstract/trialtransitionsabstract.sol";
+import "./abstracts/trialtransitionsabstract.sol";
 
 
 contract CaseContract is Owned {

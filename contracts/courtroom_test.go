@@ -1,9 +1,9 @@
 package contracts
 
 //go:generate abigen --sol ./courtroom.sol --pkg contracts --out ./courtroom.go
-//go:generate abigen --sol ./mirror.sol --pkg mirrorens --out ./mirror/mirrorens/mirror.go
-//go:generate abigen --sol ./promisevalidator.sol --pkg promisevalidator --out ./mirror/promisevalidator/promisevalidator.go
-//go:generate abigen --sol ./mirrortransitions.sol --pkg mirrortransition --out ./mirror/mirrortransition/mirrortransitions.go
+//go:generate abigen --sol ./mirrorens.sol --pkg mirrorens --out ./mirrorgame/witnesses/mirrorens/mirrorens.go
+//go:generate abigen --sol ./promisevalidator.sol --pkg promisevalidator --out ./mirrorgame/witnesses/promisevalidator/promisevalidator.go
+//go:generate abigen --sol ./mirrortransitions.sol --pkg mirrortransitions --out ./mirrorgame/mirrortransitions/mirrortransitions.go
 
 import (
 	"crypto/ecdsa"
@@ -17,9 +17,9 @@ import (
 	"github.com/ethereum/go-ethereum/contracts/ens/contract"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/crypto"
-	mirrorens "github.com/jaakmusic/swap-swear-and-swindle/contracts/mirror/mirrorens"
-	mirrortransition "github.com/jaakmusic/swap-swear-and-swindle/contracts/mirror/mirrortransition"
-	promisevalidator "github.com/jaakmusic/swap-swear-and-swindle/contracts/mirror/promisevalidator"
+	mirrortransitions "github.com/jaakmusic/swap-swear-and-swindle/contracts/mirrorgame/mirrortransitions"
+	mirrorens "github.com/jaakmusic/swap-swear-and-swindle/contracts/mirrorgame/witnesses/mirrorens"
+	promisevalidator "github.com/jaakmusic/swap-swear-and-swindle/contracts/mirrorgame/witnesses/promisevalidator"
 )
 
 var (
@@ -65,11 +65,11 @@ func deployCaseContract(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *back
 	return addr, nil
 }
 
-func deployMirror(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *mirrorens.Mirror, error) {
+func deployMirror(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *mirrorens.MirrorENS, error) {
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
 	deployTransactor.Value = amount
 
-	addr, _, mirror, err := mirrorens.DeployMirror(deployTransactor, backend)
+	addr, _, mirror, err := mirrorens.DeployMirrorENS(deployTransactor, backend)
 	if err != nil {
 		return common.Address{}, nil, err
 	}
@@ -93,7 +93,7 @@ func deployMirrorTransitions(prvKey *ecdsa.PrivateKey, amount *big.Int, backend 
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
 	deployTransactor.Value = amount
 
-	addr, _, _, err := mirrortransition.DeployMirrorTransistions(deployTransactor, backend, paymentValidatorContract, ENSMirrotValidatorContract)
+	addr, _, _, err := mirrortransitions.DeployMirrorTransistions(deployTransactor, backend, paymentValidatorContract, ENSMirrotValidatorContract)
 	if err != nil {
 		return common.Address{}, err
 	}
@@ -517,7 +517,7 @@ func deployTheGame(t *testing.T, backend *backends.SimulatedBackend) (
 	sampleToken *SampleToken,
 	promiseValidator *promisevalidator.PromiseValidator,
 	promiseValidatorAddress common.Address,
-	mirrorEns *mirrorens.Mirror) {
+	mirrorEns *mirrorens.MirrorENS) {
 
 	sampleTokenAddress, sampleToken, err := deploySampleTokenContract(ethKey, big.NewInt(0), backend, big.NewInt(1000))
 	if err != nil {

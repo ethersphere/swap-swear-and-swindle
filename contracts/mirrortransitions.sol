@@ -1,5 +1,5 @@
 pragma solidity ^0.4.0;
-import "./abstract/trialtransitionsabstract.sol";
+import "./abstracts/trialtransitionsabstract.sol";
 
 contract MirrorTransistions is TrialTransistionsAbstract {
 
