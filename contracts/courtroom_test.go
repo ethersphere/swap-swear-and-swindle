@@ -301,6 +301,8 @@ func TestPromiseOk(t *testing.T) {
 func TestOpenValidClaimPending(t *testing.T) {
 	//client and service content are diffrent and number of block to wait is 0
 	//This test will fail if client will not get compensated for its claim.
+	//This test also submit a newCase ...without submiting enough evident ...
+	//check the status submit the missing evident and resumeCase.
 	openClaimForMirrorGame(t, "1234", "4567", 0, true)
 }
 
