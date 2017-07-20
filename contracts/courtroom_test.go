@@ -31,7 +31,7 @@ var (
 	clientAddr            = crypto.PubkeyToAddress(clientKey.PublicKey)
 	blockNumber           = 0
 	compensationAmount    = int64(5)
-	PromiseTillNextBlocks = 5
+	PromiseTillNextBlocks = 51
 	serviceDeposit        = int64(50)
 	witnessesNumber       = int64(2)
 	serviceId             = [32]byte{1, 2, 3, 4}
@@ -50,19 +50,6 @@ func newTestBackend() *backends.SimulatedBackend {
 func commit(b *backends.SimulatedBackend) {
 	b.Commit()
 	blockNumber++
-}
-
-func deployCaseContract(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, error) {
-	deployTransactor := bind.NewKeyedTransactor(prvKey)
-	deployTransactor.Value = amount
-
-	addr, _, _, err := DeployCaseContract(deployTransactor, backend)
-
-	if err != nil {
-		return common.Address{}, err
-	}
-	commit(backend)
-	return addr, nil
 }
 
 func deployMirror(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *mirrorens.MirrorENS, error) {
@@ -101,11 +88,11 @@ func deployMirrorTransitions(prvKey *ecdsa.PrivateKey, amount *big.Int, backend 
 	return addr, nil
 }
 
-func deploySwearGame(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend, caseContractAddr common.Address, tokenContractAddr common.Address, mirrorTransistions common.Address, rewordCompansation *big.Int) (common.Address, *SwearGame, error) {
+func deploySwearGame(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend, tokenContractAddr common.Address, mirrorTransistions common.Address, rewordCompansation *big.Int) (common.Address, *SwearGame, error) {
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
 	deployTransactor.Value = amount
 
-	addr, _, swearGame, err := DeploySwearGame(deployTransactor, backend, caseContractAddr, tokenContractAddr, mirrorTransistions, rewordCompansation)
+	addr, _, swearGame, err := DeploySwearGame(deployTransactor, backend, tokenContractAddr, mirrorTransistions, rewordCompansation)
 	if err != nil {
 		return common.Address{}, nil, err
 	}
@@ -219,19 +206,6 @@ func openClaimForMirrorGame(t *testing.T, clientContent string, serviceContent s
 	}
 	opts = bind.NewKeyedTransactor(clientKey)
 
-	if !pendingTest {
-		promise, err := issuePromise(serviceKey, clientAddr, big.NewInt(int64(blockNumber+PromiseTillNextBlocks)), promiseValidatorAddress)
-		if err != nil {
-			t.Fatalf("NewCase: issuePromise expected no error, got %v", err)
-		}
-		v, r, s := sig2vrs(promise.sig)
-
-		promiseValidator.SubmitPromise(opts, serviceId, promise.beneficiary, promise.blockNumber, v, r, s)
-	}
-
-	for i := 0; i < numberOfBlocksToWait; i++ {
-		commit(backend)
-	}
 	_, err = swearGame.NewCase(opts, serviceId)
 
 	if err != nil {
@@ -239,14 +213,36 @@ func openClaimForMirrorGame(t *testing.T, clientContent string, serviceContent s
 	}
 	commit(backend)
 
-	claimid, err := swearGame.Ids(&bind.CallOpts{}, clientAddr, big.NewInt(0))
-	t.Log("claim", claimid)
+	claimId, err := swearGame.Ids(&bind.CallOpts{}, clientAddr, big.NewInt(0))
+	t.Log("claim", claimId)
 
-	status, err := swearGame.GetStatus(&bind.CallOpts{}, claimid)
+	if !pendingTest {
+		promise, err := issuePromise(serviceKey, clientAddr, big.NewInt(int64(blockNumber+PromiseTillNextBlocks)), promiseValidatorAddress)
+		if err != nil {
+			t.Fatalf("NewCase: issuePromise expected no error, got %v", err)
+		}
+		v, r, s := sig2vrs(promise.sig)
+
+		promiseValidator.SubmitPromise(opts, claimId, serviceId, promise.beneficiary, promise.blockNumber, v, r, s)
+	}
+
+	for i := 0; i < numberOfBlocksToWait; i++ {
+		commit(backend)
+	}
+
+	_, err = swearGame.Trial(opts, claimId)
+	if err != nil {
+		t.Fatalf("Trial: expected no error, got %v", err)
+	}
+
+	commit(backend)
+
+	status, err := swearGame.GetStatus(&bind.CallOpts{}, claimId)
 	if err != nil {
 		t.Fatalf("NewCase: expected no error, got %v", err)
 	}
 	t.Log("status", status)
+
 	if pendingTest && status == 3 {
 		//submit promise and restart from current state
 		promise, err := issuePromise(serviceKey, clientAddr, big.NewInt(int64(blockNumber+PromiseTillNextBlocks)), promiseValidatorAddress)
@@ -255,8 +251,9 @@ func openClaimForMirrorGame(t *testing.T, clientContent string, serviceContent s
 		}
 		v, r, s := sig2vrs(promise.sig)
 
-		promiseValidator.SubmitPromise(opts, serviceId, promise.beneficiary, promise.blockNumber, v, r, s)
-		_, err = swearGame.ResumeCase(opts, claimid)
+		promiseValidator.SubmitPromise(opts, claimId, serviceId, promise.beneficiary, promise.blockNumber, v, r, s)
+
+		_, err = swearGame.Trial(opts, claimId)
 
 		if err != nil {
 			t.Fatalf("NewCase: expected no error, got %v", err)
@@ -524,11 +521,6 @@ func deployTheGame(t *testing.T, backend *backends.SimulatedBackend) (
 		t.Fatalf("deploy contract: expected no error, got %v", err)
 	}
 
-	caseContractAddress, err := deployCaseContract(serviceKey, big.NewInt(0), backend)
-	if err != nil {
-		t.Fatalf("deploy contract: expected no error, got %v", err)
-	}
-
 	mirrorContractAddress, mirrorEns, err := deployMirror(serviceKey, big.NewInt(0), backend)
 	if err != nil {
 		t.Fatalf("deploy contract: expected no error, got %v", err)
@@ -542,11 +534,11 @@ func deployTheGame(t *testing.T, backend *backends.SimulatedBackend) (
 		t.Fatalf("deploy contract: expected no error, got %v", err)
 	}
 
-	swearGameContractAddress, swearGame, err = deploySwearGame(serviceKey, big.NewInt(0), backend, caseContractAddress, sampleTokenAddress, mirrorFlowContractAddress, big.NewInt(compensationAmount))
+	swearGameContractAddress, swearGame, err = deploySwearGame(serviceKey, big.NewInt(0), backend, sampleTokenAddress, mirrorFlowContractAddress, big.NewInt(compensationAmount))
 	if err != nil {
 		t.Fatalf("deploy contract: expected no error, got %v", err)
 	}
-	t.Log("address", sampleTokenAddress, caseContractAddress)
+
 	return swearGameContractAddress, swearGame, sampleToken, promiseValidator, promiseValidatorContractAddress, mirrorEns
 }
 

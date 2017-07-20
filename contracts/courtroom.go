@@ -13,345 +13,11 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
-// CaseContractABI is the input ABI used to generate the binding from.
-const CaseContractABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_plaintiff\",\"type\":\"address\"},{\"name\":\"_serviceId\",\"type\":\"bytes32\"},{\"name\":\"status\",\"type\":\"uint8\"},{\"name\":\"expiery\",\"type\":\"uint256\"}],\"name\":\"newClaim\",\"outputs\":[{\"name\":\"id\",\"type\":\"bytes32\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"id\",\"type\":\"bytes32\"}],\"name\":\"getStatus\",\"outputs\":[{\"name\":\"status\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"id\",\"type\":\"bytes32\"}],\"name\":\"isValid\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"id\",\"type\":\"bytes32\"},{\"name\":\"status\",\"type\":\"uint8\"}],\"name\":\"setStatus\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_newOwner\",\"type\":\"address\"}],\"name\":\"changeOwner\",\"outputs\":[],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_id\",\"type\":\"bytes32\"}],\"name\":\"resolveClaim\",\"outputs\":[],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_id\",\"type\":\"bytes32\"}],\"name\":\"getClaim\",\"outputs\":[{\"name\":\"plaintiff\",\"type\":\"address\"},{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"expiery\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"type\":\"constructor\"}]"
-
-// CaseContractBin is the compiled bytecode used for deploying new contracts.
-const CaseContractBin = `0x6060604052341561000f57600080fd5b5b5b60008054600160a060020a03191633600160a060020a03161790555b5b5b6105328061003e6000396000f3006060604052361561008b5763ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416631f0b2d5781146100905780635de28ae0146100cd5780636a938567146100f95780638da5cb5b146101235780638de654ba14610152578063a6f9dae114610182578063c1203cb8146101a3578063c9100bcb146101bb575b600080fd5b341561009b57600080fd5b6100bb600160a060020a036004351660243560ff604435166064356101ff565b60405190815260200160405180910390f35b34156100d857600080fd5b6100e360043561034a565b60405160ff909116815260200160405180910390f35b341561010457600080fd5b61010f600435610365565b604051901515815260200160405180910390f35b341561012e57600080fd5b610136610382565b604051600160a060020a03909116815260200160405180910390f35b341561015d57600080fd5b61010f60043560ff60243516610391565b604051901515815260200160405180910390f35b341561018d57600080fd5b6101a1600160a060020a03600435166103b9565b005b34156101ae57600080fd5b6101a1600435610401565b005b34156101c657600080fd5b6101d160043561049c565b604051600160a060020a03909316835260208301919091526040808301919091526060909101905180910390f35b60006102096104d1565b858542604051600160a060020a03939093166c01000000000000000000000000028352601483019190915260348201526054016040519081900390208152600160008251815260208101919091526040016000206005015460ff16156102725760009150610341565b600160a060020a03861660208201526040810185905260ff84166060820152600160a0820181905242840160808301528190600082518152602081019190915260400160002081518155602082015160018201805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a039290921691909117905560408201516002820155606082015160038201805460ff191660ff929092169190911790556080820151816004015560a0820151600591909101805460ff191660ff90921691909117905550805191505b50949350505050565b60008181526001602052604090206003015460ff165b919050565b60008181526001602052604090206005015460ff1615155b919050565b600054600160a060020a031681565b6000828152600160208190526040909120600301805460ff191660ff84161790555b92915050565b60005433600160a060020a039081169116146103d457600080fd5b6000805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0383161790555b5b50565b600081815260016020526040902054158061042e575060008181526001602052604090206003015460ff16155b1561043857600080fd5b60008181526001602081905260408220828155908101805473ffffffffffffffffffffffffffffffffffffffff19169055600501805460ff191690555b6000828152600160205260409020600301805460ff191660ff929092169190911790555b50565b6000818152600160208190526040909120908101546002820154600490920154600160a060020a0390911691905b9193909250565b60c06040519081016040908152600080835260208301819052908201819052606082018190526080820181905260a0820152905600a165627a7a72305820f725771df2d8af12a9c94b20e2be72b17a5c3830de04c218691af31f1196e6f20029`
-
-// DeployCaseContract deploys a new Ethereum contract, binding an instance of CaseContract to it.
-func DeployCaseContract(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *CaseContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(CaseContractABI))
-	if err != nil {
-		return common.Address{}, nil, nil, err
-	}
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(CaseContractBin), backend)
-	if err != nil {
-		return common.Address{}, nil, nil, err
-	}
-	return address, tx, &CaseContract{CaseContractCaller: CaseContractCaller{contract: contract}, CaseContractTransactor: CaseContractTransactor{contract: contract}}, nil
-}
-
-// CaseContract is an auto generated Go binding around an Ethereum contract.
-type CaseContract struct {
-	CaseContractCaller     // Read-only binding to the contract
-	CaseContractTransactor // Write-only binding to the contract
-}
-
-// CaseContractCaller is an auto generated read-only Go binding around an Ethereum contract.
-type CaseContractCaller struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// CaseContractTransactor is an auto generated write-only Go binding around an Ethereum contract.
-type CaseContractTransactor struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// CaseContractSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type CaseContractSession struct {
-	Contract     *CaseContract     // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// CaseContractCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type CaseContractCallerSession struct {
-	Contract *CaseContractCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts       // Call options to use throughout this session
-}
-
-// CaseContractTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type CaseContractTransactorSession struct {
-	Contract     *CaseContractTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts       // Transaction auth options to use throughout this session
-}
-
-// CaseContractRaw is an auto generated low-level Go binding around an Ethereum contract.
-type CaseContractRaw struct {
-	Contract *CaseContract // Generic contract binding to access the raw methods on
-}
-
-// CaseContractCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type CaseContractCallerRaw struct {
-	Contract *CaseContractCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// CaseContractTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type CaseContractTransactorRaw struct {
-	Contract *CaseContractTransactor // Generic write-only contract binding to access the raw methods on
-}
-
-// NewCaseContract creates a new instance of CaseContract, bound to a specific deployed contract.
-func NewCaseContract(address common.Address, backend bind.ContractBackend) (*CaseContract, error) {
-	contract, err := bindCaseContract(address, backend, backend)
-	if err != nil {
-		return nil, err
-	}
-	return &CaseContract{CaseContractCaller: CaseContractCaller{contract: contract}, CaseContractTransactor: CaseContractTransactor{contract: contract}}, nil
-}
-
-// NewCaseContractCaller creates a new read-only instance of CaseContract, bound to a specific deployed contract.
-func NewCaseContractCaller(address common.Address, caller bind.ContractCaller) (*CaseContractCaller, error) {
-	contract, err := bindCaseContract(address, caller, nil)
-	if err != nil {
-		return nil, err
-	}
-	return &CaseContractCaller{contract: contract}, nil
-}
-
-// NewCaseContractTransactor creates a new write-only instance of CaseContract, bound to a specific deployed contract.
-func NewCaseContractTransactor(address common.Address, transactor bind.ContractTransactor) (*CaseContractTransactor, error) {
-	contract, err := bindCaseContract(address, nil, transactor)
-	if err != nil {
-		return nil, err
-	}
-	return &CaseContractTransactor{contract: contract}, nil
-}
-
-// bindCaseContract binds a generic wrapper to an already deployed contract.
-func bindCaseContract(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(CaseContractABI))
-	if err != nil {
-		return nil, err
-	}
-	return bind.NewBoundContract(address, parsed, caller, transactor), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_CaseContract *CaseContractRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
-	return _CaseContract.Contract.CaseContractCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_CaseContract *CaseContractRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _CaseContract.Contract.CaseContractTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_CaseContract *CaseContractRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _CaseContract.Contract.CaseContractTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_CaseContract *CaseContractCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
-	return _CaseContract.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_CaseContract *CaseContractTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _CaseContract.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_CaseContract *CaseContractTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _CaseContract.Contract.contract.Transact(opts, method, params...)
-}
-
-// GetStatus is a free data retrieval call binding the contract method 0x5de28ae0.
-//
-// Solidity: function getStatus(id bytes32) constant returns(status uint8)
-func (_CaseContract *CaseContractCaller) GetStatus(opts *bind.CallOpts, id [32]byte) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _CaseContract.contract.Call(opts, out, "getStatus", id)
-	return *ret0, err
-}
-
-// GetStatus is a free data retrieval call binding the contract method 0x5de28ae0.
-//
-// Solidity: function getStatus(id bytes32) constant returns(status uint8)
-func (_CaseContract *CaseContractSession) GetStatus(id [32]byte) (uint8, error) {
-	return _CaseContract.Contract.GetStatus(&_CaseContract.CallOpts, id)
-}
-
-// GetStatus is a free data retrieval call binding the contract method 0x5de28ae0.
-//
-// Solidity: function getStatus(id bytes32) constant returns(status uint8)
-func (_CaseContract *CaseContractCallerSession) GetStatus(id [32]byte) (uint8, error) {
-	return _CaseContract.Contract.GetStatus(&_CaseContract.CallOpts, id)
-}
-
-// IsValid is a free data retrieval call binding the contract method 0x6a938567.
-//
-// Solidity: function isValid(id bytes32) constant returns(bool)
-func (_CaseContract *CaseContractCaller) IsValid(opts *bind.CallOpts, id [32]byte) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _CaseContract.contract.Call(opts, out, "isValid", id)
-	return *ret0, err
-}
-
-// IsValid is a free data retrieval call binding the contract method 0x6a938567.
-//
-// Solidity: function isValid(id bytes32) constant returns(bool)
-func (_CaseContract *CaseContractSession) IsValid(id [32]byte) (bool, error) {
-	return _CaseContract.Contract.IsValid(&_CaseContract.CallOpts, id)
-}
-
-// IsValid is a free data retrieval call binding the contract method 0x6a938567.
-//
-// Solidity: function isValid(id bytes32) constant returns(bool)
-func (_CaseContract *CaseContractCallerSession) IsValid(id [32]byte) (bool, error) {
-	return _CaseContract.Contract.IsValid(&_CaseContract.CallOpts, id)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() constant returns(address)
-func (_CaseContract *CaseContractCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _CaseContract.contract.Call(opts, out, "owner")
-	return *ret0, err
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() constant returns(address)
-func (_CaseContract *CaseContractSession) Owner() (common.Address, error) {
-	return _CaseContract.Contract.Owner(&_CaseContract.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() constant returns(address)
-func (_CaseContract *CaseContractCallerSession) Owner() (common.Address, error) {
-	return _CaseContract.Contract.Owner(&_CaseContract.CallOpts)
-}
-
-// SetStatus is a free data retrieval call binding the contract method 0x8de654ba.
-//
-// Solidity: function setStatus(id bytes32, status uint8) constant returns(bool)
-func (_CaseContract *CaseContractCaller) SetStatus(opts *bind.CallOpts, id [32]byte, status uint8) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _CaseContract.contract.Call(opts, out, "setStatus", id, status)
-	return *ret0, err
-}
-
-// SetStatus is a free data retrieval call binding the contract method 0x8de654ba.
-//
-// Solidity: function setStatus(id bytes32, status uint8) constant returns(bool)
-func (_CaseContract *CaseContractSession) SetStatus(id [32]byte, status uint8) (bool, error) {
-	return _CaseContract.Contract.SetStatus(&_CaseContract.CallOpts, id, status)
-}
-
-// SetStatus is a free data retrieval call binding the contract method 0x8de654ba.
-//
-// Solidity: function setStatus(id bytes32, status uint8) constant returns(bool)
-func (_CaseContract *CaseContractCallerSession) SetStatus(id [32]byte, status uint8) (bool, error) {
-	return _CaseContract.Contract.SetStatus(&_CaseContract.CallOpts, id, status)
-}
-
-// ChangeOwner is a paid mutator transaction binding the contract method 0xa6f9dae1.
-//
-// Solidity: function changeOwner(_newOwner address) returns()
-func (_CaseContract *CaseContractTransactor) ChangeOwner(opts *bind.TransactOpts, _newOwner common.Address) (*types.Transaction, error) {
-	return _CaseContract.contract.Transact(opts, "changeOwner", _newOwner)
-}
-
-// ChangeOwner is a paid mutator transaction binding the contract method 0xa6f9dae1.
-//
-// Solidity: function changeOwner(_newOwner address) returns()
-func (_CaseContract *CaseContractSession) ChangeOwner(_newOwner common.Address) (*types.Transaction, error) {
-	return _CaseContract.Contract.ChangeOwner(&_CaseContract.TransactOpts, _newOwner)
-}
-
-// ChangeOwner is a paid mutator transaction binding the contract method 0xa6f9dae1.
-//
-// Solidity: function changeOwner(_newOwner address) returns()
-func (_CaseContract *CaseContractTransactorSession) ChangeOwner(_newOwner common.Address) (*types.Transaction, error) {
-	return _CaseContract.Contract.ChangeOwner(&_CaseContract.TransactOpts, _newOwner)
-}
-
-// GetClaim is a paid mutator transaction binding the contract method 0xc9100bcb.
-//
-// Solidity: function getClaim(_id bytes32) returns(plaintiff address, serviceId bytes32, expiery uint256)
-func (_CaseContract *CaseContractTransactor) GetClaim(opts *bind.TransactOpts, _id [32]byte) (*types.Transaction, error) {
-	return _CaseContract.contract.Transact(opts, "getClaim", _id)
-}
-
-// GetClaim is a paid mutator transaction binding the contract method 0xc9100bcb.
-//
-// Solidity: function getClaim(_id bytes32) returns(plaintiff address, serviceId bytes32, expiery uint256)
-func (_CaseContract *CaseContractSession) GetClaim(_id [32]byte) (*types.Transaction, error) {
-	return _CaseContract.Contract.GetClaim(&_CaseContract.TransactOpts, _id)
-}
-
-// GetClaim is a paid mutator transaction binding the contract method 0xc9100bcb.
-//
-// Solidity: function getClaim(_id bytes32) returns(plaintiff address, serviceId bytes32, expiery uint256)
-func (_CaseContract *CaseContractTransactorSession) GetClaim(_id [32]byte) (*types.Transaction, error) {
-	return _CaseContract.Contract.GetClaim(&_CaseContract.TransactOpts, _id)
-}
-
-// NewClaim is a paid mutator transaction binding the contract method 0x1f0b2d57.
-//
-// Solidity: function newClaim(_plaintiff address, _serviceId bytes32, status uint8, expiery uint256) returns(id bytes32)
-func (_CaseContract *CaseContractTransactor) NewClaim(opts *bind.TransactOpts, _plaintiff common.Address, _serviceId [32]byte, status uint8, expiery *big.Int) (*types.Transaction, error) {
-	return _CaseContract.contract.Transact(opts, "newClaim", _plaintiff, _serviceId, status, expiery)
-}
-
-// NewClaim is a paid mutator transaction binding the contract method 0x1f0b2d57.
-//
-// Solidity: function newClaim(_plaintiff address, _serviceId bytes32, status uint8, expiery uint256) returns(id bytes32)
-func (_CaseContract *CaseContractSession) NewClaim(_plaintiff common.Address, _serviceId [32]byte, status uint8, expiery *big.Int) (*types.Transaction, error) {
-	return _CaseContract.Contract.NewClaim(&_CaseContract.TransactOpts, _plaintiff, _serviceId, status, expiery)
-}
-
-// NewClaim is a paid mutator transaction binding the contract method 0x1f0b2d57.
-//
-// Solidity: function newClaim(_plaintiff address, _serviceId bytes32, status uint8, expiery uint256) returns(id bytes32)
-func (_CaseContract *CaseContractTransactorSession) NewClaim(_plaintiff common.Address, _serviceId [32]byte, status uint8, expiery *big.Int) (*types.Transaction, error) {
-	return _CaseContract.Contract.NewClaim(&_CaseContract.TransactOpts, _plaintiff, _serviceId, status, expiery)
-}
-
-// ResolveClaim is a paid mutator transaction binding the contract method 0xc1203cb8.
-//
-// Solidity: function resolveClaim(_id bytes32) returns()
-func (_CaseContract *CaseContractTransactor) ResolveClaim(opts *bind.TransactOpts, _id [32]byte) (*types.Transaction, error) {
-	return _CaseContract.contract.Transact(opts, "resolveClaim", _id)
-}
-
-// ResolveClaim is a paid mutator transaction binding the contract method 0xc1203cb8.
-//
-// Solidity: function resolveClaim(_id bytes32) returns()
-func (_CaseContract *CaseContractSession) ResolveClaim(_id [32]byte) (*types.Transaction, error) {
-	return _CaseContract.Contract.ResolveClaim(&_CaseContract.TransactOpts, _id)
-}
-
-// ResolveClaim is a paid mutator transaction binding the contract method 0xc1203cb8.
-//
-// Solidity: function resolveClaim(_id bytes32) returns()
-func (_CaseContract *CaseContractTransactorSession) ResolveClaim(_id [32]byte) (*types.Transaction, error) {
-	return _CaseContract.Contract.ResolveClaim(&_CaseContract.TransactOpts, _id)
-}
-
 // OwnedABI is the input ABI used to generate the binding from.
 const OwnedABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_newOwner\",\"type\":\"address\"}],\"name\":\"changeOwner\",\"outputs\":[],\"payable\":false,\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"type\":\"constructor\"}]"
 
 // OwnedBin is the compiled bytecode used for deploying new contracts.
-const OwnedBin = `0x6060604052341561000f57600080fd5b5b60008054600160a060020a03191633600160a060020a03161790555b5b61015c8061003c6000396000f300606060405263ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416638da5cb5b8114610048578063a6f9dae114610084575b600080fd5b341561005357600080fd5b61005b6100b2565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f35b341561008f57600080fd5b6100b073ffffffffffffffffffffffffffffffffffffffff600435166100ce565b005b60005473ffffffffffffffffffffffffffffffffffffffff1681565b6000543373ffffffffffffffffffffffffffffffffffffffff9081169116146100f657600080fd5b6000805473ffffffffffffffffffffffffffffffffffffffff191673ffffffffffffffffffffffffffffffffffffffff83161790555b5b505600a165627a7a72305820a3d8a5991d5f81a82353bdb05d99ca47797b209198df16a302cf47aed9049c030029`
+const OwnedBin = `0x6060604052341561000f57600080fd5b5b60008054600160a060020a03191633600160a060020a03161790555b5b61015c8061003c6000396000f300606060405263ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416638da5cb5b8114610048578063a6f9dae114610084575b600080fd5b341561005357600080fd5b61005b6100b2565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f35b341561008f57600080fd5b6100b073ffffffffffffffffffffffffffffffffffffffff600435166100ce565b005b60005473ffffffffffffffffffffffffffffffffffffffff1681565b6000543373ffffffffffffffffffffffffffffffffffffffff9081169116146100f657600080fd5b6000805473ffffffffffffffffffffffffffffffffffffffff191673ffffffffffffffffffffffffffffffffffffffff83161790555b5b505600a165627a7a72305820c315c10434405183bfa44fb90a6dbb5f4ba839b9ff43887b4ff585950b4eb6070029`
 
 // DeployOwned deploys a new Ethereum contract, binding an instance of Owned to it.
 func DeployOwned(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Owned, error) {
@@ -544,7 +210,7 @@ func (_Owned *OwnedTransactorSession) ChangeOwner(_newOwner common.Address) (*ty
 const SampleTokenABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_spender\",\"type\":\"address\"},{\"name\":\"_value\",\"type\":\"uint256\"}],\"name\":\"approve\",\"outputs\":[{\"name\":\"success\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"totalSupply\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_from\",\"type\":\"address\"},{\"name\":\"_to\",\"type\":\"address\"},{\"name\":\"_value\",\"type\":\"uint256\"}],\"name\":\"transferFrom\",\"outputs\":[{\"name\":\"success\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_owner\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outputs\":[{\"name\":\"balance\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"beneficiary\",\"type\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\"},{\"name\":\"ref\",\"type\":\"bytes32\"}],\"name\":\"createTokens\",\"outputs\":[],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_newOwner\",\"type\":\"address\"}],\"name\":\"changeOwner\",\"outputs\":[],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_to\",\"type\":\"address\"},{\"name\":\"_value\",\"type\":\"uint256\"}],\"name\":\"transfer\",\"outputs\":[{\"name\":\"success\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_owner\",\"type\":\"address\"},{\"name\":\"_spender\",\"type\":\"address\"}],\"name\":\"allowance\",\"outputs\":[{\"name\":\"remaining\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"function\"},{\"inputs\":[{\"name\":\"initialSupply\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"beneficiary\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"amount\",\"type\":\"uint256\"},{\"indexed\":true,\"name\":\"ref\",\"type\":\"bytes32\"}],\"name\":\"TokenMined\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"_from\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"_to\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"_value\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"_owner\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"_spender\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"_value\",\"type\":\"uint256\"}],\"name\":\"Approval\",\"type\":\"event\"}]"
 
 // SampleTokenBin is the compiled bytecode used for deploying new contracts.
-const SampleTokenBin = `0x6060604052341561000f57600080fd5b60405160208061069d833981016040528080519150505b5b60038054600160a060020a03191633600160a060020a03161790555b600160a060020a03331660009081526001602052604081208290558190555b505b61062a806100736000396000f300606060405236156100965763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663095ea7b3811461009b57806318160ddd146100d157806323b872dd146100f657806370a08231146101325780638da5cb5b14610163578063a3aff92314610192578063a6f9dae1146101b9578063a9059cbb146101da578063dd62ed3e14610210575b600080fd5b34156100a657600080fd5b6100bd600160a060020a0360043516602435610247565b604051901515815260200160405180910390f35b34156100dc57600080fd5b6100e46102b4565b60405190815260200160405180910390f35b341561010157600080fd5b6100bd600160a060020a03600435811690602435166044356102ba565b604051901515815260200160405180910390f35b341561013d57600080fd5b6100e4600160a060020a03600435166102fd565b60405190815260200160405180910390f35b341561016e57600080fd5b61017661031c565b604051600160a060020a03909116815260200160405180910390f35b341561019d57600080fd5b6101b7600160a060020a036004351660243560443561032b565b005b34156101c457600080fd5b6101b7600160a060020a03600435166103e8565b005b34156101e557600080fd5b6100bd600160a060020a0360043516602435610430565b604051901515815260200160405180910390f35b341561021b57600080fd5b6100e4600160a060020a03600435811690602435166104d7565b60405190815260200160405180910390f35b600160a060020a03338116600081815260026020908152604080832094871680845294909152808220859055909291907f8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b9259085905190815260200160405180910390a35060015b92915050565b60005481565b600160a060020a0380841660009081526002602090815260408083203390941683529290529081208054830190556102f3848484610504565b90505b9392505050565b600160a060020a0381166000908152600160205260409020545b919050565b600354600160a060020a031681565b60035433600160a060020a0390811691161461034657600080fd5b600160a060020a038316600081815260016020526040808220805486019055815485019091558291907fdfb81fb379557413b0a951b4d7bf7a9df393801d8c539d5e201d6a8daeb913b99085905190815260200160405180910390a382600160a060020a031660007fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef8460405190815260200160405180910390a35b5b505050565b60035433600160a060020a0390811691161461040357600080fd5b6003805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0383161790555b5b50565b600160a060020a0333166000908152600160205260408120548290108015906104595750600082115b1561009657600160a060020a033381166000818152600160205260408082208054879003905592861680825290839020805486019055917fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef9085905190815260200160405180910390a35060016102ae565b600080fd5b5b92915050565b600160a060020a038083166000908152600260209081526040808320938516835292905220545b92915050565b600160a060020a0383166000908152600160205260408120548290108015906105545750600160a060020a0380851660009081526002602090815260408083203390941683529290522054829010155b80156105605750600082115b1561009657600160a060020a03808416600081815260016020908152604080832080548801905588851680845281842080548990039055600283528184203390961684529490915290819020805486900390559091907fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef9085905190815260200160405180910390a35060016102f6565b600080fd5b5b93925050505600a165627a7a7230582001759bcd714022196869a0bf32ff6a0e7da2b22d5163d1d6991673cdd78eeb040029`
+const SampleTokenBin = `0x6060604052341561000f57600080fd5b60405160208061069d833981016040528080519150505b5b60038054600160a060020a03191633600160a060020a03161790555b600160a060020a03331660009081526001602052604081208290558190555b505b61062a806100736000396000f300606060405236156100965763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663095ea7b3811461009b57806318160ddd146100d157806323b872dd146100f657806370a08231146101325780638da5cb5b14610163578063a3aff92314610192578063a6f9dae1146101b9578063a9059cbb146101da578063dd62ed3e14610210575b600080fd5b34156100a657600080fd5b6100bd600160a060020a0360043516602435610247565b604051901515815260200160405180910390f35b34156100dc57600080fd5b6100e46102b4565b60405190815260200160405180910390f35b341561010157600080fd5b6100bd600160a060020a03600435811690602435166044356102ba565b604051901515815260200160405180910390f35b341561013d57600080fd5b6100e4600160a060020a03600435166102fd565b60405190815260200160405180910390f35b341561016e57600080fd5b61017661031c565b604051600160a060020a03909116815260200160405180910390f35b341561019d57600080fd5b6101b7600160a060020a036004351660243560443561032b565b005b34156101c457600080fd5b6101b7600160a060020a03600435166103e8565b005b34156101e557600080fd5b6100bd600160a060020a0360043516602435610430565b604051901515815260200160405180910390f35b341561021b57600080fd5b6100e4600160a060020a03600435811690602435166104d7565b60405190815260200160405180910390f35b600160a060020a03338116600081815260026020908152604080832094871680845294909152808220859055909291907f8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b9259085905190815260200160405180910390a35060015b92915050565b60005481565b600160a060020a0380841660009081526002602090815260408083203390941683529290529081208054830190556102f3848484610504565b90505b9392505050565b600160a060020a0381166000908152600160205260409020545b919050565b600354600160a060020a031681565b60035433600160a060020a0390811691161461034657600080fd5b600160a060020a038316600081815260016020526040808220805486019055815485019091558291907fdfb81fb379557413b0a951b4d7bf7a9df393801d8c539d5e201d6a8daeb913b99085905190815260200160405180910390a382600160a060020a031660007fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef8460405190815260200160405180910390a35b5b505050565b60035433600160a060020a0390811691161461040357600080fd5b6003805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0383161790555b5b50565b600160a060020a0333166000908152600160205260408120548290108015906104595750600082115b1561009657600160a060020a033381166000818152600160205260408082208054879003905592861680825290839020805486019055917fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef9085905190815260200160405180910390a35060016102ae565b600080fd5b5b92915050565b600160a060020a038083166000908152600260209081526040808320938516835292905220545b92915050565b600160a060020a0383166000908152600160205260408120548290108015906105545750600160a060020a0380851660009081526002602090815260408083203390941683529290522054829010155b80156105605750600082115b1561009657600160a060020a03808416600081815260016020908152604080832080548801905588851680845281842080548990039055600283528184203390961684529490915290819020805486900390559091907fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef9085905190815260200160405180910390a35060016102f6565b600080fd5b5b93925050505600a165627a7a723058206c439f13ad6f6e6f1dfb80d1f8376937ff17ca98344300189358cec1203c21a60029`
 
 // DeploySampleToken deploys a new Ethereum contract, binding an instance of SampleToken to it.
 func DeploySampleToken(auth *bind.TransactOpts, backend bind.ContractBackend, initialSupply *big.Int) (common.Address, *types.Transaction, *SampleToken, error) {
@@ -899,7 +565,7 @@ func (_SampleToken *SampleTokenTransactorSession) TransferFrom(_from common.Addr
 const StandardTokenABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_spender\",\"type\":\"address\"},{\"name\":\"_value\",\"type\":\"uint256\"}],\"name\":\"approve\",\"outputs\":[{\"name\":\"success\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"totalSupply\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_from\",\"type\":\"address\"},{\"name\":\"_to\",\"type\":\"address\"},{\"name\":\"_value\",\"type\":\"uint256\"}],\"name\":\"transferFrom\",\"outputs\":[{\"name\":\"success\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_owner\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outputs\":[{\"name\":\"balance\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_to\",\"type\":\"address\"},{\"name\":\"_value\",\"type\":\"uint256\"}],\"name\":\"transfer\",\"outputs\":[{\"name\":\"success\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_owner\",\"type\":\"address\"},{\"name\":\"_spender\",\"type\":\"address\"}],\"name\":\"allowance\",\"outputs\":[{\"name\":\"remaining\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"function\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"_from\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"_to\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"_value\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"_owner\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"_spender\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"_value\",\"type\":\"uint256\"}],\"name\":\"Approval\",\"type\":\"event\"}]"
 
 // StandardTokenBin is the compiled bytecode used for deploying new contracts.
-const StandardTokenBin = `0x6060604052341561000f57600080fd5b5b61043b8061001f6000396000f300606060405236156100755763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663095ea7b3811461007a57806318160ddd146100b057806323b872dd146100d557806370a0823114610111578063a9059cbb14610142578063dd62ed3e14610178575b600080fd5b341561008557600080fd5b61009c600160a060020a03600435166024356101af565b604051901515815260200160405180910390f35b34156100bb57600080fd5b6100c361021c565b60405190815260200160405180910390f35b34156100e057600080fd5b61009c600160a060020a0360043581169060243516604435610222565b604051901515815260200160405180910390f35b341561011c57600080fd5b6100c3600160a060020a036004351661031c565b60405190815260200160405180910390f35b341561014d57600080fd5b61009c600160a060020a036004351660243561033b565b604051901515815260200160405180910390f35b341561018357600080fd5b6100c3600160a060020a03600435811690602435166103e2565b60405190815260200160405180910390f35b600160a060020a03338116600081815260026020908152604080832094871680845294909152808220859055909291907f8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b9259085905190815260200160405180910390a35060015b92915050565b60005481565b600160a060020a0383166000908152600160205260408120548290108015906102725750600160a060020a0380851660009081526002602090815260408083203390941683529290522054829010155b801561027e5750600082115b1561007557600160a060020a03808416600081815260016020908152604080832080548801905588851680845281842080548990039055600283528184203390961684529490915290819020805486900390559091907fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef9085905190815260200160405180910390a3506001610314565b600080fd5b5b9392505050565b600160a060020a0381166000908152600160205260409020545b919050565b600160a060020a0333166000908152600160205260408120548290108015906103645750600082115b1561007557600160a060020a033381166000818152600160205260408082208054879003905592861680825290839020805486019055917fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef9085905190815260200160405180910390a3506001610216565b600080fd5b5b92915050565b600160a060020a038083166000908152600260209081526040808320938516835292905220545b929150505600a165627a7a723058207aa3399e12bdf4ac02bb2ba917c98cf5cf42c0aedc0482b41a77141b9504a13a0029`
+const StandardTokenBin = `0x6060604052341561000f57600080fd5b5b61043b8061001f6000396000f300606060405236156100755763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663095ea7b3811461007a57806318160ddd146100b057806323b872dd146100d557806370a0823114610111578063a9059cbb14610142578063dd62ed3e14610178575b600080fd5b341561008557600080fd5b61009c600160a060020a03600435166024356101af565b604051901515815260200160405180910390f35b34156100bb57600080fd5b6100c361021c565b60405190815260200160405180910390f35b34156100e057600080fd5b61009c600160a060020a0360043581169060243516604435610222565b604051901515815260200160405180910390f35b341561011c57600080fd5b6100c3600160a060020a036004351661031c565b60405190815260200160405180910390f35b341561014d57600080fd5b61009c600160a060020a036004351660243561033b565b604051901515815260200160405180910390f35b341561018357600080fd5b6100c3600160a060020a03600435811690602435166103e2565b60405190815260200160405180910390f35b600160a060020a03338116600081815260026020908152604080832094871680845294909152808220859055909291907f8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b9259085905190815260200160405180910390a35060015b92915050565b60005481565b600160a060020a0383166000908152600160205260408120548290108015906102725750600160a060020a0380851660009081526002602090815260408083203390941683529290522054829010155b801561027e5750600082115b1561007557600160a060020a03808416600081815260016020908152604080832080548801905588851680845281842080548990039055600283528184203390961684529490915290819020805486900390559091907fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef9085905190815260200160405180910390a3506001610314565b600080fd5b5b9392505050565b600160a060020a0381166000908152600160205260409020545b919050565b600160a060020a0333166000908152600160205260408120548290108015906103645750600082115b1561007557600160a060020a033381166000818152600160205260408082208054879003905592861680825290839020805486019055917fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef9085905190815260200160405180910390a3506001610216565b600080fd5b5b92915050565b600160a060020a038083166000908152600260209081526040808320938516835292905220545b929150505600a165627a7a7230582048977c08230929ef6eb2126bc965691030242f511f3ecd7f177cf1b4c240f64e0029`
 
 // DeployStandardToken deploys a new Ethereum contract, binding an instance of StandardToken to it.
 func DeployStandardToken(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *StandardToken, error) {
@@ -1183,18 +849,18 @@ func (_StandardToken *StandardTokenTransactorSession) TransferFrom(_from common.
 }
 
 // SwearGameABI is the input ABI used to generate the binding from.
-const SwearGameABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"reward\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"playerCount\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_player\",\"type\":\"address\"}],\"name\":\"register\",\"outputs\":[{\"name\":\"registered\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"id\",\"type\":\"bytes32\"}],\"name\":\"getStatus\",\"outputs\":[{\"name\":\"status\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"address\"},{\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"ids\",\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_newOwner\",\"type\":\"address\"}],\"name\":\"changeOwner\",\"outputs\":[],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"trialTransistions\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"serviceId\",\"type\":\"bytes32\"}],\"name\":\"newCase\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"deposit\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"caseContract\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"address\"}],\"name\":\"players\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"id\",\"type\":\"bytes32\"}],\"name\":\"resumeCase\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"token\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"inputs\":[{\"name\":\"_CaseContract\",\"type\":\"address\"},{\"name\":\"_token\",\"type\":\"address\"},{\"name\":\"_trialTransistions\",\"type\":\"address\"},{\"name\":\"_reward\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"constructor\"},{\"payable\":true,\"type\":\"fallback\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"decide\",\"type\":\"string\"}],\"name\":\"Decision\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"depositAmount\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"deposit\",\"type\":\"uint256\"}],\"name\":\"DepositStaked\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"recipient\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"reward\",\"type\":\"uint256\"}],\"name\":\"Compensate\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"playerId\",\"type\":\"address\"}],\"name\":\"NewPlayer\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"playerId\",\"type\":\"address\"}],\"name\":\"PlayerLeftGame\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"id\",\"type\":\"bytes32\"},{\"indexed\":false,\"name\":\"plaintiff\",\"type\":\"address\"}],\"name\":\"NewClaimOpened\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"id\",\"type\":\"bytes32\"},{\"indexed\":false,\"name\":\"plaintiff\",\"type\":\"address\"}],\"name\":\"NewEvidenceSubmitted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"id\",\"type\":\"bytes32\"},{\"indexed\":false,\"name\":\"plaintiff\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"reward\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"status\",\"type\":\"uint8\"}],\"name\":\"ClaimResolved\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"from\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Payment\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"deposit\",\"type\":\"uint256\"}],\"name\":\"AdditionalDepositRequired\",\"type\":\"event\"}]"
+const SwearGameABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"reward\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"playerCount\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_player\",\"type\":\"address\"}],\"name\":\"register\",\"outputs\":[{\"name\":\"registered\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"id\",\"type\":\"bytes32\"}],\"name\":\"getStatus\",\"outputs\":[{\"name\":\"status\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"address\"},{\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"ids\",\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_newOwner\",\"type\":\"address\"}],\"name\":\"changeOwner\",\"outputs\":[],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"trialTransistions\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"serviceId\",\"type\":\"bytes32\"}],\"name\":\"newCase\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"id\",\"type\":\"bytes32\"}],\"name\":\"trial\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"deposit\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"address\"}],\"name\":\"players\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"token\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"inputs\":[{\"name\":\"_token\",\"type\":\"address\"},{\"name\":\"_trialTransistions\",\"type\":\"address\"},{\"name\":\"_reward\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"constructor\"},{\"payable\":true,\"type\":\"fallback\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"decide\",\"type\":\"string\"}],\"name\":\"Decision\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"depositAmount\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"deposit\",\"type\":\"uint256\"}],\"name\":\"DepositStaked\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"recipient\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"reward\",\"type\":\"uint256\"}],\"name\":\"Compensate\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"playerId\",\"type\":\"address\"}],\"name\":\"NewPlayer\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"playerId\",\"type\":\"address\"}],\"name\":\"PlayerLeftGame\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"id\",\"type\":\"bytes32\"},{\"indexed\":false,\"name\":\"plaintiff\",\"type\":\"address\"}],\"name\":\"NewClaimOpened\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"id\",\"type\":\"bytes32\"},{\"indexed\":false,\"name\":\"plaintiff\",\"type\":\"address\"}],\"name\":\"NewEvidenceSubmitted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"id\",\"type\":\"bytes32\"},{\"indexed\":false,\"name\":\"plaintiff\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"reward\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"status\",\"type\":\"uint8\"}],\"name\":\"ClaimResolved\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"from\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Payment\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"deposit\",\"type\":\"uint256\"}],\"name\":\"AdditionalDepositRequired\",\"type\":\"event\"}]"
 
 // SwearGameBin is the compiled bytecode used for deploying new contracts.
-const SwearGameBin = `0x6060604052341561000f57600080fd5b6040516080806111a2833981016040528080519190602001805191906020018051919060200180519150505b5b60008054600160a060020a03191633600160a060020a03161790555b60068054600160a060020a03808716600160a060020a031992831617909255600780548684169083161790556008805492851692909116919091179055600281905560006003555b505050505b6110ee806100b46000396000f300606060405236156100b45763ffffffff60e060020a600035041663228cb73381146101a2578063302bcc57146101c75780634420e486146101ec5780635de28ae01461021f5780638da5cb5b1461024b5780639f20bc921461027a578063a6f9dae1146102ae578063c41a3477146102cf578063cc345e0a146102fe578063d0e30db014610328578063d556e8e61461034d578063e2eb41ff1461037c578063e375bebd146103af578063fc0c546a146103d9575b6101a05b600754600080543492600160a060020a03908116926323b872dd9290911690309085906040516020015260405160e060020a63ffffffff8616028152600160a060020a0393841660048201529190921660248201526044810191909152606401602060405180830381600087803b151561013157600080fd5b6102c65a03f1151561014257600080fd5b50505060405180519050151561015757600080fd5b600180548201908190557f3a7e173a9698235104076a0f536c5169527adecd20d0938c7c156ddf776c859190829060405191825260208201526040908101905180910390a15b50565b005b34156101ad57600080fd5b6101b5610408565b60405190815260200160405180910390f35b34156101d257600080fd5b6101b561040e565b60405190815260200160405180910390f35b34156101f757600080fd5b61020b600160a060020a0360043516610414565b604051901515815260200160405180910390f35b341561022a57600080fd5b610235600435610541565b60405160ff909116815260200160405180910390f35b341561025657600080fd5b61025e6105b6565b604051600160a060020a03909116815260200160405180910390f35b341561028557600080fd5b6101b5600160a060020a03600435166024356105c5565b60405190815260200160405180910390f35b34156102b957600080fd5b6101a0600160a060020a03600435166105f7565b005b34156102da57600080fd5b61025e61063f565b604051600160a060020a03909116815260200160405180910390f35b341561030957600080fd5b61020b60043561064e565b604051901515815260200160405180910390f35b341561033357600080fd5b6101b5610826565b60405190815260200160405180910390f35b341561035857600080fd5b61025e61082c565b604051600160a060020a03909116815260200160405180910390f35b341561038757600080fd5b61020b600160a060020a036004351661083b565b604051901515815260200160405180910390f35b34156103ba57600080fd5b61020b600435610850565b604051901515815260200160405180910390f35b34156103e457600080fd5b61025e610900565b604051600160a060020a03909116815260200160405180910390f35b60025481565b60035481565b6000805433600160a060020a0390811691161461043057600080fd5b600160a060020a03821660009081526004602052604090205460ff161561045657600080fd5b600354151561047557600254600154101561047057600080fd5b6104c8565b60025460035460015481151561048757fe5b0410156104c8577fa8ff0fbf8dc82e5914523ed3a828920f55ab93494c59933e8c45d79f8bba70d760015460405190815260200160405180910390a1600080fd5b5b600160a060020a03821660009081526004602052604090819020805460ff191660019081179091556003805490910190557f52e92d4898337244a39bd42674ac561eadfd3959e947deec1c0ab82dd58b5a7590839051600160a060020a03909116815260200160405180910390a15060015b5b919050565b600654600090600160a060020a0316635de28ae083836040516020015260405160e060020a63ffffffff84160281526004810191909152602401602060405180830381600087803b151561059457600080fd5b6102c65a03f115156105a557600080fd5b50505060405180519150505b919050565b600054600160a060020a031681565b6005602052816000526040600020818154811015156105e057fe5b906000526020600020900160005b91509150505481565b60005433600160a060020a0390811691161461061257600080fd5b6000805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0383161790555b5b50565b600854600160a060020a031681565b600160a060020a033316600090815260046020526040812054819060ff16151561067757600080fd5b600654600854600160a060020a0391821691631f0b2d579133918791166307e5ae5f6000604051602001526040518163ffffffff1660e060020a028152600401602060405180830381600087803b15156106d057600080fd5b6102c65a03f115156106e157600080fd5b5050506040518051600854909150600160a060020a031663ada016106000604051602001526040518163ffffffff1660e060020a028152600401602060405180830381600087803b151561073457600080fd5b6102c65a03f1151561074557600080fd5b5050506040518051905060006040516020015260405160e060020a63ffffffff8716028152600160a060020a039094166004850152602484019290925260ff1660448301526064820152608401602060405180830381600087803b15156107ab57600080fd5b6102c65a03f115156107bc57600080fd5b50505060405180519150508015156107d75760009150610820565b600160a060020a03331660009081526005602052604090208054600181016107ff8382611077565b916000526020600020900160005b508290555061081b8161090f565b600191505b50919050565b60015481565b600654600160a060020a031681565b60046020526000908152604090205460ff1681565b600160a060020a03331660009081526004602052604081205460ff16151561087757600080fd5b600654600160a060020a0316636a9385678360006040516020015260405160e060020a63ffffffff84160281526004810191909152602401602060405180830381600087803b15156108c857600080fd5b6102c65a03f115156108d957600080fd5b5050506040518051905015156108ee57600080fd5b6108f78261090f565b5060015b919050565b600754600160a060020a031681565b60065460009081908190819081908190600160a060020a0316635de28ae088836040516020015260405160e060020a63ffffffff84160281526004810191909152602401602060405180830381600087803b151561096c57600080fd5b6102c65a03f1151561097d57600080fd5b5050506040518051600654909750600160a060020a0316905063c9100bcb8860006040516060015260405160e060020a63ffffffff84160281526004810191909152602401606060405180830381600087803b15156109db57600080fd5b6102c65a03f115156109ec57600080fd5b5050506040518051906020018051906020018051929750909550909350600090505b60ff168660ff161415610a2057610d88565b5b60005b60ff878116911614610d8857610a3983610d92565b15610abb57600654600160a060020a0316638de654ba8860005b60006040516020015260405160e060020a63ffffffff8516028152600481019290925260ff166024820152604401602060405180830381600087803b1515610a9a57600080fd5b6102c65a03f11515610aab57600080fd5b5050506040518051905050610d88565b600854600160a060020a031663db0615638760006040516020015260405160e060020a63ffffffff841602815260ff9091166004820152602401602060405180830381600087803b1515610b0e57600080fd5b6102c65a03f11515610b1f57600080fd5b5050506040518051925050600160a060020a0382161515610b4957610b42610d9c565b9050610d88565b81600160a060020a031663f243aee5858760006040516020015260405160e060020a63ffffffff85160281526004810192909252600160a060020a03166024820152604401602060405180830381600087803b1515610ba757600080fd5b6102c65a03f11515610bb857600080fd5b50505060405180519150505b60025b816002811115610bd357fe5b1415610bde57610d88565b600854600160a060020a031663d39eb301826002811115610bfb57fe5b8860006040516020015260405160e060020a63ffffffff851602815260ff928316600482015291166024820152604401602060405180830381600087803b1515610c4457600080fd5b6102c65a03f11515610c5557600080fd5b5050506040518051600654909750600160a060020a03169050638de654ba888860006040516020015260405160e060020a63ffffffff8516028152600481019290925260ff166024820152604401602060405180830381600087803b1515610cbc57600080fd5b6102c65a03f11515610ccd57600080fd5b505050604051805150600190505b60ff168660ff161480610cf5575060025b60ff168660ff16145b15610d8257610d05878787610da2565b5060005b600654909650600160a060020a0316638de654ba888860006040516020015260405160e060020a63ffffffff8516028152600481019290925260ff166024820152604401602060405180830381600087803b1515610d6657600080fd5b6102c65a03f11515610d7757600080fd5b505050604051805150505b5b610a20565b5b50505050505050565b428190115b919050565b60025b90565b60008060025b60ff168460ff161415610e19577f2f18444e939f85d10c4f7ad5f7de36bc69f5d99ff0e6614a6accbb2f0118e4778584600087604051938452600160a060020a03909216602084015260408084019190915260ff90911660608301526080909101905180910390a160009150610eea565b610e2283610ef2565b600654909150600160a060020a031663c1203cb88660405160e060020a63ffffffff84160281526004810191909152602401600060405180830381600087803b1515610e6d57600080fd5b6102c65a03f11515610e7e57600080fd5b505050610e8a83610fe5565b7f2f18444e939f85d10c4f7ad5f7de36bc69f5d99ff0e6614a6accbb2f0118e477858460025487604051938452600160a060020a03909216602084015260408084019190915260ff90911660608301526080909101905180910390a18091505b509392505050565b600754600254600091600160a060020a0316906323b872dd9030908590856040516020015260405160e060020a63ffffffff8616028152600160a060020a0393841660048201529190921660248201526044810191909152606401602060405180830381600087803b1515610f6657600080fd5b6102c65a03f11515610f7757600080fd5b5050506040518051915050801515610f8e57600080fd5b6002546001805482900390557f92c2a7173158b7618078365b4ad89fd1f774ae4aa04f39e10b966b47f469d34b908390604051600160a060020a03909216825260208201526040908101905180910390a15b919050565b600160a060020a03811660009081526004602052604090205460ff16151561100c57600080fd5b7f3def0aea61e344e47b98a0523a5825c0919e88f7b33d0ac7f889a7654880f9a581604051600160a060020a03909116815260200160405180910390a1600160a060020a0381166000908152600460205260409020805460ff19169055600380546000190190555b50565b81548183558181151161109b5760008381526020902061109b9181019083016110a1565b5b505050565b610d9f91905b808211156110bb57600081556001016110a7565b5090565b905600a165627a7a72305820a3ef61bc7d31f713d9fcef5f983a8cdbc65055ebeac284a48297f7c3a3f663f00029`
+const SwearGameBin = `0x6060604052341561000f57600080fd5b60405160608061104d8339810160405280805191906020018051919060200180519150505b5b60008054600160a060020a03191633600160a060020a03161790555b60048054600160a060020a03808616600160a060020a0319928316179092556005805492851692909116919091179055600281905560006003555b5050505b610fae8061009f6000396000f300606060405236156100a95763ffffffff60e060020a600035041663228cb7338114610197578063302bcc57146101bc5780634420e486146101e15780635de28ae0146102145780638da5cb5b146102405780639f20bc921461026f578063a6f9dae1146102a3578063c41a3477146102c4578063cc345e0a146102f3578063cf343bb81461031d578063d0e30db014610347578063e2eb41ff1461036c578063fc0c546a1461039f575b6101955b600454600080543492600160a060020a03908116926323b872dd9290911690309085906040516020015260405160e060020a63ffffffff8616028152600160a060020a0393841660048201529190921660248201526044810191909152606401602060405180830381600087803b151561012657600080fd5b6102c65a03f1151561013757600080fd5b50505060405180519050151561014c57600080fd5b600180548201908190557f3a7e173a9698235104076a0f536c5169527adecd20d0938c7c156ddf776c859190829060405191825260208201526040908101905180910390a15b50565b005b34156101a257600080fd5b6101aa6103ce565b60405190815260200160405180910390f35b34156101c757600080fd5b6101aa6103d4565b60405190815260200160405180910390f35b34156101ec57600080fd5b610200600160a060020a03600435166103da565b604051901515815260200160405180910390f35b341561021f57600080fd5b61022a600435610507565b60405160ff909116815260200160405180910390f35b341561024b57600080fd5b610253610522565b604051600160a060020a03909116815260200160405180910390f35b341561027a57600080fd5b6101aa600160a060020a0360043516602435610531565b60405190815260200160405180910390f35b34156102ae57600080fd5b610195600160a060020a0360043516610563565b005b34156102cf57600080fd5b6102536105ab565b604051600160a060020a03909116815260200160405180910390f35b34156102fe57600080fd5b6102006004356105ba565b604051901515815260200160405180910390f35b341561032857600080fd5b61020060043561070f565b604051901515815260200160405180910390f35b341561035257600080fd5b6101aa61075c565b60405190815260200160405180910390f35b341561037757600080fd5b610200600160a060020a0360043516610762565b604051901515815260200160405180910390f35b34156103aa57600080fd5b610253610777565b604051600160a060020a03909116815260200160405180910390f35b60025481565b60035481565b6000805433600160a060020a039081169116146103f657600080fd5b600160a060020a03821660009081526007602052604090205460ff161561041c57600080fd5b600354151561043b57600254600154101561043657600080fd5b61048e565b60025460035460015481151561044d57fe5b04101561048e577fa8ff0fbf8dc82e5914523ed3a828920f55ab93494c59933e8c45d79f8bba70d760015460405190815260200160405180910390a1600080fd5b5b600160a060020a03821660009081526007602052604090819020805460ff191660019081179091556003805490910190557f52e92d4898337244a39bd42674ac561eadfd3959e947deec1c0ab82dd58b5a7590839051600160a060020a03909116815260200160405180910390a15060015b5b919050565b60008181526006602052604090206003015460ff165b919050565b600054600160a060020a031681565b60086020528160005260406000208181548110151561054c57fe5b906000526020600020900160005b91509150505481565b60005433600160a060020a0390811691161461057e57600080fd5b6000805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0383161790555b5b50565b600554600160a060020a031681565b600160a060020a033316600090815260076020526040812054819060ff1615156105e357600080fd5b6005546106b79033908590600160a060020a03166307e5ae5f6000604051602001526040518163ffffffff1660e060020a028152600401602060405180830381600087803b151561063357600080fd5b6102c65a03f1151561064457600080fd5b5050506040518051600554909150600160a060020a031663ada016106000604051602001526040518163ffffffff1660e060020a028152600401602060405180830381600087803b151561069757600080fd5b6102c65a03f115156106a857600080fd5b50505060405180519050610786565b90508015156106c95760009150610709565b600160a060020a03331660009081526008602052604090208054600181016106f18382610f02565b916000526020600020900160005b5082905550600191505b50919050565b600160a060020a03331660009081526007602052604081205460ff16151561073657600080fd5b61073f826108d0565b151561074a57600080fd5b610753826108ed565b5060015b919050565b60015481565b60076020526000908152604090205460ff1681565b600454600160a060020a031681565b6000610790610f2c565b858542604051600160a060020a03939093166c01000000000000000000000000028352601483019190915260348201526054016040519081900390208152600660008251815260208101919091526040016000206005015460ff16156107f957600091506108c7565b600160a060020a03861660208201526040810185905260ff84166060820152600160a08201524383016080820152806006600082518152602081019190915260400160002081518155602082015160018201805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a039290921691909117905560408201516002820155606082015160038201805460ff191660ff929092169190911790556080820151816004015560a0820151600591909101805460ff191660ff90921691909117905550805191505b50949350505050565b60008181526006602052604090206005015460ff1615155b919050565b6000806000806000806108ff87610507565b955061090a87610b5f565b9196509450925060005b60ff168660ff16141561092657610b55565b5b60005b60ff878116911614610b555761093f83610b92565b15610956576109508760005b610b9c565b50610b55565b600554600160a060020a031663db0615638760006040516020015260405160e060020a63ffffffff841602815260ff9091166004820152602401602060405180830381600087803b15156109a957600080fd5b6102c65a03f115156109ba57600080fd5b5050506040518051925050600160a060020a03821615156109e4576109dd610be1565b9050610b55565b81600160a060020a031663c4b4528388868860006040516020015260405160e060020a63ffffffff861602815260048101939093526024830191909152600160a060020a03166044820152606401602060405180830381600087803b1515610a4b57600080fd5b6102c65a03f11515610a5c57600080fd5b50505060405180519150505b60025b816002811115610a7757fe5b1415610a8257610b55565b600554600160a060020a031663d39eb301826002811115610a9f57fe5b8860006040516020015260405160e060020a63ffffffff851602815260ff928316600482015291166024820152604401602060405180830381600087803b1515610ae857600080fd5b6102c65a03f11515610af957600080fd5b505050604051805190509550610b0f8787610b9c565b5060015b60ff168660ff161480610b2d575060025b60ff168660ff16145b15610b4f57610b3d878787610be7565b5060005b9550610b4d8787610b9c565b505b5b610926565b5b50505050505050565b600081815260066020526040902060018101546002820154600490920154600160a060020a0390911691905b9193909250565b438190115b919050565b6000805433600160a060020a0390811691161415610bb957600080fd5b506000828152600660205260409020600301805460ff191660ff831617905560015b92915050565b60025b90565b60008060025b60ff168460ff161415610c5e577f2f18444e939f85d10c4f7ad5f7de36bc69f5d99ff0e6614a6accbb2f0118e4778584600087604051938452600160a060020a03909216602084015260408084019190915260ff90911660608301526080909101905180910390a160009150610cdb565b610c6783610ce3565b9050610c7285610dd6565b610c7b83610e70565b7f2f18444e939f85d10c4f7ad5f7de36bc69f5d99ff0e6614a6accbb2f0118e477858460025487604051938452600160a060020a03909216602084015260408084019190915260ff90911660608301526080909101905180910390a18091505b509392505050565b600454600254600091600160a060020a0316906323b872dd9030908590856040516020015260405160e060020a63ffffffff8616028152600160a060020a0393841660048201529190921660248201526044810191909152606401602060405180830381600087803b1515610d5757600080fd5b6102c65a03f11515610d6857600080fd5b5050506040518051915050801515610d7f57600080fd5b6002546001805482900390557f92c2a7173158b7618078365b4ad89fd1f774ae4aa04f39e10b966b47f469d34b908390604051600160a060020a03909216825260208201526040908101905180910390a15b919050565b6000818152600660205260409020541580610e03575060008181526006602052604090206003015460ff16155b15610e0d57600080fd5b600081815260066020526040812081815560018101805473ffffffffffffffffffffffffffffffffffffffff19169055600501805460ff191690555b6000828152600660205260409020600301805460ff191660ff929092169190911790555b50565b600160a060020a03811660009081526007602052604090205460ff161515610e9757600080fd5b7f3def0aea61e344e47b98a0523a5825c0919e88f7b33d0ac7f889a7654880f9a581604051600160a060020a03909116815260200160405180910390a1600160a060020a0381166000908152600760205260409020805460ff19169055600380546000190190555b50565b815481835581811511610f2657600083815260209020610f26918101908301610f61565b5b505050565b60c06040519081016040908152600080835260208301819052908201819052606082018190526080820181905260a082015290565b610be491905b80821115610f7b5760008155600101610f67565b5090565b905600a165627a7a723058205903db143d81442f78346c84390b8cfff2eb9e8357fa3d1291addd77a8b6664e0029`
 
 // DeploySwearGame deploys a new Ethereum contract, binding an instance of SwearGame to it.
-func DeploySwearGame(auth *bind.TransactOpts, backend bind.ContractBackend, _CaseContract common.Address, _token common.Address, _trialTransistions common.Address, _reward *big.Int) (common.Address, *types.Transaction, *SwearGame, error) {
+func DeploySwearGame(auth *bind.TransactOpts, backend bind.ContractBackend, _token common.Address, _trialTransistions common.Address, _reward *big.Int) (common.Address, *types.Transaction, *SwearGame, error) {
 	parsed, err := abi.JSON(strings.NewReader(SwearGameABI))
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(SwearGameBin), backend, _CaseContract, _token, _trialTransistions, _reward)
+	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(SwearGameBin), backend, _token, _trialTransistions, _reward)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -1326,32 +992,6 @@ func (_SwearGame *SwearGameTransactorRaw) Transfer(opts *bind.TransactOpts) (*ty
 // Transact invokes the (paid) contract method with params as input values.
 func (_SwearGame *SwearGameTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
 	return _SwearGame.Contract.contract.Transact(opts, method, params...)
-}
-
-// CaseContract is a free data retrieval call binding the contract method 0xd556e8e6.
-//
-// Solidity: function caseContract() constant returns(address)
-func (_SwearGame *SwearGameCaller) CaseContract(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _SwearGame.contract.Call(opts, out, "caseContract")
-	return *ret0, err
-}
-
-// CaseContract is a free data retrieval call binding the contract method 0xd556e8e6.
-//
-// Solidity: function caseContract() constant returns(address)
-func (_SwearGame *SwearGameSession) CaseContract() (common.Address, error) {
-	return _SwearGame.Contract.CaseContract(&_SwearGame.CallOpts)
-}
-
-// CaseContract is a free data retrieval call binding the contract method 0xd556e8e6.
-//
-// Solidity: function caseContract() constant returns(address)
-func (_SwearGame *SwearGameCallerSession) CaseContract() (common.Address, error) {
-	return _SwearGame.Contract.CaseContract(&_SwearGame.CallOpts)
 }
 
 // Deposit is a free data retrieval call binding the contract method 0xd0e30db0.
@@ -1651,25 +1291,25 @@ func (_SwearGame *SwearGameTransactorSession) Register(_player common.Address) (
 	return _SwearGame.Contract.Register(&_SwearGame.TransactOpts, _player)
 }
 
-// ResumeCase is a paid mutator transaction binding the contract method 0xe375bebd.
+// Trial is a paid mutator transaction binding the contract method 0xcf343bb8.
 //
-// Solidity: function resumeCase(id bytes32) returns(bool)
-func (_SwearGame *SwearGameTransactor) ResumeCase(opts *bind.TransactOpts, id [32]byte) (*types.Transaction, error) {
-	return _SwearGame.contract.Transact(opts, "resumeCase", id)
+// Solidity: function trial(id bytes32) returns(bool)
+func (_SwearGame *SwearGameTransactor) Trial(opts *bind.TransactOpts, id [32]byte) (*types.Transaction, error) {
+	return _SwearGame.contract.Transact(opts, "trial", id)
 }
 
-// ResumeCase is a paid mutator transaction binding the contract method 0xe375bebd.
+// Trial is a paid mutator transaction binding the contract method 0xcf343bb8.
 //
-// Solidity: function resumeCase(id bytes32) returns(bool)
-func (_SwearGame *SwearGameSession) ResumeCase(id [32]byte) (*types.Transaction, error) {
-	return _SwearGame.Contract.ResumeCase(&_SwearGame.TransactOpts, id)
+// Solidity: function trial(id bytes32) returns(bool)
+func (_SwearGame *SwearGameSession) Trial(id [32]byte) (*types.Transaction, error) {
+	return _SwearGame.Contract.Trial(&_SwearGame.TransactOpts, id)
 }
 
-// ResumeCase is a paid mutator transaction binding the contract method 0xe375bebd.
+// Trial is a paid mutator transaction binding the contract method 0xcf343bb8.
 //
-// Solidity: function resumeCase(id bytes32) returns(bool)
-func (_SwearGame *SwearGameTransactorSession) ResumeCase(id [32]byte) (*types.Transaction, error) {
-	return _SwearGame.Contract.ResumeCase(&_SwearGame.TransactOpts, id)
+// Solidity: function trial(id bytes32) returns(bool)
+func (_SwearGame *SwearGameTransactorSession) Trial(id [32]byte) (*types.Transaction, error) {
+	return _SwearGame.Contract.Trial(&_SwearGame.TransactOpts, id)
 }
 
 // TokenABI is the input ABI used to generate the binding from.
@@ -2190,7 +1830,7 @@ func (_TrialTransistionsAbstract *TrialTransistionsAbstractTransactorSession) Ge
 }
 
 // WitnessAbstractABI is the input ABI used to generate the binding from.
-const WitnessAbstractABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"clientAddress\",\"type\":\"address\"}],\"name\":\"testimonyFor\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"}]"
+const WitnessAbstractABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"clientAddress\",\"type\":\"address\"}],\"name\":\"testimonyFor\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"}]"
 
 // WitnessAbstractBin is the compiled bytecode used for deploying new contracts.
 const WitnessAbstractBin = `0x`
@@ -2335,23 +1975,23 @@ func (_WitnessAbstract *WitnessAbstractTransactorRaw) Transact(opts *bind.Transa
 	return _WitnessAbstract.Contract.contract.Transact(opts, method, params...)
 }
 
-// TestimonyFor is a paid mutator transaction binding the contract method 0xf243aee5.
+// TestimonyFor is a paid mutator transaction binding the contract method 0xc4b45283.
 //
-// Solidity: function testimonyFor(serviceId bytes32, clientAddress address) returns(uint8)
-func (_WitnessAbstract *WitnessAbstractTransactor) TestimonyFor(opts *bind.TransactOpts, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
-	return _WitnessAbstract.contract.Transact(opts, "testimonyFor", serviceId, clientAddress)
+// Solidity: function testimonyFor(caseId bytes32, serviceId bytes32, clientAddress address) returns(uint8)
+func (_WitnessAbstract *WitnessAbstractTransactor) TestimonyFor(opts *bind.TransactOpts, caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _WitnessAbstract.contract.Transact(opts, "testimonyFor", caseId, serviceId, clientAddress)
 }
 
-// TestimonyFor is a paid mutator transaction binding the contract method 0xf243aee5.
+// TestimonyFor is a paid mutator transaction binding the contract method 0xc4b45283.
 //
-// Solidity: function testimonyFor(serviceId bytes32, clientAddress address) returns(uint8)
-func (_WitnessAbstract *WitnessAbstractSession) TestimonyFor(serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
-	return _WitnessAbstract.Contract.TestimonyFor(&_WitnessAbstract.TransactOpts, serviceId, clientAddress)
+// Solidity: function testimonyFor(caseId bytes32, serviceId bytes32, clientAddress address) returns(uint8)
+func (_WitnessAbstract *WitnessAbstractSession) TestimonyFor(caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _WitnessAbstract.Contract.TestimonyFor(&_WitnessAbstract.TransactOpts, caseId, serviceId, clientAddress)
 }
 
-// TestimonyFor is a paid mutator transaction binding the contract method 0xf243aee5.
+// TestimonyFor is a paid mutator transaction binding the contract method 0xc4b45283.
 //
-// Solidity: function testimonyFor(serviceId bytes32, clientAddress address) returns(uint8)
-func (_WitnessAbstract *WitnessAbstractTransactorSession) TestimonyFor(serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
-	return _WitnessAbstract.Contract.TestimonyFor(&_WitnessAbstract.TransactOpts, serviceId, clientAddress)
+// Solidity: function testimonyFor(caseId bytes32, serviceId bytes32, clientAddress address) returns(uint8)
+func (_WitnessAbstract *WitnessAbstractTransactorSession) TestimonyFor(caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _WitnessAbstract.Contract.TestimonyFor(&_WitnessAbstract.TransactOpts, caseId, serviceId, clientAddress)
 }

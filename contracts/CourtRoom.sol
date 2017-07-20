@@ -4,84 +4,70 @@ import "./owned.sol";
 import "./sampletoken.sol";
 import "./abstracts/trialtransitionsabstract.sol";
 
-
-contract CaseContract is Owned {
-
-	struct Case {
-		bytes32 id;
-		address plaintiff;
-    bytes32 serviceId;
-		uint8 status;
-    uint expiery;
-    uint8 valid;
-	}
-
-	//id map to _Case
-  mapping(bytes32 => Case)  OpenCases;
-
-	function CaseContract() {
-	}
-
-	function newClaim(address _plaintiff,bytes32 _serviceId,uint8 status,uint expiery) returns (bytes32 id) {
-
-	   Case memory _case;
-		_case.id = sha3(_plaintiff,_serviceId, now);
-     if (OpenCases[_case.id].valid != 0)return 0x0;
-		_case.plaintiff = _plaintiff;
-    _case.serviceId = _serviceId;
-    _case.status = status;
-		_case.valid = 1;
-    _case.expiery = now + expiery;
-		 OpenCases[_case.id] = _case;
-		return _case.id;
-	}
-
-  function isValid(bytes32 id) constant returns (bool){
-    return (OpenCases[id].valid != 0);
-  }
-
-  function getStatus(bytes32 id) constant returns (uint8 status) {
-		return OpenCases[id].status;
-	}
-
-  function setStatus(bytes32 id,uint8 status) constant returns (bool) {
-	 OpenCases[id].status = status;
-   return true;
-	}
-
-	function resolveClaim(bytes32 _id) {
-
-		if (OpenCases[_id].id == 0x0 || OpenCases[_id].status == 0) throw;
-		OpenCases[_id].id = 0x0;
-		OpenCases[_id].plaintiff = 0;
-    OpenCases[_id].valid = 0;
-		OpenCases[_id].status = uint8(TrialTransistionsAbstract.Status.UNCHALLENGED);
-	}
-  function getClaim(bytes32 _id) returns (address plaintiff,bytes32 serviceId,uint256 expiery) {
-          return (OpenCases[_id].plaintiff,OpenCases[_id].serviceId,OpenCases[_id].expiery);
-  }
-}
-
 contract SwearGame is Owned {
 
 	uint256 public deposit;
 	uint public reward;
 	uint  public playerCount;
-	mapping(address => bool) public players;
-	mapping(address => bytes32[]) public ids;
-
-	CaseContract public caseContract;
 	SampleToken public token;
   TrialTransistionsAbstract public trialTransistions;
+  struct Case {
+    bytes32 id;
+    address plaintiff;
+    bytes32 serviceId;
+    uint8 status;
+    uint expiery;
+    uint8 valid;
+  }
+  //id map to _Case
+  mapping(bytes32 => Case)  OpenCases;
+  mapping(address => bool) public players;
+	mapping(address => bytes32[]) public ids;
 
-	function SwearGame(address _CaseContract, address _token, address _trialTransistions, uint _reward) {
-		caseContract = CaseContract(_CaseContract);
+  function SwearGame(address _token, address _trialTransistions, uint _reward) {
 		token        = SampleToken(_token);
     trialTransistions    = TrialTransistionsAbstract(_trialTransistions);
 		reward = _reward;
 		playerCount = 0;
 	}
 
+  function newClaim(address _plaintiff,bytes32 _serviceId,uint8 status,uint expiery) private returns (bytes32 id) {
+
+     Case memory _case;
+    _case.id = sha3(_plaintiff,_serviceId, now);
+     if (OpenCases[_case.id].valid != 0)return 0x0;
+    _case.plaintiff = _plaintiff;
+    _case.serviceId = _serviceId;
+    _case.status = status;
+    _case.valid = 1;
+    _case.expiery = block.number + expiery;
+     OpenCases[_case.id] = _case;
+    return _case.id;
+  }
+
+  function isValid(bytes32 id) private constant returns (bool){
+    return (OpenCases[id].valid != 0);
+  }
+
+
+
+  function setStatus(bytes32 id,uint8 status) private constant  returns (bool) {
+    if (msg.sender == owner) throw;
+   OpenCases[id].status = status;
+   return true;
+  }
+
+  function resolveClaim(bytes32 _id) private {
+
+    if (OpenCases[_id].id == 0x0 || OpenCases[_id].status == 0) throw;
+    OpenCases[_id].id = 0x0;
+    OpenCases[_id].plaintiff = 0;
+    OpenCases[_id].valid = 0;
+    OpenCases[_id].status = uint8(TrialTransistionsAbstract.Status.UNCHALLENGED);
+  }
+  function getClaim(bytes32 _id) private returns (address plaintiff,bytes32 serviceId,uint256 expiery) {
+          return (OpenCases[_id].plaintiff,OpenCases[_id].serviceId,OpenCases[_id].expiery);
+  }
 
   /* The function without name is the default function that is called whenever anyone sends funds to a contract */
   function () payable {
@@ -99,7 +85,7 @@ contract SwearGame is Owned {
      }
 
 	  bool caseCompensated = compensate(plaintiff);
-		caseContract.resolveClaim(_id);
+		resolveClaim(_id);
     leaveGame(plaintiff);
 		ClaimResolved(_id, plaintiff, reward,status);
 		return caseCompensated;
@@ -150,37 +136,34 @@ contract SwearGame is Owned {
   }
 
   function getStatus(bytes32 id) public constant returns (uint8 status){
-    return caseContract.getStatus(id);
+    return OpenCases[id].status;
   }
 
 	function newCase(bytes32 serviceId) public returns (bool) {
 
 		require(players[msg.sender]);
 
-		bytes32 id  = caseContract.newClaim(msg.sender,serviceId,uint8(trialTransistions.getInitialStatus()),uint(trialTransistions.getTrialExpiry()));
+		bytes32 id  = newClaim(msg.sender,serviceId,uint8(trialTransistions.getInitialStatus()),uint(trialTransistions.getTrialExpiry()));
 
     if (id == 0x0) return false;
 
 		ids[msg.sender].push(id);
 
-    trial(id);
-
 		return true;
 	}
 
-  function resumeCase(bytes32 id) public returns (bool) {
+  function trial(bytes32 id) public returns (bool){
+    require(players[msg.sender]);
 
-		require(players[msg.sender]);
+    require(isValid(id));
 
-    require(caseContract.isValid(id));
-
-    trial(id);
+    _trial(id);
 
 		return true;
-	}
+  }
 
- function expired(uint256 expiry) private returns(bool){
-   return (now  >  expiry);
+ function expired(uint expiry) private returns(bool){
+   return (block.number  >  expiry);
   }
 
  function proceed() private returns (WitnessAbstract.Status){
@@ -188,12 +171,12 @@ contract SwearGame is Owned {
 
  }
 
- function trial(bytes32 id) private{
+ function _trial(bytes32 id) private{
 
-  uint8 status =   caseContract.getStatus(id);
+  uint8 status =  getStatus(id);
 
 
-  var(plaintiff,serviceId,expiery) = caseContract.getClaim(id);
+  var(plaintiff,serviceId,expiery) = getClaim(id);
 
   if (status == uint8(TrialTransistionsAbstract.Status.UNCHALLENGED)) {
       return;
@@ -201,7 +184,7 @@ contract SwearGame is Owned {
    for (;status != uint8(TrialTransistionsAbstract.Status.UNCHALLENGED);) {
 
         if (expired(expiery)) {
-             caseContract.setStatus(id, uint8(TrialTransistionsAbstract.Status.UNCHALLENGED));
+             setStatus(id, uint8(TrialTransistionsAbstract.Status.UNCHALLENGED));
              return;
         }
 
@@ -214,19 +197,19 @@ contract SwearGame is Owned {
             return;
         } else {
 
-           outcome = witness.testimonyFor(serviceId,plaintiff);
+           outcome = witness.testimonyFor(id,serviceId,plaintiff);
 
        }
        if (outcome == WitnessAbstract.Status.PENDING) {
            return;
       }
       status = trialTransistions.getStatus(uint8(outcome),status);
-      caseContract.setStatus(id,status);
+      setStatus(id,status);
       if ((status == uint8(TrialTransistionsAbstract.Status.GUILTY))||
          (status == uint8(TrialTransistionsAbstract.Status.NOT_GUILTY))){
         verdict(id,status,plaintiff);
         status = uint8(TrialTransistionsAbstract.Status.UNCHALLENGED);
-        caseContract.setStatus(id,status);
+        setStatus(id,status);
       }
   }
 }

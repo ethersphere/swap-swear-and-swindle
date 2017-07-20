@@ -17,7 +17,7 @@ import (
 const OwnedABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_newOwner\",\"type\":\"address\"}],\"name\":\"changeOwner\",\"outputs\":[],\"payable\":false,\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"type\":\"constructor\"}]"
 
 // OwnedBin is the compiled bytecode used for deploying new contracts.
-const OwnedBin = `0x6060604052341561000f57600080fd5b5b60008054600160a060020a03191633600160a060020a03161790555b5b61015c8061003c6000396000f300606060405263ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416638da5cb5b8114610048578063a6f9dae114610084575b600080fd5b341561005357600080fd5b61005b6100b2565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f35b341561008f57600080fd5b6100b073ffffffffffffffffffffffffffffffffffffffff600435166100ce565b005b60005473ffffffffffffffffffffffffffffffffffffffff1681565b6000543373ffffffffffffffffffffffffffffffffffffffff9081169116146100f657600080fd5b6000805473ffffffffffffffffffffffffffffffffffffffff191673ffffffffffffffffffffffffffffffffffffffff83161790555b5b505600a165627a7a723058206df254300b4267feda5385a063902983a959cc06bd413197a638ce3a53ad869e0029`
+const OwnedBin = `0x6060604052341561000f57600080fd5b5b60008054600160a060020a03191633600160a060020a03161790555b5b61015c8061003c6000396000f300606060405263ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416638da5cb5b8114610048578063a6f9dae114610084575b600080fd5b341561005357600080fd5b61005b6100b2565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f35b341561008f57600080fd5b6100b073ffffffffffffffffffffffffffffffffffffffff600435166100ce565b005b60005473ffffffffffffffffffffffffffffffffffffffff1681565b6000543373ffffffffffffffffffffffffffffffffffffffff9081169116146100f657600080fd5b6000805473ffffffffffffffffffffffffffffffffffffffff191673ffffffffffffffffffffffffffffffffffffffff83161790555b5b505600a165627a7a72305820e6722f1c05aff07afcd7e7d2fa4566661cb0bec3fd7ebfb0fb9186206656d03d0029`
 
 // DeployOwned deploys a new Ethereum contract, binding an instance of Owned to it.
 func DeployOwned(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Owned, error) {
@@ -207,10 +207,10 @@ func (_Owned *OwnedTransactorSession) ChangeOwner(_newOwner common.Address) (*ty
 }
 
 // PromiseValidatorABI is the input ABI used to generate the binding from.
-const PromiseValidatorABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_newOwner\",\"type\":\"address\"}],\"name\":\"changeOwner\",\"outputs\":[],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"clientAddress\",\"type\":\"address\"}],\"name\":\"testimonyFor\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"beneficiary\",\"type\":\"address\"},{\"name\":\"blockNumber\",\"type\":\"uint256\"},{\"name\":\"sig_v\",\"type\":\"uint8\"},{\"name\":\"sig_r\",\"type\":\"bytes32\"},{\"name\":\"sig_s\",\"type\":\"bytes32\"}],\"name\":\"submitPromise\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"type\":\"constructor\"}]"
+const PromiseValidatorABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_newOwner\",\"type\":\"address\"}],\"name\":\"changeOwner\",\"outputs\":[],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"beneficiary\",\"type\":\"address\"},{\"name\":\"blockNumber\",\"type\":\"uint256\"},{\"name\":\"sig_v\",\"type\":\"uint8\"},{\"name\":\"sig_r\",\"type\":\"bytes32\"},{\"name\":\"sig_s\",\"type\":\"bytes32\"}],\"name\":\"submitPromise\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"clientAddress\",\"type\":\"address\"}],\"name\":\"testimonyFor\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"type\":\"constructor\"}]"
 
 // PromiseValidatorBin is the compiled bytecode used for deploying new contracts.
-const PromiseValidatorBin = `0x6060604052341561000f57600080fd5b5b5b60008054600160a060020a03191633600160a060020a03161790555b5b5b6104668061003e6000396000f300606060405263ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416638da5cb5b811461005e578063a6f9dae11461008d578063f243aee5146100ae578063fb9e6e77146100f4575b600080fd5b341561006957600080fd5b610071610139565b604051600160a060020a03909116815260200160405180910390f35b341561009857600080fd5b6100ac600160a060020a0360043516610148565b005b34156100b957600080fd5b6100d0600435600160a060020a0360243516610190565b604051808260028111156100e057fe5b60ff16815260200191505060405180910390f35b34156100ff57600080fd5b610125600435600160a060020a036024351660443560ff6064351660843560a43561022e565b604051901515815260200160405180910390f35b600054600160a060020a031681565b60005433600160a060020a0390811691161461016357600080fd5b6000805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0383161790555b5b50565b6000828152600160209081526040808320600160a060020a038516845290915281206005015460ff1615156101c757506002610228565b6000838152600160208181526040808420600160a060020a038781168652925290922080549181015460028201546003830154600490930154610216959490941693919260ff90911691610315565b151561022457506001610228565b5060005b92915050565b6000610238610405565b600160a060020a038716808252602080830188905260ff87166040808501919091526060840187905260808401869052600160a0850181905260008c815290835281812093815292909152902081908151815473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a039190911617815560208201518160010155604082015160028201805460ff191660ff92909216919091179055606082015160038201556080820151600482015560a0820151600591909101805460ff191691151591909117905550600191505b509695505050505050565b6000804386901061032957600091506103fb565b3087876040516c01000000000000000000000000600160a060020a03948516810282529290931690910260148301526028820152604801604051809103902090506001818686866040518060005260200160405260006040516020015260405193845260ff90921660208085019190915260408085019290925260608401929092526080909201915160208103908084039060008661646e5a03f115156103cf57600080fd5b505060206040510351600054600160a060020a039081169116146103f657600091506103fb565b600191505b5095945050505050565b60c06040519081016040908152600080835260208301819052908201819052606082018190526080820181905260a0820152905600a165627a7a72305820a6c1f08f109b541c2a2777e0dbb8abe94a42b2d024891e1381060af34aed403e0029`
+const PromiseValidatorBin = `0x60606040526023600155341561001457600080fd5b5b5b60008054600160a060020a03191633600160a060020a03161790555b5b5b610505806100436000396000f300606060405263ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416638da5cb5b811461005e578063a6f9dae11461008d578063b31e6b91146100ae578063c4b45283146100f6575b600080fd5b341561006957600080fd5b61007161013f565b604051600160a060020a03909116815260200160405180910390f35b341561009857600080fd5b6100ac600160a060020a036004351661014e565b005b34156100b957600080fd5b6100e2600435602435600160a060020a036044351660643560ff6084351660a43560c435610196565b604051901515815260200160405180910390f35b341561010157600080fd5b61011b600435602435600160a060020a0360443516610294565b6040518082600281111561012b57fe5b60ff16815260200191505060405180910390f35b600054600160a060020a031681565b60005433600160a060020a0390811691161461016957600080fd5b6000805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0383161790555b5b50565b60006101a06104a4565b6101a989610374565b156101b75760009150610288565b600160a060020a038716808252602080830188905260ff87166040808501919091526060840187905260808401869052600160a085015260008b81526002835281812093815292909152902081908151815473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a039190911617815560208201518160010155604082015160028201805460ff191660ff92909216919091179055606082015160038201556080820151600482015560a0820151600591909101805460ff191691151591909117905550600191505b50979650505050505050565b6000828152600260209081526040808320600160a060020a038516845290915281206005015460ff16151561030d5760008481526003602052604090205415156102ee576000848152600360205260409020439055610304565b6102f784610374565b156103045750600161036d565b5b50600261036d565b6000838152600260208181526040808420600160a060020a03878116865292529092208054600182015492820154600383015460049093015461035b9592909216939260ff909116916103b4565b15156103695750600161036d565b5060005b9392505050565b600081815260036020526040812054156103aa57600154600083815260036020526040902054430311156103aa575060016103af565b5b5060005b919050565b600080438690106103c8576000915061049a565b3087876040516c01000000000000000000000000600160a060020a03948516810282529290931690910260148301526028820152604801604051809103902090506001818686866040518060005260200160405260006040516020015260405193845260ff90921660208085019190915260408085019290925260608401929092526080909201915160208103908084039060008661646e5a03f1151561046e57600080fd5b505060206040510351600054600160a060020a03908116911614610495576000915061049a565b600191505b5095945050505050565b60c06040519081016040908152600080835260208301819052908201819052606082018190526080820181905260a0820152905600a165627a7a72305820ce17601908c845e332ddb2db55059c9c442c155c8203d2fd9aabe6a4e31a7c3e0029`
 
 // DeployPromiseValidator deploys a new Ethereum contract, binding an instance of PromiseValidator to it.
 func DeployPromiseValidator(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *PromiseValidator, error) {
@@ -399,50 +399,50 @@ func (_PromiseValidator *PromiseValidatorTransactorSession) ChangeOwner(_newOwne
 	return _PromiseValidator.Contract.ChangeOwner(&_PromiseValidator.TransactOpts, _newOwner)
 }
 
-// SubmitPromise is a paid mutator transaction binding the contract method 0xfb9e6e77.
+// SubmitPromise is a paid mutator transaction binding the contract method 0xb31e6b91.
 //
-// Solidity: function submitPromise(serviceId bytes32, beneficiary address, blockNumber uint256, sig_v uint8, sig_r bytes32, sig_s bytes32) returns(bool)
-func (_PromiseValidator *PromiseValidatorTransactor) SubmitPromise(opts *bind.TransactOpts, serviceId [32]byte, beneficiary common.Address, blockNumber *big.Int, sig_v uint8, sig_r [32]byte, sig_s [32]byte) (*types.Transaction, error) {
-	return _PromiseValidator.contract.Transact(opts, "submitPromise", serviceId, beneficiary, blockNumber, sig_v, sig_r, sig_s)
+// Solidity: function submitPromise(caseId bytes32, serviceId bytes32, beneficiary address, blockNumber uint256, sig_v uint8, sig_r bytes32, sig_s bytes32) returns(bool)
+func (_PromiseValidator *PromiseValidatorTransactor) SubmitPromise(opts *bind.TransactOpts, caseId [32]byte, serviceId [32]byte, beneficiary common.Address, blockNumber *big.Int, sig_v uint8, sig_r [32]byte, sig_s [32]byte) (*types.Transaction, error) {
+	return _PromiseValidator.contract.Transact(opts, "submitPromise", caseId, serviceId, beneficiary, blockNumber, sig_v, sig_r, sig_s)
 }
 
-// SubmitPromise is a paid mutator transaction binding the contract method 0xfb9e6e77.
+// SubmitPromise is a paid mutator transaction binding the contract method 0xb31e6b91.
 //
-// Solidity: function submitPromise(serviceId bytes32, beneficiary address, blockNumber uint256, sig_v uint8, sig_r bytes32, sig_s bytes32) returns(bool)
-func (_PromiseValidator *PromiseValidatorSession) SubmitPromise(serviceId [32]byte, beneficiary common.Address, blockNumber *big.Int, sig_v uint8, sig_r [32]byte, sig_s [32]byte) (*types.Transaction, error) {
-	return _PromiseValidator.Contract.SubmitPromise(&_PromiseValidator.TransactOpts, serviceId, beneficiary, blockNumber, sig_v, sig_r, sig_s)
+// Solidity: function submitPromise(caseId bytes32, serviceId bytes32, beneficiary address, blockNumber uint256, sig_v uint8, sig_r bytes32, sig_s bytes32) returns(bool)
+func (_PromiseValidator *PromiseValidatorSession) SubmitPromise(caseId [32]byte, serviceId [32]byte, beneficiary common.Address, blockNumber *big.Int, sig_v uint8, sig_r [32]byte, sig_s [32]byte) (*types.Transaction, error) {
+	return _PromiseValidator.Contract.SubmitPromise(&_PromiseValidator.TransactOpts, caseId, serviceId, beneficiary, blockNumber, sig_v, sig_r, sig_s)
 }
 
-// SubmitPromise is a paid mutator transaction binding the contract method 0xfb9e6e77.
+// SubmitPromise is a paid mutator transaction binding the contract method 0xb31e6b91.
 //
-// Solidity: function submitPromise(serviceId bytes32, beneficiary address, blockNumber uint256, sig_v uint8, sig_r bytes32, sig_s bytes32) returns(bool)
-func (_PromiseValidator *PromiseValidatorTransactorSession) SubmitPromise(serviceId [32]byte, beneficiary common.Address, blockNumber *big.Int, sig_v uint8, sig_r [32]byte, sig_s [32]byte) (*types.Transaction, error) {
-	return _PromiseValidator.Contract.SubmitPromise(&_PromiseValidator.TransactOpts, serviceId, beneficiary, blockNumber, sig_v, sig_r, sig_s)
+// Solidity: function submitPromise(caseId bytes32, serviceId bytes32, beneficiary address, blockNumber uint256, sig_v uint8, sig_r bytes32, sig_s bytes32) returns(bool)
+func (_PromiseValidator *PromiseValidatorTransactorSession) SubmitPromise(caseId [32]byte, serviceId [32]byte, beneficiary common.Address, blockNumber *big.Int, sig_v uint8, sig_r [32]byte, sig_s [32]byte) (*types.Transaction, error) {
+	return _PromiseValidator.Contract.SubmitPromise(&_PromiseValidator.TransactOpts, caseId, serviceId, beneficiary, blockNumber, sig_v, sig_r, sig_s)
 }
 
-// TestimonyFor is a paid mutator transaction binding the contract method 0xf243aee5.
+// TestimonyFor is a paid mutator transaction binding the contract method 0xc4b45283.
 //
-// Solidity: function testimonyFor(serviceId bytes32, clientAddress address) returns(uint8)
-func (_PromiseValidator *PromiseValidatorTransactor) TestimonyFor(opts *bind.TransactOpts, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
-	return _PromiseValidator.contract.Transact(opts, "testimonyFor", serviceId, clientAddress)
+// Solidity: function testimonyFor(caseId bytes32, serviceId bytes32, clientAddress address) returns(uint8)
+func (_PromiseValidator *PromiseValidatorTransactor) TestimonyFor(opts *bind.TransactOpts, caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _PromiseValidator.contract.Transact(opts, "testimonyFor", caseId, serviceId, clientAddress)
 }
 
-// TestimonyFor is a paid mutator transaction binding the contract method 0xf243aee5.
+// TestimonyFor is a paid mutator transaction binding the contract method 0xc4b45283.
 //
-// Solidity: function testimonyFor(serviceId bytes32, clientAddress address) returns(uint8)
-func (_PromiseValidator *PromiseValidatorSession) TestimonyFor(serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
-	return _PromiseValidator.Contract.TestimonyFor(&_PromiseValidator.TransactOpts, serviceId, clientAddress)
+// Solidity: function testimonyFor(caseId bytes32, serviceId bytes32, clientAddress address) returns(uint8)
+func (_PromiseValidator *PromiseValidatorSession) TestimonyFor(caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _PromiseValidator.Contract.TestimonyFor(&_PromiseValidator.TransactOpts, caseId, serviceId, clientAddress)
 }
 
-// TestimonyFor is a paid mutator transaction binding the contract method 0xf243aee5.
+// TestimonyFor is a paid mutator transaction binding the contract method 0xc4b45283.
 //
-// Solidity: function testimonyFor(serviceId bytes32, clientAddress address) returns(uint8)
-func (_PromiseValidator *PromiseValidatorTransactorSession) TestimonyFor(serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
-	return _PromiseValidator.Contract.TestimonyFor(&_PromiseValidator.TransactOpts, serviceId, clientAddress)
+// Solidity: function testimonyFor(caseId bytes32, serviceId bytes32, clientAddress address) returns(uint8)
+func (_PromiseValidator *PromiseValidatorTransactorSession) TestimonyFor(caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _PromiseValidator.Contract.TestimonyFor(&_PromiseValidator.TransactOpts, caseId, serviceId, clientAddress)
 }
 
 // WitnessAbstractABI is the input ABI used to generate the binding from.
-const WitnessAbstractABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"clientAddress\",\"type\":\"address\"}],\"name\":\"testimonyFor\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"}]"
+const WitnessAbstractABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"clientAddress\",\"type\":\"address\"}],\"name\":\"testimonyFor\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"}]"
 
 // WitnessAbstractBin is the compiled bytecode used for deploying new contracts.
 const WitnessAbstractBin = `0x`
@@ -587,23 +587,23 @@ func (_WitnessAbstract *WitnessAbstractTransactorRaw) Transact(opts *bind.Transa
 	return _WitnessAbstract.Contract.contract.Transact(opts, method, params...)
 }
 
-// TestimonyFor is a paid mutator transaction binding the contract method 0xf243aee5.
+// TestimonyFor is a paid mutator transaction binding the contract method 0xc4b45283.
 //
-// Solidity: function testimonyFor(serviceId bytes32, clientAddress address) returns(uint8)
-func (_WitnessAbstract *WitnessAbstractTransactor) TestimonyFor(opts *bind.TransactOpts, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
-	return _WitnessAbstract.contract.Transact(opts, "testimonyFor", serviceId, clientAddress)
+// Solidity: function testimonyFor(caseId bytes32, serviceId bytes32, clientAddress address) returns(uint8)
+func (_WitnessAbstract *WitnessAbstractTransactor) TestimonyFor(opts *bind.TransactOpts, caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _WitnessAbstract.contract.Transact(opts, "testimonyFor", caseId, serviceId, clientAddress)
 }
 
-// TestimonyFor is a paid mutator transaction binding the contract method 0xf243aee5.
+// TestimonyFor is a paid mutator transaction binding the contract method 0xc4b45283.
 //
-// Solidity: function testimonyFor(serviceId bytes32, clientAddress address) returns(uint8)
-func (_WitnessAbstract *WitnessAbstractSession) TestimonyFor(serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
-	return _WitnessAbstract.Contract.TestimonyFor(&_WitnessAbstract.TransactOpts, serviceId, clientAddress)
+// Solidity: function testimonyFor(caseId bytes32, serviceId bytes32, clientAddress address) returns(uint8)
+func (_WitnessAbstract *WitnessAbstractSession) TestimonyFor(caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _WitnessAbstract.Contract.TestimonyFor(&_WitnessAbstract.TransactOpts, caseId, serviceId, clientAddress)
 }
 
-// TestimonyFor is a paid mutator transaction binding the contract method 0xf243aee5.
+// TestimonyFor is a paid mutator transaction binding the contract method 0xc4b45283.
 //
-// Solidity: function testimonyFor(serviceId bytes32, clientAddress address) returns(uint8)
-func (_WitnessAbstract *WitnessAbstractTransactorSession) TestimonyFor(serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
-	return _WitnessAbstract.Contract.TestimonyFor(&_WitnessAbstract.TransactOpts, serviceId, clientAddress)
+// Solidity: function testimonyFor(caseId bytes32, serviceId bytes32, clientAddress address) returns(uint8)
+func (_WitnessAbstract *WitnessAbstractTransactorSession) TestimonyFor(caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _WitnessAbstract.Contract.TestimonyFor(&_WitnessAbstract.TransactOpts, caseId, serviceId, clientAddress)
 }

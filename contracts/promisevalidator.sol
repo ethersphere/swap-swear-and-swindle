@@ -13,14 +13,26 @@ contract PromiseValidator is WitnessAbstract,Owned {
     bytes32 sig_s;
     bool exist;
   }
+  uint GRACE_PERIOD = 35;//grace period of 35 blocks
   //map serviceId to map clientAddress to promise
   mapping(bytes32 => mapping(address=>promise))  promises;
+  //map caseid to pending time
+  mapping(bytes32 => uint)  gracePeriods;
+
 
   function PromiseValidator() {
 	}
 
-  function submitPromise(bytes32 serviceId,address beneficiary, uint256 blockNumber,
+  function expiered(bytes32 id) private returns (bool){
+    if (gracePeriods[id]!=0){
+       if ((block.number - gracePeriods[id])> GRACE_PERIOD) return true;
+    }
+    return false;
+  }
+  function submitPromise(bytes32 caseId,bytes32 serviceId,address beneficiary, uint256 blockNumber,
 			uint8 sig_v, bytes32 sig_r, bytes32 sig_s) returns (bool) {
+
+    if (expiered(caseId)) return false;
 
 		promise  memory prm;
 		prm.beneficiary = beneficiary;
@@ -35,8 +47,15 @@ contract PromiseValidator is WitnessAbstract,Owned {
 		return true;
 
 	}
-  function testimonyFor(bytes32 serviceId,address clientAddress) returns (WitnessAbstract.Status){
-    if (!promises[serviceId][clientAddress].exist) return WitnessAbstract.Status.PENDING;
+  function testimonyFor(bytes32 caseId, bytes32 serviceId,address clientAddress) returns (WitnessAbstract.Status){
+    if (!promises[serviceId][clientAddress].exist) {
+      if (gracePeriods[caseId] == 0){
+        gracePeriods[caseId] = block.number;
+      }else if (expiered(caseId)) {
+        return WitnessAbstract.Status.INVALID;//grace period pass
+      }
+      return WitnessAbstract.Status.PENDING;
+    }
 
     if (!validatePromise(promises[serviceId][clientAddress].beneficiary,
                        promises[serviceId][clientAddress].blockNumber,

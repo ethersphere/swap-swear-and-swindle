@@ -16,7 +16,7 @@ import (
 const MirrorTransistionsABI = "[{\"constant\":false,\"inputs\":[],\"name\":\"getInitialStatus\",\"outputs\":[{\"name\":\"status\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"uint8\"},{\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"transitions\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"getTrialExpiry\",\"outputs\":[{\"name\":\"expiery\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"witnesses\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"witnessState\",\"type\":\"uint8\"},{\"name\":\"trialStatus\",\"type\":\"uint8\"}],\"name\":\"getStatus\",\"outputs\":[{\"name\":\"status\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"trialStatus\",\"type\":\"uint8\"}],\"name\":\"getWitness\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"inputs\":[{\"name\":\"paymentValidatorContract\",\"type\":\"address\"},{\"name\":\"ENSMirrotValidatorContract\",\"type\":\"address\"}],\"payable\":false,\"type\":\"constructor\"}]"
 
 // MirrorTransistionsBin is the compiled bytecode used for deploying new contracts.
-const MirrorTransistionsBin = `0x6060604052341561000f57600080fd5b60405160408061049383398101604052808051919060200180519150505b8160008060025b60010160ff1660ff16815260200190815260200160002060006101000a815481600160a060020a030219169083600160a060020a031602179055508060008060028081111561007f57fe5b600290810160ff16825260208201929092526040016000208054600160a060020a031916600160a060020a0393909316929092179091555b60020160016000805b60ff168152602081019190915260400160009081209060025b60010160ff90811682526020820192909252604001600020805460ff19169290911691909117905560025b60016000815b60ff168152602081019190915260400160009081209060025b600190810160ff908116835260208301939093526040909101600020805460ff1916939092169290921790555b60016000805b60ff168152602081019190915260400160009081209060025b600290810160ff908116835260208301939093526040909101600020805460ff1916939092169290921790555b60016000815b60ff168152602081019190915260400160009081209060025b60020160ff1660ff16815260200190815260200160002060006101000a81548160ff021916908360ff1602179055505b50505b610296806101fd6000396000f300606060405236156100755763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166307e5ae5f811461007a5780639c2a1029146100a3578063ada01610146100d8578063b2400f09146100fd578063d39eb3011461013f578063db06156314610174575b600080fd5b341561008557600080fd5b61008d6101b6565b60405160ff909116815260200160405180910390f35b34156100ae57600080fd5b61008d60ff600435811690602435166101c4565b60405160ff909116815260200160405180910390f35b34156100e357600080fd5b6100eb6101e4565b60405190815260200160405180910390f35b341561010857600080fd5b61011660ff600435166101ea565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f35b341561014a57600080fd5b61008d60ff60043581169060243516610212565b60405160ff909116815260200160405180910390f35b341561017f57600080fd5b61011660ff6004351661023b565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f35b600060025b60010190505b90565b600160209081526000928352604080842090915290825290205460ff1681565b60325b90565b60006020819052908152604090205473ffffffffffffffffffffffffffffffffffffffff1681565b60ff80831660009081526001602090815260408083208585168452909152902054165b92915050565b60ff811660009081526020819052604090205473ffffffffffffffffffffffffffffffffffffffff165b9190505600a165627a7a72305820482b7d6e4946072db962a56467af67bab077d4f529ab5e7b50d911fbfeee4ee60029`
+const MirrorTransistionsBin = `0x6060604052341561000f57600080fd5b60405160408061049383398101604052808051919060200180519150505b8160008060025b60010160ff1660ff16815260200190815260200160002060006101000a815481600160a060020a030219169083600160a060020a031602179055508060008060028081111561007f57fe5b600290810160ff16825260208201929092526040016000208054600160a060020a031916600160a060020a0393909316929092179091555b60020160016000805b60ff168152602081019190915260400160009081209060025b60010160ff90811682526020820192909252604001600020805460ff19169290911691909117905560025b60016000815b60ff168152602081019190915260400160009081209060025b600190810160ff908116835260208301939093526040909101600020805460ff1916939092169290921790555b60016000805b60ff168152602081019190915260400160009081209060025b600290810160ff908116835260208301939093526040909101600020805460ff1916939092169290921790555b60016000815b60ff168152602081019190915260400160009081209060025b60020160ff1660ff16815260200190815260200160002060006101000a81548160ff021916908360ff1602179055505b50505b610296806101fd6000396000f300606060405236156100755763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166307e5ae5f811461007a5780639c2a1029146100a3578063ada01610146100d8578063b2400f09146100fd578063d39eb3011461013f578063db06156314610174575b600080fd5b341561008557600080fd5b61008d6101b6565b60405160ff909116815260200160405180910390f35b34156100ae57600080fd5b61008d60ff600435811690602435166101c4565b60405160ff909116815260200160405180910390f35b34156100e357600080fd5b6100eb6101e4565b60405190815260200160405180910390f35b341561010857600080fd5b61011660ff600435166101ea565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f35b341561014a57600080fd5b61008d60ff60043581169060243516610212565b60405160ff909116815260200160405180910390f35b341561017f57600080fd5b61011660ff6004351661023b565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f35b600060025b60010190505b90565b600160209081526000928352604080842090915290825290205460ff1681565b60645b90565b60006020819052908152604090205473ffffffffffffffffffffffffffffffffffffffff1681565b60ff80831660009081526001602090815260408083208585168452909152902054165b92915050565b60ff811660009081526020819052604090205473ffffffffffffffffffffffffffffffffffffffff165b9190505600a165627a7a7230582055b941d412b70292bf7ef3a039d6084a6946b738e7ada8a5e15408d8caa5d8070029`
 
 // DeployMirrorTransistions deploys a new Ethereum contract, binding an instance of MirrorTransistions to it.
 func DeployMirrorTransistions(auth *bind.TransactOpts, backend bind.ContractBackend, paymentValidatorContract common.Address, ENSMirrotValidatorContract common.Address) (common.Address, *types.Transaction, *MirrorTransistions, error) {
@@ -525,7 +525,7 @@ func (_TrialTransistionsAbstract *TrialTransistionsAbstractTransactorSession) Ge
 }
 
 // WitnessAbstractABI is the input ABI used to generate the binding from.
-const WitnessAbstractABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"clientAddress\",\"type\":\"address\"}],\"name\":\"testimonyFor\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"}]"
+const WitnessAbstractABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"clientAddress\",\"type\":\"address\"}],\"name\":\"testimonyFor\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"}]"
 
 // WitnessAbstractBin is the compiled bytecode used for deploying new contracts.
 const WitnessAbstractBin = `0x`
@@ -670,23 +670,23 @@ func (_WitnessAbstract *WitnessAbstractTransactorRaw) Transact(opts *bind.Transa
 	return _WitnessAbstract.Contract.contract.Transact(opts, method, params...)
 }
 
-// TestimonyFor is a paid mutator transaction binding the contract method 0xf243aee5.
+// TestimonyFor is a paid mutator transaction binding the contract method 0xc4b45283.
 //
-// Solidity: function testimonyFor(serviceId bytes32, clientAddress address) returns(uint8)
-func (_WitnessAbstract *WitnessAbstractTransactor) TestimonyFor(opts *bind.TransactOpts, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
-	return _WitnessAbstract.contract.Transact(opts, "testimonyFor", serviceId, clientAddress)
+// Solidity: function testimonyFor(caseId bytes32, serviceId bytes32, clientAddress address) returns(uint8)
+func (_WitnessAbstract *WitnessAbstractTransactor) TestimonyFor(opts *bind.TransactOpts, caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _WitnessAbstract.contract.Transact(opts, "testimonyFor", caseId, serviceId, clientAddress)
 }
 
-// TestimonyFor is a paid mutator transaction binding the contract method 0xf243aee5.
+// TestimonyFor is a paid mutator transaction binding the contract method 0xc4b45283.
 //
-// Solidity: function testimonyFor(serviceId bytes32, clientAddress address) returns(uint8)
-func (_WitnessAbstract *WitnessAbstractSession) TestimonyFor(serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
-	return _WitnessAbstract.Contract.TestimonyFor(&_WitnessAbstract.TransactOpts, serviceId, clientAddress)
+// Solidity: function testimonyFor(caseId bytes32, serviceId bytes32, clientAddress address) returns(uint8)
+func (_WitnessAbstract *WitnessAbstractSession) TestimonyFor(caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _WitnessAbstract.Contract.TestimonyFor(&_WitnessAbstract.TransactOpts, caseId, serviceId, clientAddress)
 }
 
-// TestimonyFor is a paid mutator transaction binding the contract method 0xf243aee5.
+// TestimonyFor is a paid mutator transaction binding the contract method 0xc4b45283.
 //
-// Solidity: function testimonyFor(serviceId bytes32, clientAddress address) returns(uint8)
-func (_WitnessAbstract *WitnessAbstractTransactorSession) TestimonyFor(serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
-	return _WitnessAbstract.Contract.TestimonyFor(&_WitnessAbstract.TransactOpts, serviceId, clientAddress)
+// Solidity: function testimonyFor(caseId bytes32, serviceId bytes32, clientAddress address) returns(uint8)
+func (_WitnessAbstract *WitnessAbstractTransactorSession) TestimonyFor(caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _WitnessAbstract.Contract.TestimonyFor(&_WitnessAbstract.TransactOpts, caseId, serviceId, clientAddress)
 }

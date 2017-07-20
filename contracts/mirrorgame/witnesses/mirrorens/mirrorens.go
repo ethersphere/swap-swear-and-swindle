@@ -321,10 +321,10 @@ func (_ENSAbstract *ENSAbstractTransactorSession) SetTTL(node [32]byte, ttl uint
 }
 
 // MirrorENSABI is the input ABI used to generate the binding from.
-const MirrorENSABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_ensAddr\",\"type\":\"address\"}],\"name\":\"setENSAddress\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"ensAddress\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"clientAddress\",\"type\":\"address\"}],\"name\":\"testimonyFor\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"type\":\"constructor\"}]"
+const MirrorENSABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_ensAddr\",\"type\":\"address\"}],\"name\":\"setENSAddress\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"ensAddress\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"clientAddress\",\"type\":\"address\"}],\"name\":\"testimonyFor\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"type\":\"constructor\"}]"
 
 // MirrorENSBin is the compiled bytecode used for deploying new contracts.
-const MirrorENSBin = `0x606060405260018054600160a060020a031916738163bc885c2b14478b75f178ca76f31581dc967f179055341561003557600080fd5b5b5b5b6102ee806100476000396000f300606060405263ffffffff60e060020a6000350416634cad1ce9811461003a578063a6b694f21461006d578063f243aee51461009c575b600080fd5b341561004557600080fd5b610059600160a060020a03600435166100e2565b604051901515815260200160405180910390f35b341561007857600080fd5b610080610110565b604051600160a060020a03909116815260200160405180910390f35b34156100a757600080fd5b6100be600435600160a060020a036024351661011f565b604051808260028111156100ce57fe5b60ff16815260200191505060405180910390f35b6001805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0383161781555b919050565b600154600160a060020a031681565b6000610129610140565b156101365750600061013a565b5060015b92915050565b6001546000805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a039092169190911781556101987facd7f5ed7d93b1526477b93e6c7def60c40420a868e7f694a7671413d89bb9a56101d5565b6101c17f94c4860d894e91f2df683b61455630d721209c6265d2e80c86a1f92cab14b3706101d5565b146101ce575060016101d2565b5060005b90565b60008054819081908190600160a060020a0316630178b8bf86836040516020015260405160e060020a63ffffffff84160281526004810191909152602401602060405180830381600087803b151561022c57600080fd5b6102c65a03f1151561023d57600080fd5b5050506040518051935083925050600160a060020a038216632dff69418660006040516020015260405160e060020a63ffffffff84160281526004810191909152602401602060405180830381600087803b151561029a57600080fd5b6102c65a03f115156102ab57600080fd5b50505060405180519450849150505b5050509190505600a165627a7a72305820ff84f5e5c81f8d5ad0344ff0e2fb8e73ea2930b2d7be0b1c101d18b542db7e6b0029`
+const MirrorENSBin = `0x606060405260018054600160a060020a031916738163bc885c2b14478b75f178ca76f31581dc967f179055341561003557600080fd5b5b5b5b6102f2806100476000396000f300606060405263ffffffff60e060020a6000350416634cad1ce9811461003a578063a6b694f21461006d578063c4b452831461009c575b600080fd5b341561004557600080fd5b610059600160a060020a03600435166100e5565b604051901515815260200160405180910390f35b341561007857600080fd5b610080610113565b604051600160a060020a03909116815260200160405180910390f35b34156100a757600080fd5b6100c1600435602435600160a060020a0360443516610122565b604051808260028111156100d157fe5b60ff16815260200191505060405180910390f35b6001805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0383161781555b919050565b600154600160a060020a031681565b600061012c610144565b156101395750600061013d565b5060015b9392505050565b6001546000805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0390921691909117815561019c7facd7f5ed7d93b1526477b93e6c7def60c40420a868e7f694a7671413d89bb9a56101d9565b6101c57f94c4860d894e91f2df683b61455630d721209c6265d2e80c86a1f92cab14b3706101d9565b146101d2575060016101d6565b5060005b90565b60008054819081908190600160a060020a0316630178b8bf86836040516020015260405160e060020a63ffffffff84160281526004810191909152602401602060405180830381600087803b151561023057600080fd5b6102c65a03f1151561024157600080fd5b5050506040518051935083925050600160a060020a038216632dff69418660006040516020015260405160e060020a63ffffffff84160281526004810191909152602401602060405180830381600087803b151561029e57600080fd5b6102c65a03f115156102af57600080fd5b50505060405180519450849150505b5050509190505600a165627a7a7230582093200b625c1b95be510543905ea8117841b87425e26cdc1b7028e02a7abb62a00029`
 
 // DeployMirrorENS deploys a new Ethereum contract, binding an instance of MirrorENS to it.
 func DeployMirrorENS(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *MirrorENS, error) {
@@ -513,25 +513,25 @@ func (_MirrorENS *MirrorENSTransactorSession) SetENSAddress(_ensAddr common.Addr
 	return _MirrorENS.Contract.SetENSAddress(&_MirrorENS.TransactOpts, _ensAddr)
 }
 
-// TestimonyFor is a paid mutator transaction binding the contract method 0xf243aee5.
+// TestimonyFor is a paid mutator transaction binding the contract method 0xc4b45283.
 //
-// Solidity: function testimonyFor(serviceId bytes32, clientAddress address) returns(uint8)
-func (_MirrorENS *MirrorENSTransactor) TestimonyFor(opts *bind.TransactOpts, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
-	return _MirrorENS.contract.Transact(opts, "testimonyFor", serviceId, clientAddress)
+// Solidity: function testimonyFor(caseId bytes32, serviceId bytes32, clientAddress address) returns(uint8)
+func (_MirrorENS *MirrorENSTransactor) TestimonyFor(opts *bind.TransactOpts, caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _MirrorENS.contract.Transact(opts, "testimonyFor", caseId, serviceId, clientAddress)
 }
 
-// TestimonyFor is a paid mutator transaction binding the contract method 0xf243aee5.
+// TestimonyFor is a paid mutator transaction binding the contract method 0xc4b45283.
 //
-// Solidity: function testimonyFor(serviceId bytes32, clientAddress address) returns(uint8)
-func (_MirrorENS *MirrorENSSession) TestimonyFor(serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
-	return _MirrorENS.Contract.TestimonyFor(&_MirrorENS.TransactOpts, serviceId, clientAddress)
+// Solidity: function testimonyFor(caseId bytes32, serviceId bytes32, clientAddress address) returns(uint8)
+func (_MirrorENS *MirrorENSSession) TestimonyFor(caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _MirrorENS.Contract.TestimonyFor(&_MirrorENS.TransactOpts, caseId, serviceId, clientAddress)
 }
 
-// TestimonyFor is a paid mutator transaction binding the contract method 0xf243aee5.
+// TestimonyFor is a paid mutator transaction binding the contract method 0xc4b45283.
 //
-// Solidity: function testimonyFor(serviceId bytes32, clientAddress address) returns(uint8)
-func (_MirrorENS *MirrorENSTransactorSession) TestimonyFor(serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
-	return _MirrorENS.Contract.TestimonyFor(&_MirrorENS.TransactOpts, serviceId, clientAddress)
+// Solidity: function testimonyFor(caseId bytes32, serviceId bytes32, clientAddress address) returns(uint8)
+func (_MirrorENS *MirrorENSTransactorSession) TestimonyFor(caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _MirrorENS.Contract.TestimonyFor(&_MirrorENS.TransactOpts, caseId, serviceId, clientAddress)
 }
 
 // ResolverAbstractABI is the input ABI used to generate the binding from.
@@ -707,7 +707,7 @@ func (_ResolverAbstract *ResolverAbstractCallerSession) Content(node [32]byte) (
 }
 
 // WitnessAbstractABI is the input ABI used to generate the binding from.
-const WitnessAbstractABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"clientAddress\",\"type\":\"address\"}],\"name\":\"testimonyFor\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"}]"
+const WitnessAbstractABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"clientAddress\",\"type\":\"address\"}],\"name\":\"testimonyFor\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"}]"
 
 // WitnessAbstractBin is the compiled bytecode used for deploying new contracts.
 const WitnessAbstractBin = `0x`
@@ -852,23 +852,23 @@ func (_WitnessAbstract *WitnessAbstractTransactorRaw) Transact(opts *bind.Transa
 	return _WitnessAbstract.Contract.contract.Transact(opts, method, params...)
 }
 
-// TestimonyFor is a paid mutator transaction binding the contract method 0xf243aee5.
+// TestimonyFor is a paid mutator transaction binding the contract method 0xc4b45283.
 //
-// Solidity: function testimonyFor(serviceId bytes32, clientAddress address) returns(uint8)
-func (_WitnessAbstract *WitnessAbstractTransactor) TestimonyFor(opts *bind.TransactOpts, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
-	return _WitnessAbstract.contract.Transact(opts, "testimonyFor", serviceId, clientAddress)
+// Solidity: function testimonyFor(caseId bytes32, serviceId bytes32, clientAddress address) returns(uint8)
+func (_WitnessAbstract *WitnessAbstractTransactor) TestimonyFor(opts *bind.TransactOpts, caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _WitnessAbstract.contract.Transact(opts, "testimonyFor", caseId, serviceId, clientAddress)
 }
 
-// TestimonyFor is a paid mutator transaction binding the contract method 0xf243aee5.
+// TestimonyFor is a paid mutator transaction binding the contract method 0xc4b45283.
 //
-// Solidity: function testimonyFor(serviceId bytes32, clientAddress address) returns(uint8)
-func (_WitnessAbstract *WitnessAbstractSession) TestimonyFor(serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
-	return _WitnessAbstract.Contract.TestimonyFor(&_WitnessAbstract.TransactOpts, serviceId, clientAddress)
+// Solidity: function testimonyFor(caseId bytes32, serviceId bytes32, clientAddress address) returns(uint8)
+func (_WitnessAbstract *WitnessAbstractSession) TestimonyFor(caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _WitnessAbstract.Contract.TestimonyFor(&_WitnessAbstract.TransactOpts, caseId, serviceId, clientAddress)
 }
 
-// TestimonyFor is a paid mutator transaction binding the contract method 0xf243aee5.
+// TestimonyFor is a paid mutator transaction binding the contract method 0xc4b45283.
 //
-// Solidity: function testimonyFor(serviceId bytes32, clientAddress address) returns(uint8)
-func (_WitnessAbstract *WitnessAbstractTransactorSession) TestimonyFor(serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
-	return _WitnessAbstract.Contract.TestimonyFor(&_WitnessAbstract.TransactOpts, serviceId, clientAddress)
+// Solidity: function testimonyFor(caseId bytes32, serviceId bytes32, clientAddress address) returns(uint8)
+func (_WitnessAbstract *WitnessAbstractTransactorSession) TestimonyFor(caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _WitnessAbstract.Contract.TestimonyFor(&_WitnessAbstract.TransactOpts, caseId, serviceId, clientAddress)
 }
