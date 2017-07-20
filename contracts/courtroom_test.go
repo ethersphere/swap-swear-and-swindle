@@ -1,6 +1,9 @@
 package contracts
 
 //go:generate abigen --sol ./courtroom.sol --pkg contracts --out ./courtroom.go
+//go:generate abigen --sol ./mirror.sol --pkg mirrorens --out ./mirror/mirrorens/mirror.go
+//go:generate abigen --sol ./promisevalidator.sol --pkg promisevalidator --out ./mirror/promisevalidator/promisevalidator.go
+//go:generate abigen --sol ./mirrortransitions.sol --pkg mirrortransition --out ./mirror/mirrortransition/mirrortransitions.go
 
 import (
 	"crypto/ecdsa"
@@ -14,6 +17,9 @@ import (
 	"github.com/ethereum/go-ethereum/contracts/ens/contract"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/crypto"
+	mirrorens "github.com/jaakmusic/swap-swear-and-swindle/contracts/mirror/mirrorens"
+	mirrortransition "github.com/jaakmusic/swap-swear-and-swindle/contracts/mirror/mirrortransition"
+	promisevalidator "github.com/jaakmusic/swap-swear-and-swindle/contracts/mirror/promisevalidator"
 )
 
 var (
@@ -27,6 +33,8 @@ var (
 	compensationAmount    = int64(5)
 	PromiseTillNextBlocks = 5
 	serviceDeposit        = int64(50)
+	witnessesNumber       = int64(2)
+	serviceId             = [32]byte{1, 2, 3, 4}
 )
 
 func newTestBackend() *backends.SimulatedBackend {
@@ -57,12 +65,47 @@ func deployCaseContract(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *back
 	return addr, nil
 }
 
-func deploySwearGame(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend, caseContractAddr common.Address, tokenContractAddr common.Address, rewordCompansation *big.Int) (common.Address, *SwearGame, error) {
+func deployMirror(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *mirrorens.Mirror, error) {
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
 	deployTransactor.Value = amount
 
-	addr, _, swearGame, err := DeploySwearGame(deployTransactor, backend, caseContractAddr, tokenContractAddr, rewordCompansation)
+	addr, _, mirror, err := mirrorens.DeployMirror(deployTransactor, backend)
+	if err != nil {
+		return common.Address{}, nil, err
+	}
+	commit(backend)
+	return addr, mirror, nil
+}
 
+func deployPromiseValidator(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *promisevalidator.PromiseValidator, error) {
+	deployTransactor := bind.NewKeyedTransactor(prvKey)
+	deployTransactor.Value = amount
+
+	addr, _, promiseValidator, err := promisevalidator.DeployPromiseValidator(deployTransactor, backend)
+	if err != nil {
+		return common.Address{}, nil, err
+	}
+	commit(backend)
+	return addr, promiseValidator, nil
+}
+
+func deployMirrorTransitions(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend, paymentValidatorContract common.Address, ENSMirrotValidatorContract common.Address) (common.Address, error) {
+	deployTransactor := bind.NewKeyedTransactor(prvKey)
+	deployTransactor.Value = amount
+
+	addr, _, _, err := mirrortransition.DeployMirrorTransistions(deployTransactor, backend, paymentValidatorContract, ENSMirrotValidatorContract)
+	if err != nil {
+		return common.Address{}, err
+	}
+	commit(backend)
+	return addr, nil
+}
+
+func deploySwearGame(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend, caseContractAddr common.Address, tokenContractAddr common.Address, mirrorTransistions common.Address, rewordCompansation *big.Int) (common.Address, *SwearGame, error) {
+	deployTransactor := bind.NewKeyedTransactor(prvKey)
+	deployTransactor.Value = amount
+
+	addr, _, swearGame, err := DeploySwearGame(deployTransactor, backend, caseContractAddr, tokenContractAddr, mirrorTransistions, rewordCompansation)
 	if err != nil {
 		return common.Address{}, nil, err
 	}
@@ -136,10 +179,10 @@ func deposit(t *testing.T, backend *backends.SimulatedBackend, sampleToken *Samp
 	}
 	commit(backend)
 }
-func openClaimForMirrorGame(t *testing.T, clientContent string, serviceContent string, numberOfBlocksToWait int) {
+func openClaimForMirrorGame(t *testing.T, clientContent string, serviceContent string, numberOfBlocksToWait int, pendingTest bool) {
 	backend := newTestBackend()
 
-	swearGameContractAddress, swearGame, sampleToken := deployTheGame(t, backend)
+	_, swearGame, sampleToken, promiseValidator, promiseValidatorAddress, _ := deployTheGame(t, backend)
 
 	deposit(t, backend, sampleToken, swearGame)
 
@@ -176,16 +219,20 @@ func openClaimForMirrorGame(t *testing.T, clientContent string, serviceContent s
 	}
 	opts = bind.NewKeyedTransactor(clientKey)
 
-	promise, err := issuePromise(serviceKey, clientAddr, big.NewInt(int64(blockNumber+PromiseTillNextBlocks)), swearGameContractAddress)
-	if err != nil {
-		t.Fatalf("NewCase: issuePromise expected no error, got %v", err)
+	if !pendingTest {
+		promise, err := issuePromise(serviceKey, clientAddr, big.NewInt(int64(blockNumber+PromiseTillNextBlocks)), promiseValidatorAddress)
+		if err != nil {
+			t.Fatalf("NewCase: issuePromise expected no error, got %v", err)
+		}
+		v, r, s := sig2vrs(promise.sig)
+
+		promiseValidator.SubmitPromise(opts, serviceId, promise.beneficiary, promise.blockNumber, v, r, s)
 	}
-	v, r, s := sig2vrs(promise.Sig)
 
 	for i := 0; i < numberOfBlocksToWait; i++ {
 		commit(backend)
 	}
-	_, err = swearGame.NewCase(opts, promise.Beneficiary, promise.BlockNumber, v, r, s, [32]byte{1})
+	_, err = swearGame.NewCase(opts, serviceId)
 
 	if err != nil {
 		t.Fatalf("NewCase: expected no error, got %v", err)
@@ -194,6 +241,28 @@ func openClaimForMirrorGame(t *testing.T, clientContent string, serviceContent s
 
 	claimid, err := swearGame.Ids(&bind.CallOpts{}, clientAddr, big.NewInt(0))
 	t.Log("claim", claimid)
+
+	status, err := swearGame.GetStatus(&bind.CallOpts{}, claimid)
+	if err != nil {
+		t.Fatalf("NewCase: expected no error, got %v", err)
+	}
+	t.Log("status", status)
+	if pendingTest && status == 3 {
+		//submit promise and restart from current state
+		promise, err := issuePromise(serviceKey, clientAddr, big.NewInt(int64(blockNumber+PromiseTillNextBlocks)), promiseValidatorAddress)
+		if err != nil {
+			t.Fatalf("NewCase: issuePromise expected no error, got %v", err)
+		}
+		v, r, s := sig2vrs(promise.sig)
+
+		promiseValidator.SubmitPromise(opts, serviceId, promise.beneficiary, promise.blockNumber, v, r, s)
+		_, err = swearGame.ResumeCase(opts, claimid)
+
+		if err != nil {
+			t.Fatalf("NewCase: expected no error, got %v", err)
+		}
+		commit(backend)
+	}
 
 	depositAfter, err := swearGame.Deposit(&bind.CallOpts{})
 	if err != nil {
@@ -226,25 +295,31 @@ func TestPromiseOk(t *testing.T) {
 	//client and service content are diffrent  but number of block to wait is 6
 	// the service promise to serve client for the next PromiseTillNextBlocks(5) blocks.
 	//This test will fail if client will  get compensated for its claim.
-	openClaimForMirrorGame(t, "1234", "4567", 6)
+	openClaimForMirrorGame(t, "1234", "4567", 6, false)
+}
+
+func TestOpenValidClaimPending(t *testing.T) {
+	//client and service content are diffrent and number of block to wait is 0
+	//This test will fail if client will not get compensated for its claim.
+	openClaimForMirrorGame(t, "1234", "4567", 0, true)
 }
 
 func TestOpenValidClaim(t *testing.T) {
 	//client and service content are diffrent and number of block to wait is 0
 	//This test will fail if client will not get compensated for its claim.
-	openClaimForMirrorGame(t, "1234", "4567", 0)
+	openClaimForMirrorGame(t, "1234", "4567", 0, false)
 }
 
 func TestOpenNoneValidClaim(t *testing.T) {
 	//client and service content are the same and number of blocks to wait is 0
 	//This test will fail if client will get compensated for its claim.
-	openClaimForMirrorGame(t, "1234", "1234", 0)
+	openClaimForMirrorGame(t, "1234", "1234", 0, false)
 }
 
 func TestRegisterAndNewCase(t *testing.T) {
 	backend := newTestBackend()
 
-	swearGameContractAddress, swearGame, sampleToken := deployTheGame(t, backend)
+	_, swearGame, sampleToken, _, _, mirrorEns := deployTheGame(t, backend)
 
 	deposit(t, backend, sampleToken, swearGame)
 
@@ -271,18 +346,18 @@ func TestRegisterAndNewCase(t *testing.T) {
 		t.Fatal("registerENSRecord", "client.game", "fail")
 	}
 
-	_, err = swearGame.SetENSAddress(opts, ensAddress)
+	_, err = mirrorEns.SetENSAddress(opts, ensAddress)
 	if err != nil {
 		t.Fatal("SetENSAddress fail")
 	}
 
 	opts = bind.NewKeyedTransactor(clientKey)
-	promise, err := issuePromise(serviceKey, clientAddr, big.NewInt(int64(blockNumber+5)), swearGameContractAddress)
-	if err != nil {
-		t.Fatalf("NewCase: issuePromise expected no error, got %v", err)
-	}
-	v, r, s := sig2vrs(promise.Sig)
-	_, err = swearGame.NewCase(opts, promise.Beneficiary, promise.BlockNumber, v, r, s, [32]byte{1})
+	// promise, err := issuePromise(serviceKey, clientAddr, big.NewInt(int64(blockNumber+5)), swearGameContractAddress)
+	// if err != nil {
+	// 	t.Fatalf("NewCase: issuePromise expected no error, got %v", err)
+	// }
+	// v, r, s := sig2vrs(promise.Sig)
+	_, err = swearGame.NewCase(opts, serviceId)
 
 	if err != nil {
 		t.Fatalf("Register: expected no error, got %v", err)
@@ -306,7 +381,7 @@ func TestRegisterAndNewCase(t *testing.T) {
 func TestNewCaseNotRegister(t *testing.T) {
 	backend := newTestBackend()
 
-	swearGameContractAddress, swearGame, _ := deployTheGame(t, backend)
+	_, swearGame, _, _, _, _ := deployTheGame(t, backend)
 
 	_, _, _, _, err := deployENS(ethKey, big.NewInt(0), backend, ethAddr)
 
@@ -316,12 +391,12 @@ func TestNewCaseNotRegister(t *testing.T) {
 	commit(backend)
 
 	opts := bind.NewKeyedTransactor(clientKey)
-	promise, err := issuePromise(serviceKey, clientAddr, big.NewInt(int64(blockNumber+5)), swearGameContractAddress)
-	if err != nil {
-		t.Fatalf("NewCase: issuePromise expected no error, got %v", err)
-	}
-	v, r, s := sig2vrs(promise.Sig)
-	_, err = swearGame.NewCase(opts, promise.Beneficiary, promise.BlockNumber, v, r, s, [32]byte{1})
+	// promise, err := issuePromise(serviceKey, clientAddr, big.NewInt(int64(blockNumber+5)), swearGameContractAddress)
+	// if err != nil {
+	// 	t.Fatalf("NewCase: issuePromise expected no error, got %v", err)
+	// }
+	// v, r, s := sig2vrs(promise.Sig)
+	_, err = swearGame.NewCase(opts, serviceId)
 
 	if err != nil {
 		t.Fatalf("Register: expected no error, got %v", err)
@@ -336,7 +411,7 @@ func TestNewCaseNotRegister(t *testing.T) {
 func TestDoubleRegistration(t *testing.T) {
 	backend := newTestBackend()
 
-	_, swearGame, sampleToken := deployTheGame(t, backend)
+	_, swearGame, sampleToken, _, _, _ := deployTheGame(t, backend)
 
 	deposit(t, backend, sampleToken, swearGame)
 
@@ -367,7 +442,7 @@ func TestDoubleRegistration(t *testing.T) {
 func TestRegisterFromClient(t *testing.T) {
 	backend := newTestBackend()
 
-	_, swearGame, sampleToken := deployTheGame(t, backend)
+	_, swearGame, sampleToken, _, _, _ := deployTheGame(t, backend)
 
 	deposit(t, backend, sampleToken, swearGame)
 
@@ -390,7 +465,7 @@ func TestRegisterFromClient(t *testing.T) {
 
 func TestDeposit(t *testing.T) {
 	backend := newTestBackend()
-	_, swearGame, sampleToken := deployTheGame(t, backend)
+	_, swearGame, sampleToken, _, _, _ := deployTheGame(t, backend)
 	//trasfer 100 tokens to the Service
 	opts := bind.NewKeyedTransactor(ethKey)
 	_, err := sampleToken.Transfer(opts, serviceAddr, big.NewInt(100))
@@ -434,7 +509,13 @@ func TestDeposit(t *testing.T) {
 
 }
 
-func deployTheGame(t *testing.T, backend *backends.SimulatedBackend) (swearGameContractAddress common.Address, swearGame *SwearGame, sampleToken *SampleToken) {
+func deployTheGame(t *testing.T, backend *backends.SimulatedBackend) (
+	swearGameContractAddress common.Address,
+	swearGame *SwearGame,
+	sampleToken *SampleToken,
+	promiseValidator *promisevalidator.PromiseValidator,
+	promiseValidatorAddress common.Address,
+	mirrorEns *mirrorens.Mirror) {
 
 	sampleTokenAddress, sampleToken, err := deploySampleTokenContract(ethKey, big.NewInt(0), backend, big.NewInt(1000))
 	if err != nil {
@@ -446,12 +527,25 @@ func deployTheGame(t *testing.T, backend *backends.SimulatedBackend) (swearGameC
 		t.Fatalf("deploy contract: expected no error, got %v", err)
 	}
 
-	swearGameContractAddress, swearGame, err = deploySwearGame(serviceKey, big.NewInt(0), backend, caseContractAddress, sampleTokenAddress, big.NewInt(compensationAmount))
+	mirrorContractAddress, mirrorEns, err := deployMirror(serviceKey, big.NewInt(0), backend)
+	if err != nil {
+		t.Fatalf("deploy contract: expected no error, got %v", err)
+	}
+	promiseValidatorContractAddress, promiseValidator, err := deployPromiseValidator(serviceKey, big.NewInt(0), backend)
+	if err != nil {
+		t.Fatalf("deploy contract: expected no error, got %v", err)
+	}
+	mirrorFlowContractAddress, err := deployMirrorTransitions(serviceKey, big.NewInt(0), backend, promiseValidatorContractAddress, mirrorContractAddress)
+	if err != nil {
+		t.Fatalf("deploy contract: expected no error, got %v", err)
+	}
+
+	swearGameContractAddress, swearGame, err = deploySwearGame(serviceKey, big.NewInt(0), backend, caseContractAddress, sampleTokenAddress, mirrorFlowContractAddress, big.NewInt(compensationAmount))
 	if err != nil {
 		t.Fatalf("deploy contract: expected no error, got %v", err)
 	}
 	t.Log("address", sampleTokenAddress, caseContractAddress)
-	return swearGameContractAddress, swearGame, sampleToken
+	return swearGameContractAddress, swearGame, sampleToken, promiseValidator, promiseValidatorContractAddress, mirrorEns
 }
 
 func registerENSRecord(t *testing.T, backend *backends.SimulatedBackend, name, contentHash string, ens *contract.ENS, resolver *contract.PublicResolver, resolverAddr common.Address) error {
@@ -494,10 +588,10 @@ func Namehash(name string) (node common.Hash) {
 
 // Promise represents a promise from the service to serve the client up to a certain blocknumber.
 type Promise struct {
-	Contract    common.Address // address of swearGame contract, needed to avoid cross-contract submission
-	Beneficiary common.Address // address of Beneficiary (client)
-	BlockNumber *big.Int       // Until which block number this promise is valid
-	Sig         []byte         // signature Sign(Keccak256(contract, beneficiary, blocknumber), prvKey)
+	contract    common.Address // address of swearGame contract, needed to avoid cross-contract submission
+	beneficiary common.Address // address of Beneficiary (client)
+	blockNumber *big.Int       // Until which block number this promise is valid
+	sig         []byte         // signature Sign(Keccak256(contract, beneficiary, blocknumber), prvKey)
 }
 
 //issuePromise creates a promise signed by the serive's private key .
@@ -507,10 +601,10 @@ func issuePromise(prvKey *ecdsa.PrivateKey, beneficiary common.Address, blockNum
 	sig, err := crypto.Sign(sigHash(contractAddress, beneficiary, blockNumber), prvKey)
 	if err == nil {
 		promise = &Promise{
-			Contract:    contractAddress,
-			Beneficiary: beneficiary,
-			BlockNumber: blockNumber,
-			Sig:         sig,
+			contract:    contractAddress,
+			beneficiary: beneficiary,
+			blockNumber: blockNumber,
+			sig:         sig,
 		}
 	}
 	return promise, err

@@ -37,6 +37,7 @@ contract CourtroomAbstract is Owned {
 	SampleToken public sampleToken;
 	bytes32 public claimId;
 
+
 	function SwearGame(address _caseContract, address _sampleToken, uint _rewardCompensation);
 	function deposit(uint256 _depositAmount) onlyOwner payable public returns(bool);
 	function makeJudgement(bytes32 _claimId) private returns(bool);
@@ -45,7 +46,7 @@ contract CourtroomAbstract is Owned {
 	function leaveGame(address _player) onlyOwner public;
 	function openNewClaim(bytes32 _evidence) public returns (bool);
 	function takeDecision() private returns(bool);
-	
+
 	event Decision(string decide);
 	event DepositStaked(uint depositAmount, uint amountStaked);
 	event Compensate(address recipient, uint rewardCompensation);
