@@ -23,7 +23,7 @@ contract PromiseValidator is WitnessAbstract,Owned {
   function PromiseValidator() {
 	}
 
-  function expiered(bytes32 id) private returns (bool){
+  function expired(bytes32 id) private returns (bool){
     if (gracePeriods[id]!=0){
        if ((block.number - gracePeriods[id])> GRACE_PERIOD) return true;
     }
@@ -32,7 +32,7 @@ contract PromiseValidator is WitnessAbstract,Owned {
   function submitPromise(bytes32 caseId,bytes32 serviceId,address beneficiary, uint256 blockNumber,
 			uint8 sig_v, bytes32 sig_r, bytes32 sig_s) returns (bool) {
 
-    if (expiered(caseId)) return false;
+    if (expired(caseId)) return false;
 
 		promise  memory prm;
 		prm.beneficiary = beneficiary;
@@ -51,7 +51,7 @@ contract PromiseValidator is WitnessAbstract,Owned {
     if (!promises[serviceId][clientAddress].exist) {
       if (gracePeriods[caseId] == 0){
         gracePeriods[caseId] = block.number;
-      }else if (expiered(caseId)) {
+      }else if (expired(caseId)) {
         return WitnessAbstract.Status.INVALID;//grace period pass
       }
       return WitnessAbstract.Status.PENDING;

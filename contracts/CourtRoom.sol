@@ -31,7 +31,7 @@ contract SwearGame is Owned {
 		playerCount = 0;
 	}
 
-  function newClaim(address _plaintiff,bytes32 _serviceId,uint8 status,uint expiery) private returns (bytes32 id) {
+  function _newCase(address _plaintiff,bytes32 _serviceId,uint8 status,uint expiery) private returns (bytes32 id) {
 
      Case memory _case;
     _case.id = sha3(_plaintiff,_serviceId, now);
@@ -143,7 +143,7 @@ contract SwearGame is Owned {
 
 		require(players[msg.sender]);
 
-		bytes32 id  = newClaim(msg.sender,serviceId,uint8(trialTransistions.getInitialStatus()),uint(trialTransistions.getTrialExpiry()));
+		bytes32 id  = _newCase(msg.sender,serviceId,uint8(trialTransistions.getInitialStatus()),uint(trialTransistions.getTrialExpiry()));
 
     if (id == 0x0) return false;
 
