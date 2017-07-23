@@ -17,7 +17,7 @@ import (
 const OwnedABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_newOwner\",\"type\":\"address\"}],\"name\":\"changeOwner\",\"outputs\":[],\"payable\":false,\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"type\":\"constructor\"}]"
 
 // OwnedBin is the compiled bytecode used for deploying new contracts.
-const OwnedBin = `0x6060604052341561000f57600080fd5b5b60008054600160a060020a03191633600160a060020a03161790555b5b61015c8061003c6000396000f300606060405263ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416638da5cb5b8114610048578063a6f9dae114610084575b600080fd5b341561005357600080fd5b61005b6100b2565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f35b341561008f57600080fd5b6100b073ffffffffffffffffffffffffffffffffffffffff600435166100ce565b005b60005473ffffffffffffffffffffffffffffffffffffffff1681565b6000543373ffffffffffffffffffffffffffffffffffffffff9081169116146100f657600080fd5b6000805473ffffffffffffffffffffffffffffffffffffffff191673ffffffffffffffffffffffffffffffffffffffff83161790555b5b505600a165627a7a72305820c7ebdbac8653b5b7d8531f9551342ae927ff9f24709be5bae7d19d39cda65f5b0029`
+const OwnedBin = `0x6060604052341561000f57600080fd5b5b60008054600160a060020a03191633600160a060020a03161790555b5b61015c8061003c6000396000f300606060405263ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416638da5cb5b8114610048578063a6f9dae114610084575b600080fd5b341561005357600080fd5b61005b6100b2565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f35b341561008f57600080fd5b6100b073ffffffffffffffffffffffffffffffffffffffff600435166100ce565b005b60005473ffffffffffffffffffffffffffffffffffffffff1681565b6000543373ffffffffffffffffffffffffffffffffffffffff9081169116146100f657600080fd5b6000805473ffffffffffffffffffffffffffffffffffffffff191673ffffffffffffffffffffffffffffffffffffffff83161790555b5b505600a165627a7a7230582051449e93a63ca5555b4b692a82397557d5d5cff504403871abfb7ba1862efb4f0029`
 
 // DeployOwned deploys a new Ethereum contract, binding an instance of Owned to it.
 func DeployOwned(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Owned, error) {
@@ -207,10 +207,10 @@ func (_Owned *OwnedTransactorSession) ChangeOwner(_newOwner common.Address) (*ty
 }
 
 // PromiseValidatorABI is the input ABI used to generate the binding from.
-const PromiseValidatorABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_newOwner\",\"type\":\"address\"}],\"name\":\"changeOwner\",\"outputs\":[],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"beneficiary\",\"type\":\"address\"},{\"name\":\"blockNumber\",\"type\":\"uint256\"},{\"name\":\"sig_v\",\"type\":\"uint8\"},{\"name\":\"sig_r\",\"type\":\"bytes32\"},{\"name\":\"sig_s\",\"type\":\"bytes32\"}],\"name\":\"submitPromise\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"clientAddress\",\"type\":\"address\"}],\"name\":\"testimonyFor\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"type\":\"constructor\"}]"
+const PromiseValidatorABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"clientAddress\",\"type\":\"address\"}],\"name\":\"isEvidentSubmited\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_newOwner\",\"type\":\"address\"}],\"name\":\"changeOwner\",\"outputs\":[],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"beneficiary\",\"type\":\"address\"},{\"name\":\"blockNumber\",\"type\":\"uint256\"},{\"name\":\"sig_v\",\"type\":\"uint8\"},{\"name\":\"sig_r\",\"type\":\"bytes32\"},{\"name\":\"sig_s\",\"type\":\"bytes32\"}],\"name\":\"submitPromise\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"clientAddress\",\"type\":\"address\"}],\"name\":\"testimonyFor\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"type\":\"constructor\"}]"
 
 // PromiseValidatorBin is the compiled bytecode used for deploying new contracts.
-const PromiseValidatorBin = `0x60606040526023600155341561001457600080fd5b5b5b60008054600160a060020a03191633600160a060020a03161790555b5b5b610505806100436000396000f300606060405263ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416638da5cb5b811461005e578063a6f9dae11461008d578063b31e6b91146100ae578063c4b45283146100f6575b600080fd5b341561006957600080fd5b61007161013f565b604051600160a060020a03909116815260200160405180910390f35b341561009857600080fd5b6100ac600160a060020a036004351661014e565b005b34156100b957600080fd5b6100e2600435602435600160a060020a036044351660643560ff6084351660a43560c435610196565b604051901515815260200160405180910390f35b341561010157600080fd5b61011b600435602435600160a060020a0360443516610294565b6040518082600281111561012b57fe5b60ff16815260200191505060405180910390f35b600054600160a060020a031681565b60005433600160a060020a0390811691161461016957600080fd5b6000805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0383161790555b5b50565b60006101a06104a4565b6101a989610374565b156101b75760009150610288565b600160a060020a038716808252602080830188905260ff87166040808501919091526060840187905260808401869052600160a085015260008b81526002835281812093815292909152902081908151815473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a039190911617815560208201518160010155604082015160028201805460ff191660ff92909216919091179055606082015160038201556080820151600482015560a0820151600591909101805460ff191691151591909117905550600191505b50979650505050505050565b6000828152600260209081526040808320600160a060020a038516845290915281206005015460ff16151561030d5760008481526003602052604090205415156102ee576000848152600360205260409020439055610304565b6102f784610374565b156103045750600161036d565b5b50600261036d565b6000838152600260208181526040808420600160a060020a03878116865292529092208054600182015492820154600383015460049093015461035b9592909216939260ff909116916103b4565b15156103695750600161036d565b5060005b9392505050565b600081815260036020526040812054156103aa57600154600083815260036020526040902054430311156103aa575060016103af565b5b5060005b919050565b600080438690106103c8576000915061049a565b3087876040516c01000000000000000000000000600160a060020a03948516810282529290931690910260148301526028820152604801604051809103902090506001818686866040518060005260200160405260006040516020015260405193845260ff90921660208085019190915260408085019290925260608401929092526080909201915160208103908084039060008661646e5a03f1151561046e57600080fd5b505060206040510351600054600160a060020a03908116911614610495576000915061049a565b600191505b5095945050505050565b60c06040519081016040908152600080835260208301819052908201819052606082018190526080820181905260a0820152905600a165627a7a723058203b58e91da21fce079ee9a5ddebc2affe4c1401b615bfe29746c7de2b4f1458a40029`
+const PromiseValidatorBin = `0x6060604052341561000f57600080fd5b5b5b60008054600160a060020a03191633600160a060020a03161790555b5b5b6104c48061003e6000396000f300606060405263ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166370e39acd81146100695780638da5cb5b146100a2578063a6f9dae1146100d1578063b31e6b91146100f2578063c4b452831461013a575b600080fd5b341561007457600080fd5b61008e600435602435600160a060020a0360443516610183565b604051901515815260200160405180910390f35b34156100ad57600080fd5b6100b56101bc565b604051600160a060020a03909116815260200160405180910390f35b34156100dc57600080fd5b6100f0600160a060020a03600435166101cb565b005b34156100fd57600080fd5b61008e600435602435600160a060020a036044351660643560ff6084351660a43560c435610213565b604051901515815260200160405180910390f35b341561014557600080fd5b61015f600435602435600160a060020a036044351661033a565b6040518082600281111561016f57fe5b60ff16815260200191505060405180910390f35b60008381526001602090815260408083208584528252808320600160a060020a038516845290915290206005015460ff165b9392505050565b600054600160a060020a031681565b60005433600160a060020a039081169116146101e657600080fd5b6000805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0383161790555b5b50565b60008781526001602090815260408083208984528252808320600160a060020a038916845290915281206005015460ff16156102515750600061032f565b60c06040519081016040908152600160a060020a038816808352602080840189905260ff8816838501526060840187905260808401869052600160a0850181905260008d81529082528381208c82528252838120928152919052208151815473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a039190911617815560208201518160010155604082015160028201805460ff191660ff92909216919091179055606082015160038201556080820151600482015560a0820151600591909101805460ff191691151591909117905550600190505b979650505050505050565b60008381526001602081815260408084208685528252808420600160a060020a038681168652925283208054928101546002820154600383015460049093015461038f9590941693919260ff909116916103a8565b151561039d575060016101b5565b5060005b9392505050565b600080438690106103bc576000915061048e565b3087876040516c01000000000000000000000000600160a060020a03948516810282529290931690910260148301526028820152604801604051809103902090506001818686866040518060005260200160405260006040516020015260405193845260ff90921660208085019190915260408085019290925260608401929092526080909201915160208103908084039060008661646e5a03f1151561046257600080fd5b505060206040510351600054600160a060020a03908116911614610489576000915061048e565b600191505b50959450505050505600a165627a7a7230582091caa74eccdd143107b7d718b862e5cd6ee5f4a7cb2dd33b186ad69612e9763d0029`
 
 // DeployPromiseValidator deploys a new Ethereum contract, binding an instance of PromiseValidator to it.
 func DeployPromiseValidator(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *PromiseValidator, error) {
@@ -399,6 +399,27 @@ func (_PromiseValidator *PromiseValidatorTransactorSession) ChangeOwner(_newOwne
 	return _PromiseValidator.Contract.ChangeOwner(&_PromiseValidator.TransactOpts, _newOwner)
 }
 
+// IsEvidentSubmited is a paid mutator transaction binding the contract method 0x70e39acd.
+//
+// Solidity: function isEvidentSubmited(caseId bytes32, serviceId bytes32, clientAddress address) returns(bool)
+func (_PromiseValidator *PromiseValidatorTransactor) IsEvidentSubmited(opts *bind.TransactOpts, caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _PromiseValidator.contract.Transact(opts, "isEvidentSubmited", caseId, serviceId, clientAddress)
+}
+
+// IsEvidentSubmited is a paid mutator transaction binding the contract method 0x70e39acd.
+//
+// Solidity: function isEvidentSubmited(caseId bytes32, serviceId bytes32, clientAddress address) returns(bool)
+func (_PromiseValidator *PromiseValidatorSession) IsEvidentSubmited(caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _PromiseValidator.Contract.IsEvidentSubmited(&_PromiseValidator.TransactOpts, caseId, serviceId, clientAddress)
+}
+
+// IsEvidentSubmited is a paid mutator transaction binding the contract method 0x70e39acd.
+//
+// Solidity: function isEvidentSubmited(caseId bytes32, serviceId bytes32, clientAddress address) returns(bool)
+func (_PromiseValidator *PromiseValidatorTransactorSession) IsEvidentSubmited(caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _PromiseValidator.Contract.IsEvidentSubmited(&_PromiseValidator.TransactOpts, caseId, serviceId, clientAddress)
+}
+
 // SubmitPromise is a paid mutator transaction binding the contract method 0xb31e6b91.
 //
 // Solidity: function submitPromise(caseId bytes32, serviceId bytes32, beneficiary address, blockNumber uint256, sig_v uint8, sig_r bytes32, sig_s bytes32) returns(bool)
@@ -441,8 +462,259 @@ func (_PromiseValidator *PromiseValidatorTransactorSession) TestimonyFor(caseId 
 	return _PromiseValidator.Contract.TestimonyFor(&_PromiseValidator.TransactOpts, caseId, serviceId, clientAddress)
 }
 
+// TrialTransistionsAbstractABI is the input ABI used to generate the binding from.
+const TrialTransistionsAbstractABI = "[{\"constant\":false,\"inputs\":[],\"name\":\"getInitialStatus\",\"outputs\":[{\"name\":\"status\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"claimId\",\"type\":\"bytes32\"},{\"name\":\"status\",\"type\":\"uint8\"}],\"name\":\"startGracePeriod\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"witnessState\",\"type\":\"uint8\"},{\"name\":\"trialStatus\",\"type\":\"uint8\"}],\"name\":\"getStatus\",\"outputs\":[{\"name\":\"status\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"trialStatus\",\"type\":\"uint8\"}],\"name\":\"getWitness\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"claimId\",\"type\":\"bytes32\"},{\"name\":\"status\",\"type\":\"uint8\"}],\"name\":\"expired\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"}]"
+
+// TrialTransistionsAbstractBin is the compiled bytecode used for deploying new contracts.
+const TrialTransistionsAbstractBin = `0x`
+
+// DeployTrialTransistionsAbstract deploys a new Ethereum contract, binding an instance of TrialTransistionsAbstract to it.
+func DeployTrialTransistionsAbstract(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *TrialTransistionsAbstract, error) {
+	parsed, err := abi.JSON(strings.NewReader(TrialTransistionsAbstractABI))
+	if err != nil {
+		return common.Address{}, nil, nil, err
+	}
+	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(TrialTransistionsAbstractBin), backend)
+	if err != nil {
+		return common.Address{}, nil, nil, err
+	}
+	return address, tx, &TrialTransistionsAbstract{TrialTransistionsAbstractCaller: TrialTransistionsAbstractCaller{contract: contract}, TrialTransistionsAbstractTransactor: TrialTransistionsAbstractTransactor{contract: contract}}, nil
+}
+
+// TrialTransistionsAbstract is an auto generated Go binding around an Ethereum contract.
+type TrialTransistionsAbstract struct {
+	TrialTransistionsAbstractCaller     // Read-only binding to the contract
+	TrialTransistionsAbstractTransactor // Write-only binding to the contract
+}
+
+// TrialTransistionsAbstractCaller is an auto generated read-only Go binding around an Ethereum contract.
+type TrialTransistionsAbstractCaller struct {
+	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+}
+
+// TrialTransistionsAbstractTransactor is an auto generated write-only Go binding around an Ethereum contract.
+type TrialTransistionsAbstractTransactor struct {
+	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+}
+
+// TrialTransistionsAbstractSession is an auto generated Go binding around an Ethereum contract,
+// with pre-set call and transact options.
+type TrialTransistionsAbstractSession struct {
+	Contract     *TrialTransistionsAbstract // Generic contract binding to set the session for
+	CallOpts     bind.CallOpts              // Call options to use throughout this session
+	TransactOpts bind.TransactOpts          // Transaction auth options to use throughout this session
+}
+
+// TrialTransistionsAbstractCallerSession is an auto generated read-only Go binding around an Ethereum contract,
+// with pre-set call options.
+type TrialTransistionsAbstractCallerSession struct {
+	Contract *TrialTransistionsAbstractCaller // Generic contract caller binding to set the session for
+	CallOpts bind.CallOpts                    // Call options to use throughout this session
+}
+
+// TrialTransistionsAbstractTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
+// with pre-set transact options.
+type TrialTransistionsAbstractTransactorSession struct {
+	Contract     *TrialTransistionsAbstractTransactor // Generic contract transactor binding to set the session for
+	TransactOpts bind.TransactOpts                    // Transaction auth options to use throughout this session
+}
+
+// TrialTransistionsAbstractRaw is an auto generated low-level Go binding around an Ethereum contract.
+type TrialTransistionsAbstractRaw struct {
+	Contract *TrialTransistionsAbstract // Generic contract binding to access the raw methods on
+}
+
+// TrialTransistionsAbstractCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
+type TrialTransistionsAbstractCallerRaw struct {
+	Contract *TrialTransistionsAbstractCaller // Generic read-only contract binding to access the raw methods on
+}
+
+// TrialTransistionsAbstractTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
+type TrialTransistionsAbstractTransactorRaw struct {
+	Contract *TrialTransistionsAbstractTransactor // Generic write-only contract binding to access the raw methods on
+}
+
+// NewTrialTransistionsAbstract creates a new instance of TrialTransistionsAbstract, bound to a specific deployed contract.
+func NewTrialTransistionsAbstract(address common.Address, backend bind.ContractBackend) (*TrialTransistionsAbstract, error) {
+	contract, err := bindTrialTransistionsAbstract(address, backend, backend)
+	if err != nil {
+		return nil, err
+	}
+	return &TrialTransistionsAbstract{TrialTransistionsAbstractCaller: TrialTransistionsAbstractCaller{contract: contract}, TrialTransistionsAbstractTransactor: TrialTransistionsAbstractTransactor{contract: contract}}, nil
+}
+
+// NewTrialTransistionsAbstractCaller creates a new read-only instance of TrialTransistionsAbstract, bound to a specific deployed contract.
+func NewTrialTransistionsAbstractCaller(address common.Address, caller bind.ContractCaller) (*TrialTransistionsAbstractCaller, error) {
+	contract, err := bindTrialTransistionsAbstract(address, caller, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &TrialTransistionsAbstractCaller{contract: contract}, nil
+}
+
+// NewTrialTransistionsAbstractTransactor creates a new write-only instance of TrialTransistionsAbstract, bound to a specific deployed contract.
+func NewTrialTransistionsAbstractTransactor(address common.Address, transactor bind.ContractTransactor) (*TrialTransistionsAbstractTransactor, error) {
+	contract, err := bindTrialTransistionsAbstract(address, nil, transactor)
+	if err != nil {
+		return nil, err
+	}
+	return &TrialTransistionsAbstractTransactor{contract: contract}, nil
+}
+
+// bindTrialTransistionsAbstract binds a generic wrapper to an already deployed contract.
+func bindTrialTransistionsAbstract(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor) (*bind.BoundContract, error) {
+	parsed, err := abi.JSON(strings.NewReader(TrialTransistionsAbstractABI))
+	if err != nil {
+		return nil, err
+	}
+	return bind.NewBoundContract(address, parsed, caller, transactor), nil
+}
+
+// Call invokes the (constant) contract method with params as input values and
+// sets the output to result. The result type might be a single field for simple
+// returns, a slice of interfaces for anonymous returns and a struct for named
+// returns.
+func (_TrialTransistionsAbstract *TrialTransistionsAbstractRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+	return _TrialTransistionsAbstract.Contract.TrialTransistionsAbstractCaller.contract.Call(opts, result, method, params...)
+}
+
+// Transfer initiates a plain transaction to move funds to the contract, calling
+// its default method if one is available.
+func (_TrialTransistionsAbstract *TrialTransistionsAbstractRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _TrialTransistionsAbstract.Contract.TrialTransistionsAbstractTransactor.contract.Transfer(opts)
+}
+
+// Transact invokes the (paid) contract method with params as input values.
+func (_TrialTransistionsAbstract *TrialTransistionsAbstractRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+	return _TrialTransistionsAbstract.Contract.TrialTransistionsAbstractTransactor.contract.Transact(opts, method, params...)
+}
+
+// Call invokes the (constant) contract method with params as input values and
+// sets the output to result. The result type might be a single field for simple
+// returns, a slice of interfaces for anonymous returns and a struct for named
+// returns.
+func (_TrialTransistionsAbstract *TrialTransistionsAbstractCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+	return _TrialTransistionsAbstract.Contract.contract.Call(opts, result, method, params...)
+}
+
+// Transfer initiates a plain transaction to move funds to the contract, calling
+// its default method if one is available.
+func (_TrialTransistionsAbstract *TrialTransistionsAbstractTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _TrialTransistionsAbstract.Contract.contract.Transfer(opts)
+}
+
+// Transact invokes the (paid) contract method with params as input values.
+func (_TrialTransistionsAbstract *TrialTransistionsAbstractTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+	return _TrialTransistionsAbstract.Contract.contract.Transact(opts, method, params...)
+}
+
+// Expired is a paid mutator transaction binding the contract method 0xfcc0a2ae.
+//
+// Solidity: function expired(claimId bytes32, status uint8) returns(bool)
+func (_TrialTransistionsAbstract *TrialTransistionsAbstractTransactor) Expired(opts *bind.TransactOpts, claimId [32]byte, status uint8) (*types.Transaction, error) {
+	return _TrialTransistionsAbstract.contract.Transact(opts, "expired", claimId, status)
+}
+
+// Expired is a paid mutator transaction binding the contract method 0xfcc0a2ae.
+//
+// Solidity: function expired(claimId bytes32, status uint8) returns(bool)
+func (_TrialTransistionsAbstract *TrialTransistionsAbstractSession) Expired(claimId [32]byte, status uint8) (*types.Transaction, error) {
+	return _TrialTransistionsAbstract.Contract.Expired(&_TrialTransistionsAbstract.TransactOpts, claimId, status)
+}
+
+// Expired is a paid mutator transaction binding the contract method 0xfcc0a2ae.
+//
+// Solidity: function expired(claimId bytes32, status uint8) returns(bool)
+func (_TrialTransistionsAbstract *TrialTransistionsAbstractTransactorSession) Expired(claimId [32]byte, status uint8) (*types.Transaction, error) {
+	return _TrialTransistionsAbstract.Contract.Expired(&_TrialTransistionsAbstract.TransactOpts, claimId, status)
+}
+
+// GetInitialStatus is a paid mutator transaction binding the contract method 0x07e5ae5f.
+//
+// Solidity: function getInitialStatus() returns(status uint8)
+func (_TrialTransistionsAbstract *TrialTransistionsAbstractTransactor) GetInitialStatus(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _TrialTransistionsAbstract.contract.Transact(opts, "getInitialStatus")
+}
+
+// GetInitialStatus is a paid mutator transaction binding the contract method 0x07e5ae5f.
+//
+// Solidity: function getInitialStatus() returns(status uint8)
+func (_TrialTransistionsAbstract *TrialTransistionsAbstractSession) GetInitialStatus() (*types.Transaction, error) {
+	return _TrialTransistionsAbstract.Contract.GetInitialStatus(&_TrialTransistionsAbstract.TransactOpts)
+}
+
+// GetInitialStatus is a paid mutator transaction binding the contract method 0x07e5ae5f.
+//
+// Solidity: function getInitialStatus() returns(status uint8)
+func (_TrialTransistionsAbstract *TrialTransistionsAbstractTransactorSession) GetInitialStatus() (*types.Transaction, error) {
+	return _TrialTransistionsAbstract.Contract.GetInitialStatus(&_TrialTransistionsAbstract.TransactOpts)
+}
+
+// GetStatus is a paid mutator transaction binding the contract method 0xd39eb301.
+//
+// Solidity: function getStatus(witnessState uint8, trialStatus uint8) returns(status uint8)
+func (_TrialTransistionsAbstract *TrialTransistionsAbstractTransactor) GetStatus(opts *bind.TransactOpts, witnessState uint8, trialStatus uint8) (*types.Transaction, error) {
+	return _TrialTransistionsAbstract.contract.Transact(opts, "getStatus", witnessState, trialStatus)
+}
+
+// GetStatus is a paid mutator transaction binding the contract method 0xd39eb301.
+//
+// Solidity: function getStatus(witnessState uint8, trialStatus uint8) returns(status uint8)
+func (_TrialTransistionsAbstract *TrialTransistionsAbstractSession) GetStatus(witnessState uint8, trialStatus uint8) (*types.Transaction, error) {
+	return _TrialTransistionsAbstract.Contract.GetStatus(&_TrialTransistionsAbstract.TransactOpts, witnessState, trialStatus)
+}
+
+// GetStatus is a paid mutator transaction binding the contract method 0xd39eb301.
+//
+// Solidity: function getStatus(witnessState uint8, trialStatus uint8) returns(status uint8)
+func (_TrialTransistionsAbstract *TrialTransistionsAbstractTransactorSession) GetStatus(witnessState uint8, trialStatus uint8) (*types.Transaction, error) {
+	return _TrialTransistionsAbstract.Contract.GetStatus(&_TrialTransistionsAbstract.TransactOpts, witnessState, trialStatus)
+}
+
+// GetWitness is a paid mutator transaction binding the contract method 0xdb061563.
+//
+// Solidity: function getWitness(trialStatus uint8) returns(address)
+func (_TrialTransistionsAbstract *TrialTransistionsAbstractTransactor) GetWitness(opts *bind.TransactOpts, trialStatus uint8) (*types.Transaction, error) {
+	return _TrialTransistionsAbstract.contract.Transact(opts, "getWitness", trialStatus)
+}
+
+// GetWitness is a paid mutator transaction binding the contract method 0xdb061563.
+//
+// Solidity: function getWitness(trialStatus uint8) returns(address)
+func (_TrialTransistionsAbstract *TrialTransistionsAbstractSession) GetWitness(trialStatus uint8) (*types.Transaction, error) {
+	return _TrialTransistionsAbstract.Contract.GetWitness(&_TrialTransistionsAbstract.TransactOpts, trialStatus)
+}
+
+// GetWitness is a paid mutator transaction binding the contract method 0xdb061563.
+//
+// Solidity: function getWitness(trialStatus uint8) returns(address)
+func (_TrialTransistionsAbstract *TrialTransistionsAbstractTransactorSession) GetWitness(trialStatus uint8) (*types.Transaction, error) {
+	return _TrialTransistionsAbstract.Contract.GetWitness(&_TrialTransistionsAbstract.TransactOpts, trialStatus)
+}
+
+// StartGracePeriod is a paid mutator transaction binding the contract method 0xa7edcbe4.
+//
+// Solidity: function startGracePeriod(claimId bytes32, status uint8) returns(bool)
+func (_TrialTransistionsAbstract *TrialTransistionsAbstractTransactor) StartGracePeriod(opts *bind.TransactOpts, claimId [32]byte, status uint8) (*types.Transaction, error) {
+	return _TrialTransistionsAbstract.contract.Transact(opts, "startGracePeriod", claimId, status)
+}
+
+// StartGracePeriod is a paid mutator transaction binding the contract method 0xa7edcbe4.
+//
+// Solidity: function startGracePeriod(claimId bytes32, status uint8) returns(bool)
+func (_TrialTransistionsAbstract *TrialTransistionsAbstractSession) StartGracePeriod(claimId [32]byte, status uint8) (*types.Transaction, error) {
+	return _TrialTransistionsAbstract.Contract.StartGracePeriod(&_TrialTransistionsAbstract.TransactOpts, claimId, status)
+}
+
+// StartGracePeriod is a paid mutator transaction binding the contract method 0xa7edcbe4.
+//
+// Solidity: function startGracePeriod(claimId bytes32, status uint8) returns(bool)
+func (_TrialTransistionsAbstract *TrialTransistionsAbstractTransactorSession) StartGracePeriod(claimId [32]byte, status uint8) (*types.Transaction, error) {
+	return _TrialTransistionsAbstract.Contract.StartGracePeriod(&_TrialTransistionsAbstract.TransactOpts, claimId, status)
+}
+
 // WitnessAbstractABI is the input ABI used to generate the binding from.
-const WitnessAbstractABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"clientAddress\",\"type\":\"address\"}],\"name\":\"testimonyFor\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"}]"
+const WitnessAbstractABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"clientAddress\",\"type\":\"address\"}],\"name\":\"isEvidentSubmited\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"clientAddress\",\"type\":\"address\"}],\"name\":\"testimonyFor\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"}]"
 
 // WitnessAbstractBin is the compiled bytecode used for deploying new contracts.
 const WitnessAbstractBin = `0x`
@@ -585,6 +857,27 @@ func (_WitnessAbstract *WitnessAbstractTransactorRaw) Transfer(opts *bind.Transa
 // Transact invokes the (paid) contract method with params as input values.
 func (_WitnessAbstract *WitnessAbstractTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
 	return _WitnessAbstract.Contract.contract.Transact(opts, method, params...)
+}
+
+// IsEvidentSubmited is a paid mutator transaction binding the contract method 0x70e39acd.
+//
+// Solidity: function isEvidentSubmited(caseId bytes32, serviceId bytes32, clientAddress address) returns(bool)
+func (_WitnessAbstract *WitnessAbstractTransactor) IsEvidentSubmited(opts *bind.TransactOpts, caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _WitnessAbstract.contract.Transact(opts, "isEvidentSubmited", caseId, serviceId, clientAddress)
+}
+
+// IsEvidentSubmited is a paid mutator transaction binding the contract method 0x70e39acd.
+//
+// Solidity: function isEvidentSubmited(caseId bytes32, serviceId bytes32, clientAddress address) returns(bool)
+func (_WitnessAbstract *WitnessAbstractSession) IsEvidentSubmited(caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _WitnessAbstract.Contract.IsEvidentSubmited(&_WitnessAbstract.TransactOpts, caseId, serviceId, clientAddress)
+}
+
+// IsEvidentSubmited is a paid mutator transaction binding the contract method 0x70e39acd.
+//
+// Solidity: function isEvidentSubmited(caseId bytes32, serviceId bytes32, clientAddress address) returns(bool)
+func (_WitnessAbstract *WitnessAbstractTransactorSession) IsEvidentSubmited(caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _WitnessAbstract.Contract.IsEvidentSubmited(&_WitnessAbstract.TransactOpts, caseId, serviceId, clientAddress)
 }
 
 // TestimonyFor is a paid mutator transaction binding the contract method 0xc4b45283.

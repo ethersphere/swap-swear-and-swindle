@@ -35,6 +35,8 @@ var (
 	serviceDeposit        = int64(50)
 	witnessesNumber       = int64(2)
 	serviceId             = [32]byte{1, 2, 3, 4}
+	clientENSName         = "client.game"
+	serviceENSName        = "service.game"
 )
 
 func newTestBackend() *backends.SimulatedBackend {
@@ -169,7 +171,7 @@ func deposit(t *testing.T, backend *backends.SimulatedBackend, sampleToken *Samp
 func openClaimForMirrorGame(t *testing.T, clientContent string, serviceContent string, numberOfBlocksToWait int, pendingTest bool) {
 	backend := newTestBackend()
 
-	_, swearGame, sampleToken, promiseValidator, promiseValidatorAddress, _ := deployTheGame(t, backend)
+	_, swearGame, sampleToken, promiseValidator, promiseValidatorAddress, mirrorEns := deployTheGame(t, backend)
 
 	deposit(t, backend, sampleToken, swearGame)
 
@@ -186,14 +188,14 @@ func openClaimForMirrorGame(t *testing.T, clientContent string, serviceContent s
 		t.Fatalf("deployENS: expected no error, got %v", err)
 	}
 
-	err = registerENSRecord(t, backend, "service.game", serviceContent, ens, publicResolver, resolverAddr)
+	err = registerENSRecord(t, backend, serviceENSName, serviceContent, ens, publicResolver, resolverAddr)
 	if err != nil {
 
 		t.Fatal("registerENSRecord service.game fail")
 	}
-	err = registerENSRecord(t, backend, "client.game", clientContent, ens, publicResolver, resolverAddr)
+	err = registerENSRecord(t, backend, clientENSName, clientContent, ens, publicResolver, resolverAddr)
 	if err != nil {
-		t.Fatal("registerENSRecord", "client.game", "fail")
+		t.Fatal("registerENSRecord", clientENSName, "fail")
 	}
 	depositBefore, err := swearGame.Deposit(&bind.CallOpts{})
 	if err != nil {
@@ -213,8 +215,14 @@ func openClaimForMirrorGame(t *testing.T, clientContent string, serviceContent s
 	}
 	commit(backend)
 
-	claimId, err := swearGame.Ids(&bind.CallOpts{}, clientAddr, big.NewInt(0))
-	t.Log("claim", claimId)
+	caseId, err := swearGame.Ids(&bind.CallOpts{}, clientAddr, big.NewInt(0))
+	t.Log("case", caseId)
+
+	_, err = mirrorEns.SubmitNameHashes(opts, caseId, serviceId, Namehash(clientENSName), Namehash(serviceENSName))
+	if err != nil {
+		t.Fatalf("SubmitNameHashes:  expected no error, got %v", err)
+	}
+	commit(backend)
 
 	if !pendingTest {
 		promise, err := issuePromise(serviceKey, clientAddr, big.NewInt(int64(blockNumber+PromiseTillNextBlocks)), promiseValidatorAddress)
@@ -223,21 +231,21 @@ func openClaimForMirrorGame(t *testing.T, clientContent string, serviceContent s
 		}
 		v, r, s := sig2vrs(promise.sig)
 
-		promiseValidator.SubmitPromise(opts, claimId, serviceId, promise.beneficiary, promise.blockNumber, v, r, s)
+		promiseValidator.SubmitPromise(opts, caseId, serviceId, promise.beneficiary, promise.blockNumber, v, r, s)
 	}
 
 	for i := 0; i < numberOfBlocksToWait; i++ {
 		commit(backend)
 	}
 
-	_, err = swearGame.Trial(opts, claimId)
+	_, err = swearGame.Trial(opts, caseId)
 	if err != nil {
 		t.Fatalf("Trial: expected no error, got %v", err)
 	}
 
 	commit(backend)
 
-	status, err := swearGame.GetStatus(&bind.CallOpts{}, claimId)
+	status, err := swearGame.GetStatus(&bind.CallOpts{}, caseId)
 	if err != nil {
 		t.Fatalf("NewCase: expected no error, got %v", err)
 	}
@@ -251,9 +259,9 @@ func openClaimForMirrorGame(t *testing.T, clientContent string, serviceContent s
 		}
 		v, r, s := sig2vrs(promise.sig)
 
-		promiseValidator.SubmitPromise(opts, claimId, serviceId, promise.beneficiary, promise.blockNumber, v, r, s)
+		promiseValidator.SubmitPromise(opts, caseId, serviceId, promise.beneficiary, promise.blockNumber, v, r, s)
 
-		_, err = swearGame.Trial(opts, claimId)
+		_, err = swearGame.Trial(opts, caseId)
 
 		if err != nil {
 			t.Fatalf("NewCase: expected no error, got %v", err)
@@ -335,14 +343,14 @@ func TestRegisterAndNewCase(t *testing.T) {
 		t.Fatalf("deployENS: expected no error, got %v", err)
 	}
 
-	err = registerENSRecord(t, backend, "service.game", "123", ens, publicResolver, resolverAddr)
+	err = registerENSRecord(t, backend, serviceENSName, "123", ens, publicResolver, resolverAddr)
 	if err != nil {
 
 		t.Fatal("registerENSRecord service.game fail")
 	}
-	err = registerENSRecord(t, backend, "client.game", "13", ens, publicResolver, resolverAddr)
+	err = registerENSRecord(t, backend, clientENSName, "13", ens, publicResolver, resolverAddr)
 	if err != nil {
-		t.Fatal("registerENSRecord", "client.game", "fail")
+		t.Fatal("registerENSRecord", clientENSName, "fail")
 	}
 
 	_, err = mirrorEns.SetENSAddress(opts, ensAddress)
@@ -351,11 +359,7 @@ func TestRegisterAndNewCase(t *testing.T) {
 	}
 
 	opts = bind.NewKeyedTransactor(clientKey)
-	// promise, err := issuePromise(serviceKey, clientAddr, big.NewInt(int64(blockNumber+5)), swearGameContractAddress)
-	// if err != nil {
-	// 	t.Fatalf("NewCase: issuePromise expected no error, got %v", err)
-	// }
-	// v, r, s := sig2vrs(promise.Sig)
+
 	_, err = swearGame.NewCase(opts, serviceId)
 
 	if err != nil {
@@ -390,11 +394,7 @@ func TestNewCaseNotRegister(t *testing.T) {
 	commit(backend)
 
 	opts := bind.NewKeyedTransactor(clientKey)
-	// promise, err := issuePromise(serviceKey, clientAddr, big.NewInt(int64(blockNumber+5)), swearGameContractAddress)
-	// if err != nil {
-	// 	t.Fatalf("NewCase: issuePromise expected no error, got %v", err)
-	// }
-	// v, r, s := sig2vrs(promise.Sig)
+
 	_, err = swearGame.NewCase(opts, serviceId)
 
 	if err != nil {

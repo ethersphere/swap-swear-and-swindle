@@ -5,13 +5,14 @@ import "./abstracts/ensabstract.sol";
 
 contract MirrorENS is WitnessAbstract{
 
-  //This is the specific game logic "mirror"
-	//specific game "mirror"
+	struct ensNameHashePair{
+    bytes32 clientNameHash;
+		bytes32 serviceNameHash;
+  }
+  //map caseId to map serviceId to ensNameHashePair
+	mapping(bytes32=> mapping(bytes32=> ensNameHashePair))  ensNameHashePairs;
+
 	ENSAbstract ens;
-	//client.game namehash
-	bytes32 constant clientENSNameHash = 0x94c4860d894e91f2df683b61455630d721209c6265d2e80c86a1f92cab14b370;
-	//reflector.game namehash
-	bytes32 constant reflectorENSNameHash = 0xacd7f5ed7d93b1526477b93e6c7def60c40420a868e7f694a7671413d89bb9a5;
 
 	address public ensAddress = 0x8163bc885c2b14478b75f178ca76f31581dc967f;
 
@@ -21,9 +22,19 @@ contract MirrorENS is WitnessAbstract{
 
   function testimonyFor(bytes32 caseId,bytes32 serviceId,address clientAddress) returns (WitnessAbstract.Status){
 
-    if (guilty()) return WitnessAbstract.Status.VALID;
+    if (guilty(caseId,serviceId)) return WitnessAbstract.Status.VALID;
     return WitnessAbstract.Status.INVALID;
 
+  }
+
+	function submitNameHashes(bytes32 caseId,bytes32 serviceId, bytes32 clientNameHash , bytes32 serviceNameHash) returns (bool) {
+		if (ensNameHashePairs[caseId][serviceId].clientNameHash != bytes32(0x0)) return false; //do not allow override submition
+		ensNameHashePairs[caseId][serviceId] = ensNameHashePair(clientNameHash,serviceNameHash);
+		return true;
+  }
+
+  function isEvidentSubmited(bytes32 caseId, bytes32 serviceId,address clientAddress) returns (bool){
+	  return (ensNameHashePairs[caseId][serviceId].clientNameHash != bytes32(0x0));
   }
 
 	function ensResolve(bytes32 node) private constant returns(bytes32) {
@@ -33,11 +44,11 @@ contract MirrorENS is WitnessAbstract{
 			return content;
 	}
 
-	function guilty() private returns(bool){
+	function guilty(bytes32 caseId, bytes32 serviceId) private returns(bool){
 		  //check if the two nodes resolved ENS are equal
 			//for each specific game the the decision should be take diffrently
 			ens = ENSAbstract(ensAddress);
-			if (ensResolve(clientENSNameHash)!= ensResolve(reflectorENSNameHash)){
+			if (ensResolve(ensNameHashePairs[caseId][serviceId].clientNameHash)!= ensResolve(ensNameHashePairs[caseId][serviceId].serviceNameHash)){
 				return true;
 			}
 			return false;

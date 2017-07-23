@@ -321,10 +321,10 @@ func (_ENSAbstract *ENSAbstractTransactorSession) SetTTL(node [32]byte, ttl uint
 }
 
 // MirrorENSABI is the input ABI used to generate the binding from.
-const MirrorENSABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_ensAddr\",\"type\":\"address\"}],\"name\":\"setENSAddress\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"ensAddress\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"clientAddress\",\"type\":\"address\"}],\"name\":\"testimonyFor\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"type\":\"constructor\"}]"
+const MirrorENSABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_ensAddr\",\"type\":\"address\"}],\"name\":\"setENSAddress\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"clientNameHash\",\"type\":\"bytes32\"},{\"name\":\"serviceNameHash\",\"type\":\"bytes32\"}],\"name\":\"submitNameHashes\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"clientAddress\",\"type\":\"address\"}],\"name\":\"isEvidentSubmited\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"ensAddress\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"clientAddress\",\"type\":\"address\"}],\"name\":\"testimonyFor\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"type\":\"constructor\"}]"
 
 // MirrorENSBin is the compiled bytecode used for deploying new contracts.
-const MirrorENSBin = `0x606060405260018054600160a060020a031916738163bc885c2b14478b75f178ca76f31581dc967f179055341561003557600080fd5b5b5b5b6102f2806100476000396000f300606060405263ffffffff60e060020a6000350416634cad1ce9811461003a578063a6b694f21461006d578063c4b452831461009c575b600080fd5b341561004557600080fd5b610059600160a060020a03600435166100e5565b604051901515815260200160405180910390f35b341561007857600080fd5b610080610113565b604051600160a060020a03909116815260200160405180910390f35b34156100a757600080fd5b6100c1600435602435600160a060020a0360443516610122565b604051808260028111156100d157fe5b60ff16815260200191505060405180910390f35b6001805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0383161781555b919050565b600154600160a060020a031681565b600061012c610144565b156101395750600061013d565b5060015b9392505050565b6001546000805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0390921691909117815561019c7facd7f5ed7d93b1526477b93e6c7def60c40420a868e7f694a7671413d89bb9a56101d9565b6101c57f94c4860d894e91f2df683b61455630d721209c6265d2e80c86a1f92cab14b3706101d9565b146101d2575060016101d6565b5060005b90565b60008054819081908190600160a060020a0316630178b8bf86836040516020015260405160e060020a63ffffffff84160281526004810191909152602401602060405180830381600087803b151561023057600080fd5b6102c65a03f1151561024157600080fd5b5050506040518051935083925050600160a060020a038216632dff69418660006040516020015260405160e060020a63ffffffff84160281526004810191909152602401602060405180830381600087803b151561029e57600080fd5b6102c65a03f115156102af57600080fd5b50505060405180519450849150505b5050509190505600a165627a7a7230582093200b625c1b95be510543905ea8117841b87425e26cdc1b7028e02a7abb62a00029`
+const MirrorENSBin = `0x606060405260028054600160a060020a031916738163bc885c2b14478b75f178ca76f31581dc967f179055341561003557600080fd5b5b5b5b6103fb806100476000396000f300606060405263ffffffff60e060020a6000350416634cad1ce981146100505780636fc345671461008357806370e39acd146100b6578063a6b694f2146100ef578063c4b452831461011e575b600080fd5b341561005b57600080fd5b61006f600160a060020a0360043516610167565b604051901515815260200160405180910390f35b341561008e57600080fd5b61006f600435602435604435606435610197565b604051901515815260200160405180910390f35b34156100c157600080fd5b61006f600435602435600160a060020a0360443516610200565b604051901515815260200160405180910390f35b34156100fa57600080fd5b610102610222565b604051600160a060020a03909116815260200160405180910390f35b341561012957600080fd5b610143600435602435600160a060020a0360443516610231565b6040518082600281111561015357fe5b60ff16815260200191505060405180910390f35b6002805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a03831617905560015b919050565b600084815260208181526040808320868452909152812054156101bc575060006101f8565b60408051908101604090815284825260208083018590526000888152808252828120888252909152208151815560208201516001918201559150505b949350505050565b60008381526020818152604080832085845290915290205415155b9392505050565b600254600160a060020a031681565b600061023d8484610255565b1561024a5750600061021b565b5060015b9392505050565b6002546001805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a039092169190911781556000838152602081815260408083208584529091528120909101546102a8906102e0565b6000848152602081815260408083208684529091529020546102c9906102e0565b146102d6575060016102da565b5060005b92915050565b600154600090819081908190600160a060020a0316630178b8bf86836040516020015260405160e060020a63ffffffff84160281526004810191909152602401602060405180830381600087803b151561033957600080fd5b6102c65a03f1151561034a57600080fd5b5050506040518051935083925050600160a060020a038216632dff69418660006040516020015260405160e060020a63ffffffff84160281526004810191909152602401602060405180830381600087803b15156103a757600080fd5b6102c65a03f115156103b857600080fd5b50505060405180519450849150505b5050509190505600a165627a7a72305820f62d045a3b17466243b97c4bbff4a3e8674b6fe6e6071757a50e94fd01a40d830029`
 
 // DeployMirrorENS deploys a new Ethereum contract, binding an instance of MirrorENS to it.
 func DeployMirrorENS(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *MirrorENS, error) {
@@ -492,6 +492,27 @@ func (_MirrorENS *MirrorENSCallerSession) EnsAddress() (common.Address, error) {
 	return _MirrorENS.Contract.EnsAddress(&_MirrorENS.CallOpts)
 }
 
+// IsEvidentSubmited is a paid mutator transaction binding the contract method 0x70e39acd.
+//
+// Solidity: function isEvidentSubmited(caseId bytes32, serviceId bytes32, clientAddress address) returns(bool)
+func (_MirrorENS *MirrorENSTransactor) IsEvidentSubmited(opts *bind.TransactOpts, caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _MirrorENS.contract.Transact(opts, "isEvidentSubmited", caseId, serviceId, clientAddress)
+}
+
+// IsEvidentSubmited is a paid mutator transaction binding the contract method 0x70e39acd.
+//
+// Solidity: function isEvidentSubmited(caseId bytes32, serviceId bytes32, clientAddress address) returns(bool)
+func (_MirrorENS *MirrorENSSession) IsEvidentSubmited(caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _MirrorENS.Contract.IsEvidentSubmited(&_MirrorENS.TransactOpts, caseId, serviceId, clientAddress)
+}
+
+// IsEvidentSubmited is a paid mutator transaction binding the contract method 0x70e39acd.
+//
+// Solidity: function isEvidentSubmited(caseId bytes32, serviceId bytes32, clientAddress address) returns(bool)
+func (_MirrorENS *MirrorENSTransactorSession) IsEvidentSubmited(caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _MirrorENS.Contract.IsEvidentSubmited(&_MirrorENS.TransactOpts, caseId, serviceId, clientAddress)
+}
+
 // SetENSAddress is a paid mutator transaction binding the contract method 0x4cad1ce9.
 //
 // Solidity: function setENSAddress(_ensAddr address) returns(bool)
@@ -511,6 +532,27 @@ func (_MirrorENS *MirrorENSSession) SetENSAddress(_ensAddr common.Address) (*typ
 // Solidity: function setENSAddress(_ensAddr address) returns(bool)
 func (_MirrorENS *MirrorENSTransactorSession) SetENSAddress(_ensAddr common.Address) (*types.Transaction, error) {
 	return _MirrorENS.Contract.SetENSAddress(&_MirrorENS.TransactOpts, _ensAddr)
+}
+
+// SubmitNameHashes is a paid mutator transaction binding the contract method 0x6fc34567.
+//
+// Solidity: function submitNameHashes(caseId bytes32, serviceId bytes32, clientNameHash bytes32, serviceNameHash bytes32) returns(bool)
+func (_MirrorENS *MirrorENSTransactor) SubmitNameHashes(opts *bind.TransactOpts, caseId [32]byte, serviceId [32]byte, clientNameHash [32]byte, serviceNameHash [32]byte) (*types.Transaction, error) {
+	return _MirrorENS.contract.Transact(opts, "submitNameHashes", caseId, serviceId, clientNameHash, serviceNameHash)
+}
+
+// SubmitNameHashes is a paid mutator transaction binding the contract method 0x6fc34567.
+//
+// Solidity: function submitNameHashes(caseId bytes32, serviceId bytes32, clientNameHash bytes32, serviceNameHash bytes32) returns(bool)
+func (_MirrorENS *MirrorENSSession) SubmitNameHashes(caseId [32]byte, serviceId [32]byte, clientNameHash [32]byte, serviceNameHash [32]byte) (*types.Transaction, error) {
+	return _MirrorENS.Contract.SubmitNameHashes(&_MirrorENS.TransactOpts, caseId, serviceId, clientNameHash, serviceNameHash)
+}
+
+// SubmitNameHashes is a paid mutator transaction binding the contract method 0x6fc34567.
+//
+// Solidity: function submitNameHashes(caseId bytes32, serviceId bytes32, clientNameHash bytes32, serviceNameHash bytes32) returns(bool)
+func (_MirrorENS *MirrorENSTransactorSession) SubmitNameHashes(caseId [32]byte, serviceId [32]byte, clientNameHash [32]byte, serviceNameHash [32]byte) (*types.Transaction, error) {
+	return _MirrorENS.Contract.SubmitNameHashes(&_MirrorENS.TransactOpts, caseId, serviceId, clientNameHash, serviceNameHash)
 }
 
 // TestimonyFor is a paid mutator transaction binding the contract method 0xc4b45283.
@@ -707,7 +749,7 @@ func (_ResolverAbstract *ResolverAbstractCallerSession) Content(node [32]byte) (
 }
 
 // WitnessAbstractABI is the input ABI used to generate the binding from.
-const WitnessAbstractABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"clientAddress\",\"type\":\"address\"}],\"name\":\"testimonyFor\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"}]"
+const WitnessAbstractABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"clientAddress\",\"type\":\"address\"}],\"name\":\"isEvidentSubmited\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"clientAddress\",\"type\":\"address\"}],\"name\":\"testimonyFor\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"}]"
 
 // WitnessAbstractBin is the compiled bytecode used for deploying new contracts.
 const WitnessAbstractBin = `0x`
@@ -850,6 +892,27 @@ func (_WitnessAbstract *WitnessAbstractTransactorRaw) Transfer(opts *bind.Transa
 // Transact invokes the (paid) contract method with params as input values.
 func (_WitnessAbstract *WitnessAbstractTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
 	return _WitnessAbstract.Contract.contract.Transact(opts, method, params...)
+}
+
+// IsEvidentSubmited is a paid mutator transaction binding the contract method 0x70e39acd.
+//
+// Solidity: function isEvidentSubmited(caseId bytes32, serviceId bytes32, clientAddress address) returns(bool)
+func (_WitnessAbstract *WitnessAbstractTransactor) IsEvidentSubmited(opts *bind.TransactOpts, caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _WitnessAbstract.contract.Transact(opts, "isEvidentSubmited", caseId, serviceId, clientAddress)
+}
+
+// IsEvidentSubmited is a paid mutator transaction binding the contract method 0x70e39acd.
+//
+// Solidity: function isEvidentSubmited(caseId bytes32, serviceId bytes32, clientAddress address) returns(bool)
+func (_WitnessAbstract *WitnessAbstractSession) IsEvidentSubmited(caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _WitnessAbstract.Contract.IsEvidentSubmited(&_WitnessAbstract.TransactOpts, caseId, serviceId, clientAddress)
+}
+
+// IsEvidentSubmited is a paid mutator transaction binding the contract method 0x70e39acd.
+//
+// Solidity: function isEvidentSubmited(caseId bytes32, serviceId bytes32, clientAddress address) returns(bool)
+func (_WitnessAbstract *WitnessAbstractTransactorSession) IsEvidentSubmited(caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
+	return _WitnessAbstract.Contract.IsEvidentSubmited(&_WitnessAbstract.TransactOpts, caseId, serviceId, clientAddress)
 }
 
 // TestimonyFor is a paid mutator transaction binding the contract method 0xc4b45283.

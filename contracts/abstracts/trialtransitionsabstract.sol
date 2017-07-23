@@ -9,5 +9,6 @@ contract TrialTransistionsAbstract {
   function getStatus(uint8 witnessState,uint8 trialStatus) returns (uint8 status);
   function getWitness(uint8 trialStatus) returns (WitnessAbstract);
   function getInitialStatus() public returns (uint8 status);
-  function getTrialExpiry() returns (uint expiery);
+  function expired(bytes32 claimId,uint8 status) returns (bool);
+  function startGracePeriod(bytes32 claimId,uint8 status) returns (bool);
 }

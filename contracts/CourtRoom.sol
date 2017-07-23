@@ -12,11 +12,9 @@ contract SwearGame is Owned {
 	SampleToken public token;
   TrialTransistionsAbstract public trialTransistions;
   struct Case {
-    bytes32 id;
     address plaintiff;
     bytes32 serviceId;
     uint8 status;
-    uint expiery;
     uint8 valid;
   }
   //id map to _Case
@@ -31,25 +29,16 @@ contract SwearGame is Owned {
 		playerCount = 0;
 	}
 
-  function _newCase(address _plaintiff,bytes32 _serviceId,uint8 status,uint expiery) private returns (bytes32 id) {
-
-     Case memory _case;
-    _case.id = sha3(_plaintiff,_serviceId, now);
-     if (OpenCases[_case.id].valid != 0)return 0x0;
-    _case.plaintiff = _plaintiff;
-    _case.serviceId = _serviceId;
-    _case.status = status;
-    _case.valid = 1;
-    _case.expiery = block.number + expiery;
-     OpenCases[_case.id] = _case;
-    return _case.id;
+  function _newCase(address _plaintiff,bytes32 _serviceId,uint8 _status) private returns (bytes32 id) {
+     id = sha3(_plaintiff,_serviceId, now);
+     if (OpenCases[id].valid != 0)return 0x0;
+     OpenCases[id] = Case(_plaintiff,_serviceId,_status,1);
+    return id;
   }
 
   function isValid(bytes32 id) private constant returns (bool){
     return (OpenCases[id].valid != 0);
   }
-
-
 
   function setStatus(bytes32 id,uint8 status) private constant  returns (bool) {
     if (msg.sender == owner) throw;
@@ -59,14 +48,13 @@ contract SwearGame is Owned {
 
   function resolveClaim(bytes32 _id) private {
 
-    if (OpenCases[_id].id == 0x0 || OpenCases[_id].status == 0) throw;
-    OpenCases[_id].id = 0x0;
+    if (OpenCases[_id].status == uint8(TrialTransistionsAbstract.Status.UNCHALLENGED)) throw;
     OpenCases[_id].plaintiff = 0;
     OpenCases[_id].valid = 0;
     OpenCases[_id].status = uint8(TrialTransistionsAbstract.Status.UNCHALLENGED);
   }
-  function getClaim(bytes32 _id) private returns (address plaintiff,bytes32 serviceId,uint256 expiery) {
-          return (OpenCases[_id].plaintiff,OpenCases[_id].serviceId,OpenCases[_id].expiery);
+  function getClaim(bytes32 _id) private returns (address plaintiff,bytes32 serviceId) {
+          return (OpenCases[_id].plaintiff,OpenCases[_id].serviceId);
   }
 
   /* The function without name is the default function that is called whenever anyone sends funds to a contract */
@@ -143,7 +131,7 @@ contract SwearGame is Owned {
 
 		require(players[msg.sender]);
 
-		bytes32 id  = _newCase(msg.sender,serviceId,uint8(trialTransistions.getInitialStatus()),uint(trialTransistions.getTrialExpiry()));
+		bytes32 id  = _newCase(msg.sender,serviceId,uint8(trialTransistions.getInitialStatus()));
 
     if (id == 0x0) return false;
 
@@ -162,47 +150,42 @@ contract SwearGame is Owned {
 		return true;
   }
 
- function expired(uint expiry) private returns(bool){
-   return (block.number  >  expiry);
-  }
-
  function proceed() private returns (WitnessAbstract.Status){
    return WitnessAbstract.Status.PENDING;
-
  }
 
  function _trial(bytes32 id) private{
 
   uint8 status =  getStatus(id);
 
-
-  var(plaintiff,serviceId,expiery) = getClaim(id);
+  var(plaintiff,serviceId) = getClaim(id);
 
   if (status == uint8(TrialTransistionsAbstract.Status.UNCHALLENGED)) {
       return;
    }
    for (;status != uint8(TrialTransistionsAbstract.Status.UNCHALLENGED);) {
 
-        if (expired(expiery)) {
-             setStatus(id, uint8(TrialTransistionsAbstract.Status.UNCHALLENGED));
-             return;
-        }
-
         WitnessAbstract witness = trialTransistions.getWitness(status);
-
 
         WitnessAbstract.Status outcome;
         if (witness == WitnessAbstract(0x0)) {
             outcome = proceed();
             return;
         } else {
-
-           outcome = witness.testimonyFor(id,serviceId,plaintiff);
-
+					 bool expired = trialTransistions.expired(id,status);
+					 if (witness.isEvidentSubmited(id,serviceId,plaintiff) && !expired){
+					   outcome = witness.testimonyFor(id,serviceId,plaintiff);
+					 }else{
+						  if(trialTransistions.startGracePeriod(id,status)||(!expired)){
+								 outcome = WitnessAbstract.Status.PENDING;
+							}else{
+							outcome = WitnessAbstract.Status.INVALID;
+						}
+					 }
        }
        if (outcome == WitnessAbstract.Status.PENDING) {
            return;
-      }
+       }
       status = trialTransistions.getStatus(uint8(outcome),status);
       setStatus(id,status);
       if ((status == uint8(TrialTransistionsAbstract.Status.GUILTY))||
