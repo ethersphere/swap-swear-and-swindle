@@ -6,7 +6,7 @@ This repository include a basic abstract example of a courtroom contracts game.
 The courtroom suite includes :
  - an abstract generic contract "SwearGame" which in a sense conduct the trial: iterate over the specific game witnesses ,trial statuses and verdict accordingly .
  - a specific game rules contract which defined the trial rules such as transitions states,grace periods per state..  .(in our example it is "MirrorRules")
- - a specific game witnesses contracts which in a sense are expert witnesses which can take decisions based on the submitted evidences.   
+ - A specific game witnesses contracts which in a sense are "expert witnesses" which can validate submitted evidences.  
 
 
 ## Mirror game
