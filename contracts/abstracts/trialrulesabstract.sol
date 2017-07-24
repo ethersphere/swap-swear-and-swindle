@@ -1,7 +1,7 @@
 pragma solidity ^0.4.0;
 import "./witnessabstract.sol";
 
-contract TrialTransistionsAbstract {
+contract TrialRulesAbstract {
 
 
   enum Status {UNCHALLENGED,GUILTY,NOT_GUILTY}

@@ -2,7 +2,7 @@ pragma solidity ^0.4.0;
 
 import "./owned.sol";
 import "./sampletoken.sol";
-import "./abstracts/trialtransitionsabstract.sol";
+import "./abstracts/trialrulesabstract.sol";
 
 contract SwearGame is Owned {
 
@@ -10,7 +10,7 @@ contract SwearGame is Owned {
 	uint public reward;
 	uint  public playerCount;
 	SampleToken public token;
-  TrialTransistionsAbstract public trialTransistions;
+  TrialRulesAbstract public trialRules;
   struct Case {
     address plaintiff;
     bytes32 serviceId;
@@ -22,9 +22,9 @@ contract SwearGame is Owned {
   mapping(address => bool) public players;
 	mapping(address => bytes32[]) public ids;
 
-  function SwearGame(address _token, address _trialTransistions, uint _reward) {
+  function SwearGame(address _token, address _trialRules, uint _reward) {
 		token        = SampleToken(_token);
-    trialTransistions    = TrialTransistionsAbstract(_trialTransistions);
+    trialRules    = TrialRulesAbstract(_trialRules);
 		reward = _reward;
 		playerCount = 0;
 	}
@@ -48,10 +48,10 @@ contract SwearGame is Owned {
 
   function resolveClaim(bytes32 _id) private {
 
-    if (OpenCases[_id].status == uint8(TrialTransistionsAbstract.Status.UNCHALLENGED)) throw;
+    if (OpenCases[_id].status == uint8(TrialRulesAbstract.Status.UNCHALLENGED)) throw;
     OpenCases[_id].plaintiff = 0;
     OpenCases[_id].valid = 0;
-    OpenCases[_id].status = uint8(TrialTransistionsAbstract.Status.UNCHALLENGED);
+    OpenCases[_id].status = uint8(TrialRulesAbstract.Status.UNCHALLENGED);
   }
   function getClaim(bytes32 _id) private returns (address plaintiff,bytes32 serviceId) {
           return (OpenCases[_id].plaintiff,OpenCases[_id].serviceId);
@@ -67,14 +67,14 @@ contract SwearGame is Owned {
 
 	function verdict(bytes32 _id,uint8 status,address plaintiff) private returns(bool) {
 
-    if (status == uint8(TrialTransistionsAbstract.Status.NOT_GUILTY)){
+    if (status == uint8(TrialRulesAbstract.Status.NOT_GUILTY)){
        ClaimResolved(_id, plaintiff, 0,status);
        return false;
      }
 
 	  bool caseCompensated = compensate(plaintiff);
 		resolveClaim(_id);
-    leaveGame(plaintiff);
+    _leaveGame(plaintiff);
 		ClaimResolved(_id, plaintiff, reward,status);
 		return caseCompensated;
 
@@ -113,14 +113,24 @@ contract SwearGame is Owned {
 		return true;
 
 	}
+	function leaveGame(address _player) {
 
-  function leaveGame(address _player) private {
+		for (uint256 i=0;i<ids[msg.sender].length;i++){ //allow only plaintiff wihich do not have openCases on it name to leave game
+			require(OpenCases[ids[msg.sender][i]].valid == 0);
+		}
+		return _leaveGame(msg.sender);
+
+  }
+
+  function _leaveGame(address _player) private {
+
     require(players[_player]);
 
 		PlayerLeftGame(_player);
 
 		players[_player] = false;
 		playerCount--;
+
   }
 
   function getStatus(bytes32 id) public constant returns (uint8 status){
@@ -131,7 +141,7 @@ contract SwearGame is Owned {
 
 		require(players[msg.sender]);
 
-		bytes32 id  = _newCase(msg.sender,serviceId,uint8(trialTransistions.getInitialStatus()));
+		bytes32 id  = _newCase(msg.sender,serviceId,uint8(trialRules.getInitialStatus()));
 
     if (id == 0x0) return false;
 
@@ -160,23 +170,23 @@ contract SwearGame is Owned {
 
   var(plaintiff,serviceId) = getClaim(id);
 
-  if (status == uint8(TrialTransistionsAbstract.Status.UNCHALLENGED)) {
+  if (status == uint8(TrialRulesAbstract.Status.UNCHALLENGED)) {
       return;
    }
-   for (;status != uint8(TrialTransistionsAbstract.Status.UNCHALLENGED);) {
+   for (;status != uint8(TrialRulesAbstract.Status.UNCHALLENGED);) {
 
-        WitnessAbstract witness = trialTransistions.getWitness(status);
+        WitnessAbstract witness = trialRules.getWitness(status);
 
         WitnessAbstract.Status outcome;
         if (witness == WitnessAbstract(0x0)) {
             outcome = proceed();
             return;
         } else {
-					 bool expired = trialTransistions.expired(id,status);
+					 bool expired = trialRules.expired(id,status);
 					 if (witness.isEvidentSubmited(id,serviceId,plaintiff) && !expired){
 					   outcome = witness.testimonyFor(id,serviceId,plaintiff);
 					 }else{
-						  if(trialTransistions.startGracePeriod(id,status)||(!expired)){
+						  if(trialRules.startGracePeriod(id,status)||(!expired)){
 								 outcome = WitnessAbstract.Status.PENDING;
 							}else{
 							outcome = WitnessAbstract.Status.INVALID;
@@ -186,12 +196,12 @@ contract SwearGame is Owned {
        if (outcome == WitnessAbstract.Status.PENDING) {
            return;
        }
-      status = trialTransistions.getStatus(uint8(outcome),status);
+      status = trialRules.getStatus(uint8(outcome),status);
       setStatus(id,status);
-      if ((status == uint8(TrialTransistionsAbstract.Status.GUILTY))||
-         (status == uint8(TrialTransistionsAbstract.Status.NOT_GUILTY))){
+      if ((status == uint8(TrialRulesAbstract.Status.GUILTY))||
+         (status == uint8(TrialRulesAbstract.Status.NOT_GUILTY))){
         verdict(id,status,plaintiff);
-        status = uint8(TrialTransistionsAbstract.Status.UNCHALLENGED);
+        status = uint8(TrialRulesAbstract.Status.UNCHALLENGED);
         setStatus(id,status);
       }
   }

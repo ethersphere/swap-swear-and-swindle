@@ -1,7 +1,7 @@
 // This file is an automatically generated Go binding. Do not modify as any
 // change will likely be lost upon the next re-generation!
 
-package promisevalidator
+package mirrorrules
 
 import (
 	"math/big"
@@ -13,108 +13,108 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
-// OwnedABI is the input ABI used to generate the binding from.
-const OwnedABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_newOwner\",\"type\":\"address\"}],\"name\":\"changeOwner\",\"outputs\":[],\"payable\":false,\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"type\":\"constructor\"}]"
+// MirrorRulesABI is the input ABI used to generate the binding from.
+const MirrorRulesABI = "[{\"constant\":false,\"inputs\":[],\"name\":\"getInitialStatus\",\"outputs\":[{\"name\":\"status\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"uint8\"},{\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"transitions\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"status\",\"type\":\"uint8\"}],\"name\":\"startGracePeriod\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"witnesses\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"witnessState\",\"type\":\"uint8\"},{\"name\":\"trialStatus\",\"type\":\"uint8\"}],\"name\":\"getStatus\",\"outputs\":[{\"name\":\"status\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"trialStatus\",\"type\":\"uint8\"}],\"name\":\"getWitness\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"gracePeriods\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"status\",\"type\":\"uint8\"}],\"name\":\"expired\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"inputs\":[{\"name\":\"paymentValidatorContract\",\"type\":\"address\"},{\"name\":\"ENSMirrotValidatorContract\",\"type\":\"address\"}],\"payable\":false,\"type\":\"constructor\"}]"
 
-// OwnedBin is the compiled bytecode used for deploying new contracts.
-const OwnedBin = `0x6060604052341561000f57600080fd5b5b60008054600160a060020a03191633600160a060020a03161790555b5b61015c8061003c6000396000f300606060405263ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416638da5cb5b8114610048578063a6f9dae114610084575b600080fd5b341561005357600080fd5b61005b6100b2565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f35b341561008f57600080fd5b6100b073ffffffffffffffffffffffffffffffffffffffff600435166100ce565b005b60005473ffffffffffffffffffffffffffffffffffffffff1681565b6000543373ffffffffffffffffffffffffffffffffffffffff9081169116146100f657600080fd5b6000805473ffffffffffffffffffffffffffffffffffffffff191673ffffffffffffffffffffffffffffffffffffffff83161790555b5b505600a165627a7a723058208398aa5ae88fe874c07e64c01d9bca51a2ab08fd350334611fd3860555a1a3c50029`
+// MirrorRulesBin is the compiled bytecode used for deploying new contracts.
+const MirrorRulesBin = `0x6060604052341561000f57600080fd5b60405160408061063083398101604052808051919060200180519150505b8160008060025b60010160ff1660ff16815260200190815260200160002060006101000a815481600160a060020a030219169083600160a060020a031602179055508060008060028081111561007f57fe5b600290810160ff16825260208201929092526040016000208054600160a060020a031916600160a060020a0393909316929092179091555b60020160016000805b60ff168152602081019190915260400160009081209060025b60010160ff90811682526020820192909252604001600020805460ff19169290911691909117905560025b60016000815b60ff168152602081019190915260400160009081209060025b600190810160ff908116835260208301939093526040909101600020805460ff1916939092169290921790555b60016000805b60ff168152602081019190915260400160009081209060025b600290810160ff908116835260208301939093526040909101600020805460ff1916939092169290921790555b60016000815b60ff168152602081019190915260400160009081209060025b60020160ff1660ff16815260200190815260200160002060006101000a81548160ff021916908360ff1602179055506023600260006002808111156101fc57fe5b60010160ff1660ff1681526020019081526020016000208190555060236002600060028081111561022957fe5b60020160ff1660ff168152602001908152602001600020819055505b50505b6103d9806102576000396000f3006060604052361561008b5763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166307e5ae5f81146100905780639c2a1029146100b9578063a7edcbe4146100ee578063b2400f091461011e578063d39eb30114610160578063db06156314610195578063fa778a0f146101d7578063fcc0a2ae14610202575b600080fd5b341561009b57600080fd5b6100a3610232565b60405160ff909116815260200160405180910390f35b34156100c457600080fd5b6100a360ff60043581169060243516610240565b60405160ff909116815260200160405180910390f35b34156100f957600080fd5b61010a60043560ff60243516610260565b604051901515815260200160405180910390f35b341561012957600080fd5b61013760ff600435166102b4565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f35b341561016b57600080fd5b6100a360ff600435811690602435166102dc565b60405160ff909116815260200160405180910390f35b34156101a057600080fd5b61013760ff60043516610305565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f35b34156101e257600080fd5b6101f060ff60043516610334565b60405190815260200160405180910390f35b341561020d57600080fd5b61010a60043560ff60243516610346565b604051901515815260200160405180910390f35b600060025b60010190505b90565b600160209081526000928352604080842090915290825290205460ff1681565b600082815260036020908152604080832060ff8516845290915281205415156102aa5750600082815260036020908152604080832060ff85168452909152902043905560016102ae565b5060005b92915050565b60006020819052908152604090205473ffffffffffffffffffffffffffffffffffffffff1681565b60ff80831660009081526001602090815260408083208585168452909152902054165b92915050565b60ff811660009081526020819052604090205473ffffffffffffffffffffffffffffffffffffffff165b919050565b60026020526000908152604090205481565b600082815260036020908152604080832060ff85168452909152812054156102aa5760ff82166000818152600260209081526040808320548784526003835281842094845293909152902054430311156102aa575060016102ae565b5b5060005b929150505600a165627a7a723058202590744e47533b35372d64bb6e1ae550a8dbe75a94a20d33a7dd7b181588755f0029`
 
-// DeployOwned deploys a new Ethereum contract, binding an instance of Owned to it.
-func DeployOwned(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Owned, error) {
-	parsed, err := abi.JSON(strings.NewReader(OwnedABI))
+// DeployMirrorRules deploys a new Ethereum contract, binding an instance of MirrorRules to it.
+func DeployMirrorRules(auth *bind.TransactOpts, backend bind.ContractBackend, paymentValidatorContract common.Address, ENSMirrotValidatorContract common.Address) (common.Address, *types.Transaction, *MirrorRules, error) {
+	parsed, err := abi.JSON(strings.NewReader(MirrorRulesABI))
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(OwnedBin), backend)
+	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(MirrorRulesBin), backend, paymentValidatorContract, ENSMirrotValidatorContract)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
-	return address, tx, &Owned{OwnedCaller: OwnedCaller{contract: contract}, OwnedTransactor: OwnedTransactor{contract: contract}}, nil
+	return address, tx, &MirrorRules{MirrorRulesCaller: MirrorRulesCaller{contract: contract}, MirrorRulesTransactor: MirrorRulesTransactor{contract: contract}}, nil
 }
 
-// Owned is an auto generated Go binding around an Ethereum contract.
-type Owned struct {
-	OwnedCaller     // Read-only binding to the contract
-	OwnedTransactor // Write-only binding to the contract
+// MirrorRules is an auto generated Go binding around an Ethereum contract.
+type MirrorRules struct {
+	MirrorRulesCaller     // Read-only binding to the contract
+	MirrorRulesTransactor // Write-only binding to the contract
 }
 
-// OwnedCaller is an auto generated read-only Go binding around an Ethereum contract.
-type OwnedCaller struct {
+// MirrorRulesCaller is an auto generated read-only Go binding around an Ethereum contract.
+type MirrorRulesCaller struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// OwnedTransactor is an auto generated write-only Go binding around an Ethereum contract.
-type OwnedTransactor struct {
+// MirrorRulesTransactor is an auto generated write-only Go binding around an Ethereum contract.
+type MirrorRulesTransactor struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// OwnedSession is an auto generated Go binding around an Ethereum contract,
+// MirrorRulesSession is an auto generated Go binding around an Ethereum contract,
 // with pre-set call and transact options.
-type OwnedSession struct {
-	Contract     *Owned            // Generic contract binding to set the session for
+type MirrorRulesSession struct {
+	Contract     *MirrorRules      // Generic contract binding to set the session for
 	CallOpts     bind.CallOpts     // Call options to use throughout this session
 	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
 }
 
-// OwnedCallerSession is an auto generated read-only Go binding around an Ethereum contract,
+// MirrorRulesCallerSession is an auto generated read-only Go binding around an Ethereum contract,
 // with pre-set call options.
-type OwnedCallerSession struct {
-	Contract *OwnedCaller  // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts // Call options to use throughout this session
+type MirrorRulesCallerSession struct {
+	Contract *MirrorRulesCaller // Generic contract caller binding to set the session for
+	CallOpts bind.CallOpts      // Call options to use throughout this session
 }
 
-// OwnedTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
+// MirrorRulesTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
 // with pre-set transact options.
-type OwnedTransactorSession struct {
-	Contract     *OwnedTransactor  // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
+type MirrorRulesTransactorSession struct {
+	Contract     *MirrorRulesTransactor // Generic contract transactor binding to set the session for
+	TransactOpts bind.TransactOpts      // Transaction auth options to use throughout this session
 }
 
-// OwnedRaw is an auto generated low-level Go binding around an Ethereum contract.
-type OwnedRaw struct {
-	Contract *Owned // Generic contract binding to access the raw methods on
+// MirrorRulesRaw is an auto generated low-level Go binding around an Ethereum contract.
+type MirrorRulesRaw struct {
+	Contract *MirrorRules // Generic contract binding to access the raw methods on
 }
 
-// OwnedCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type OwnedCallerRaw struct {
-	Contract *OwnedCaller // Generic read-only contract binding to access the raw methods on
+// MirrorRulesCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
+type MirrorRulesCallerRaw struct {
+	Contract *MirrorRulesCaller // Generic read-only contract binding to access the raw methods on
 }
 
-// OwnedTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type OwnedTransactorRaw struct {
-	Contract *OwnedTransactor // Generic write-only contract binding to access the raw methods on
+// MirrorRulesTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
+type MirrorRulesTransactorRaw struct {
+	Contract *MirrorRulesTransactor // Generic write-only contract binding to access the raw methods on
 }
 
-// NewOwned creates a new instance of Owned, bound to a specific deployed contract.
-func NewOwned(address common.Address, backend bind.ContractBackend) (*Owned, error) {
-	contract, err := bindOwned(address, backend, backend)
+// NewMirrorRules creates a new instance of MirrorRules, bound to a specific deployed contract.
+func NewMirrorRules(address common.Address, backend bind.ContractBackend) (*MirrorRules, error) {
+	contract, err := bindMirrorRules(address, backend, backend)
 	if err != nil {
 		return nil, err
 	}
-	return &Owned{OwnedCaller: OwnedCaller{contract: contract}, OwnedTransactor: OwnedTransactor{contract: contract}}, nil
+	return &MirrorRules{MirrorRulesCaller: MirrorRulesCaller{contract: contract}, MirrorRulesTransactor: MirrorRulesTransactor{contract: contract}}, nil
 }
 
-// NewOwnedCaller creates a new read-only instance of Owned, bound to a specific deployed contract.
-func NewOwnedCaller(address common.Address, caller bind.ContractCaller) (*OwnedCaller, error) {
-	contract, err := bindOwned(address, caller, nil)
+// NewMirrorRulesCaller creates a new read-only instance of MirrorRules, bound to a specific deployed contract.
+func NewMirrorRulesCaller(address common.Address, caller bind.ContractCaller) (*MirrorRulesCaller, error) {
+	contract, err := bindMirrorRules(address, caller, nil)
 	if err != nil {
 		return nil, err
 	}
-	return &OwnedCaller{contract: contract}, nil
+	return &MirrorRulesCaller{contract: contract}, nil
 }
 
-// NewOwnedTransactor creates a new write-only instance of Owned, bound to a specific deployed contract.
-func NewOwnedTransactor(address common.Address, transactor bind.ContractTransactor) (*OwnedTransactor, error) {
-	contract, err := bindOwned(address, nil, transactor)
+// NewMirrorRulesTransactor creates a new write-only instance of MirrorRules, bound to a specific deployed contract.
+func NewMirrorRulesTransactor(address common.Address, transactor bind.ContractTransactor) (*MirrorRulesTransactor, error) {
+	contract, err := bindMirrorRules(address, nil, transactor)
 	if err != nil {
 		return nil, err
 	}
-	return &OwnedTransactor{contract: contract}, nil
+	return &MirrorRulesTransactor{contract: contract}, nil
 }
 
-// bindOwned binds a generic wrapper to an already deployed contract.
-func bindOwned(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(OwnedABI))
+// bindMirrorRules binds a generic wrapper to an already deployed contract.
+func bindMirrorRules(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor) (*bind.BoundContract, error) {
+	parsed, err := abi.JSON(strings.NewReader(MirrorRulesABI))
 	if err != nil {
 		return nil, err
 	}
@@ -125,341 +125,221 @@ func bindOwned(address common.Address, caller bind.ContractCaller, transactor bi
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_Owned *OwnedRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
-	return _Owned.Contract.OwnedCaller.contract.Call(opts, result, method, params...)
+func (_MirrorRules *MirrorRulesRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+	return _MirrorRules.Contract.MirrorRulesCaller.contract.Call(opts, result, method, params...)
 }
 
 // Transfer initiates a plain transaction to move funds to the contract, calling
 // its default method if one is available.
-func (_Owned *OwnedRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Owned.Contract.OwnedTransactor.contract.Transfer(opts)
+func (_MirrorRules *MirrorRulesRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _MirrorRules.Contract.MirrorRulesTransactor.contract.Transfer(opts)
 }
 
 // Transact invokes the (paid) contract method with params as input values.
-func (_Owned *OwnedRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Owned.Contract.OwnedTransactor.contract.Transact(opts, method, params...)
+func (_MirrorRules *MirrorRulesRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+	return _MirrorRules.Contract.MirrorRulesTransactor.contract.Transact(opts, method, params...)
 }
 
 // Call invokes the (constant) contract method with params as input values and
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_Owned *OwnedCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
-	return _Owned.Contract.contract.Call(opts, result, method, params...)
+func (_MirrorRules *MirrorRulesCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+	return _MirrorRules.Contract.contract.Call(opts, result, method, params...)
 }
 
 // Transfer initiates a plain transaction to move funds to the contract, calling
 // its default method if one is available.
-func (_Owned *OwnedTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Owned.Contract.contract.Transfer(opts)
+func (_MirrorRules *MirrorRulesTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _MirrorRules.Contract.contract.Transfer(opts)
 }
 
 // Transact invokes the (paid) contract method with params as input values.
-func (_Owned *OwnedTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Owned.Contract.contract.Transact(opts, method, params...)
+func (_MirrorRules *MirrorRulesTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+	return _MirrorRules.Contract.contract.Transact(opts, method, params...)
 }
 
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
+// GracePeriods is a free data retrieval call binding the contract method 0xfa778a0f.
 //
-// Solidity: function owner() constant returns(address)
-func (_Owned *OwnedCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
+// Solidity: function gracePeriods( uint8) constant returns(uint256)
+func (_MirrorRules *MirrorRulesCaller) GracePeriods(opts *bind.CallOpts, arg0 uint8) (*big.Int, error) {
+	var (
+		ret0 = new(*big.Int)
+	)
+	out := ret0
+	err := _MirrorRules.contract.Call(opts, out, "gracePeriods", arg0)
+	return *ret0, err
+}
+
+// GracePeriods is a free data retrieval call binding the contract method 0xfa778a0f.
+//
+// Solidity: function gracePeriods( uint8) constant returns(uint256)
+func (_MirrorRules *MirrorRulesSession) GracePeriods(arg0 uint8) (*big.Int, error) {
+	return _MirrorRules.Contract.GracePeriods(&_MirrorRules.CallOpts, arg0)
+}
+
+// GracePeriods is a free data retrieval call binding the contract method 0xfa778a0f.
+//
+// Solidity: function gracePeriods( uint8) constant returns(uint256)
+func (_MirrorRules *MirrorRulesCallerSession) GracePeriods(arg0 uint8) (*big.Int, error) {
+	return _MirrorRules.Contract.GracePeriods(&_MirrorRules.CallOpts, arg0)
+}
+
+// Transitions is a free data retrieval call binding the contract method 0x9c2a1029.
+//
+// Solidity: function transitions( uint8,  uint8) constant returns(uint8)
+func (_MirrorRules *MirrorRulesCaller) Transitions(opts *bind.CallOpts, arg0 uint8, arg1 uint8) (uint8, error) {
+	var (
+		ret0 = new(uint8)
+	)
+	out := ret0
+	err := _MirrorRules.contract.Call(opts, out, "transitions", arg0, arg1)
+	return *ret0, err
+}
+
+// Transitions is a free data retrieval call binding the contract method 0x9c2a1029.
+//
+// Solidity: function transitions( uint8,  uint8) constant returns(uint8)
+func (_MirrorRules *MirrorRulesSession) Transitions(arg0 uint8, arg1 uint8) (uint8, error) {
+	return _MirrorRules.Contract.Transitions(&_MirrorRules.CallOpts, arg0, arg1)
+}
+
+// Transitions is a free data retrieval call binding the contract method 0x9c2a1029.
+//
+// Solidity: function transitions( uint8,  uint8) constant returns(uint8)
+func (_MirrorRules *MirrorRulesCallerSession) Transitions(arg0 uint8, arg1 uint8) (uint8, error) {
+	return _MirrorRules.Contract.Transitions(&_MirrorRules.CallOpts, arg0, arg1)
+}
+
+// Witnesses is a free data retrieval call binding the contract method 0xb2400f09.
+//
+// Solidity: function witnesses( uint8) constant returns(address)
+func (_MirrorRules *MirrorRulesCaller) Witnesses(opts *bind.CallOpts, arg0 uint8) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
 	)
 	out := ret0
-	err := _Owned.contract.Call(opts, out, "owner")
+	err := _MirrorRules.contract.Call(opts, out, "witnesses", arg0)
 	return *ret0, err
 }
 
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
+// Witnesses is a free data retrieval call binding the contract method 0xb2400f09.
 //
-// Solidity: function owner() constant returns(address)
-func (_Owned *OwnedSession) Owner() (common.Address, error) {
-	return _Owned.Contract.Owner(&_Owned.CallOpts)
+// Solidity: function witnesses( uint8) constant returns(address)
+func (_MirrorRules *MirrorRulesSession) Witnesses(arg0 uint8) (common.Address, error) {
+	return _MirrorRules.Contract.Witnesses(&_MirrorRules.CallOpts, arg0)
 }
 
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
+// Witnesses is a free data retrieval call binding the contract method 0xb2400f09.
 //
-// Solidity: function owner() constant returns(address)
-func (_Owned *OwnedCallerSession) Owner() (common.Address, error) {
-	return _Owned.Contract.Owner(&_Owned.CallOpts)
+// Solidity: function witnesses( uint8) constant returns(address)
+func (_MirrorRules *MirrorRulesCallerSession) Witnesses(arg0 uint8) (common.Address, error) {
+	return _MirrorRules.Contract.Witnesses(&_MirrorRules.CallOpts, arg0)
 }
 
-// ChangeOwner is a paid mutator transaction binding the contract method 0xa6f9dae1.
+// Expired is a paid mutator transaction binding the contract method 0xfcc0a2ae.
 //
-// Solidity: function changeOwner(_newOwner address) returns()
-func (_Owned *OwnedTransactor) ChangeOwner(opts *bind.TransactOpts, _newOwner common.Address) (*types.Transaction, error) {
-	return _Owned.contract.Transact(opts, "changeOwner", _newOwner)
+// Solidity: function expired(caseId bytes32, status uint8) returns(bool)
+func (_MirrorRules *MirrorRulesTransactor) Expired(opts *bind.TransactOpts, caseId [32]byte, status uint8) (*types.Transaction, error) {
+	return _MirrorRules.contract.Transact(opts, "expired", caseId, status)
 }
 
-// ChangeOwner is a paid mutator transaction binding the contract method 0xa6f9dae1.
+// Expired is a paid mutator transaction binding the contract method 0xfcc0a2ae.
 //
-// Solidity: function changeOwner(_newOwner address) returns()
-func (_Owned *OwnedSession) ChangeOwner(_newOwner common.Address) (*types.Transaction, error) {
-	return _Owned.Contract.ChangeOwner(&_Owned.TransactOpts, _newOwner)
+// Solidity: function expired(caseId bytes32, status uint8) returns(bool)
+func (_MirrorRules *MirrorRulesSession) Expired(caseId [32]byte, status uint8) (*types.Transaction, error) {
+	return _MirrorRules.Contract.Expired(&_MirrorRules.TransactOpts, caseId, status)
 }
 
-// ChangeOwner is a paid mutator transaction binding the contract method 0xa6f9dae1.
+// Expired is a paid mutator transaction binding the contract method 0xfcc0a2ae.
 //
-// Solidity: function changeOwner(_newOwner address) returns()
-func (_Owned *OwnedTransactorSession) ChangeOwner(_newOwner common.Address) (*types.Transaction, error) {
-	return _Owned.Contract.ChangeOwner(&_Owned.TransactOpts, _newOwner)
+// Solidity: function expired(caseId bytes32, status uint8) returns(bool)
+func (_MirrorRules *MirrorRulesTransactorSession) Expired(caseId [32]byte, status uint8) (*types.Transaction, error) {
+	return _MirrorRules.Contract.Expired(&_MirrorRules.TransactOpts, caseId, status)
 }
 
-// PromiseValidatorABI is the input ABI used to generate the binding from.
-const PromiseValidatorABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"clientAddress\",\"type\":\"address\"}],\"name\":\"isEvidentSubmited\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_newOwner\",\"type\":\"address\"}],\"name\":\"changeOwner\",\"outputs\":[],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"beneficiary\",\"type\":\"address\"},{\"name\":\"blockNumber\",\"type\":\"uint256\"},{\"name\":\"sig_v\",\"type\":\"uint8\"},{\"name\":\"sig_r\",\"type\":\"bytes32\"},{\"name\":\"sig_s\",\"type\":\"bytes32\"}],\"name\":\"submitPromise\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"serviceId\",\"type\":\"bytes32\"},{\"name\":\"clientAddress\",\"type\":\"address\"}],\"name\":\"testimonyFor\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"type\":\"constructor\"}]"
-
-// PromiseValidatorBin is the compiled bytecode used for deploying new contracts.
-const PromiseValidatorBin = `0x6060604052341561000f57600080fd5b5b5b60008054600160a060020a03191633600160a060020a03161790555b5b5b6104c48061003e6000396000f300606060405263ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166370e39acd81146100695780638da5cb5b146100a2578063a6f9dae1146100d1578063b31e6b91146100f2578063c4b452831461013a575b600080fd5b341561007457600080fd5b61008e600435602435600160a060020a0360443516610183565b604051901515815260200160405180910390f35b34156100ad57600080fd5b6100b56101bc565b604051600160a060020a03909116815260200160405180910390f35b34156100dc57600080fd5b6100f0600160a060020a03600435166101cb565b005b34156100fd57600080fd5b61008e600435602435600160a060020a036044351660643560ff6084351660a43560c435610213565b604051901515815260200160405180910390f35b341561014557600080fd5b61015f600435602435600160a060020a036044351661033a565b6040518082600281111561016f57fe5b60ff16815260200191505060405180910390f35b60008381526001602090815260408083208584528252808320600160a060020a038516845290915290206005015460ff165b9392505050565b600054600160a060020a031681565b60005433600160a060020a039081169116146101e657600080fd5b6000805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0383161790555b5b50565b60008781526001602090815260408083208984528252808320600160a060020a038916845290915281206005015460ff16156102515750600061032f565b60c06040519081016040908152600160a060020a038816808352602080840189905260ff8816838501526060840187905260808401869052600160a0850181905260008d81529082528381208c82528252838120928152919052208151815473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a039190911617815560208201518160010155604082015160028201805460ff191660ff92909216919091179055606082015160038201556080820151600482015560a0820151600591909101805460ff191691151591909117905550600190505b979650505050505050565b60008381526001602081815260408084208685528252808420600160a060020a038681168652925283208054928101546002820154600383015460049093015461038f9590941693919260ff909116916103a8565b151561039d575060016101b5565b5060005b9392505050565b600080438690106103bc576000915061048e565b3087876040516c01000000000000000000000000600160a060020a03948516810282529290931690910260148301526028820152604801604051809103902090506001818686866040518060005260200160405260006040516020015260405193845260ff90921660208085019190915260408085019290925260608401929092526080909201915160208103908084039060008661646e5a03f1151561046257600080fd5b505060206040510351600054600160a060020a03908116911614610489576000915061048e565b600191505b50959450505050505600a165627a7a72305820c0c00cbd66d8488a6bff4007a1574c48fa3e98b251d03e0e62f592705dec07a70029`
-
-// DeployPromiseValidator deploys a new Ethereum contract, binding an instance of PromiseValidator to it.
-func DeployPromiseValidator(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *PromiseValidator, error) {
-	parsed, err := abi.JSON(strings.NewReader(PromiseValidatorABI))
-	if err != nil {
-		return common.Address{}, nil, nil, err
-	}
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(PromiseValidatorBin), backend)
-	if err != nil {
-		return common.Address{}, nil, nil, err
-	}
-	return address, tx, &PromiseValidator{PromiseValidatorCaller: PromiseValidatorCaller{contract: contract}, PromiseValidatorTransactor: PromiseValidatorTransactor{contract: contract}}, nil
-}
-
-// PromiseValidator is an auto generated Go binding around an Ethereum contract.
-type PromiseValidator struct {
-	PromiseValidatorCaller     // Read-only binding to the contract
-	PromiseValidatorTransactor // Write-only binding to the contract
-}
-
-// PromiseValidatorCaller is an auto generated read-only Go binding around an Ethereum contract.
-type PromiseValidatorCaller struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// PromiseValidatorTransactor is an auto generated write-only Go binding around an Ethereum contract.
-type PromiseValidatorTransactor struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// PromiseValidatorSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type PromiseValidatorSession struct {
-	Contract     *PromiseValidator // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// PromiseValidatorCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type PromiseValidatorCallerSession struct {
-	Contract *PromiseValidatorCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts           // Call options to use throughout this session
-}
-
-// PromiseValidatorTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type PromiseValidatorTransactorSession struct {
-	Contract     *PromiseValidatorTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts           // Transaction auth options to use throughout this session
-}
-
-// PromiseValidatorRaw is an auto generated low-level Go binding around an Ethereum contract.
-type PromiseValidatorRaw struct {
-	Contract *PromiseValidator // Generic contract binding to access the raw methods on
-}
-
-// PromiseValidatorCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type PromiseValidatorCallerRaw struct {
-	Contract *PromiseValidatorCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// PromiseValidatorTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type PromiseValidatorTransactorRaw struct {
-	Contract *PromiseValidatorTransactor // Generic write-only contract binding to access the raw methods on
-}
-
-// NewPromiseValidator creates a new instance of PromiseValidator, bound to a specific deployed contract.
-func NewPromiseValidator(address common.Address, backend bind.ContractBackend) (*PromiseValidator, error) {
-	contract, err := bindPromiseValidator(address, backend, backend)
-	if err != nil {
-		return nil, err
-	}
-	return &PromiseValidator{PromiseValidatorCaller: PromiseValidatorCaller{contract: contract}, PromiseValidatorTransactor: PromiseValidatorTransactor{contract: contract}}, nil
-}
-
-// NewPromiseValidatorCaller creates a new read-only instance of PromiseValidator, bound to a specific deployed contract.
-func NewPromiseValidatorCaller(address common.Address, caller bind.ContractCaller) (*PromiseValidatorCaller, error) {
-	contract, err := bindPromiseValidator(address, caller, nil)
-	if err != nil {
-		return nil, err
-	}
-	return &PromiseValidatorCaller{contract: contract}, nil
-}
-
-// NewPromiseValidatorTransactor creates a new write-only instance of PromiseValidator, bound to a specific deployed contract.
-func NewPromiseValidatorTransactor(address common.Address, transactor bind.ContractTransactor) (*PromiseValidatorTransactor, error) {
-	contract, err := bindPromiseValidator(address, nil, transactor)
-	if err != nil {
-		return nil, err
-	}
-	return &PromiseValidatorTransactor{contract: contract}, nil
-}
-
-// bindPromiseValidator binds a generic wrapper to an already deployed contract.
-func bindPromiseValidator(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(PromiseValidatorABI))
-	if err != nil {
-		return nil, err
-	}
-	return bind.NewBoundContract(address, parsed, caller, transactor), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_PromiseValidator *PromiseValidatorRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
-	return _PromiseValidator.Contract.PromiseValidatorCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_PromiseValidator *PromiseValidatorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _PromiseValidator.Contract.PromiseValidatorTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_PromiseValidator *PromiseValidatorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _PromiseValidator.Contract.PromiseValidatorTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_PromiseValidator *PromiseValidatorCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
-	return _PromiseValidator.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_PromiseValidator *PromiseValidatorTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _PromiseValidator.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_PromiseValidator *PromiseValidatorTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _PromiseValidator.Contract.contract.Transact(opts, method, params...)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
+// GetInitialStatus is a paid mutator transaction binding the contract method 0x07e5ae5f.
 //
-// Solidity: function owner() constant returns(address)
-func (_PromiseValidator *PromiseValidatorCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _PromiseValidator.contract.Call(opts, out, "owner")
-	return *ret0, err
+// Solidity: function getInitialStatus() returns(status uint8)
+func (_MirrorRules *MirrorRulesTransactor) GetInitialStatus(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _MirrorRules.contract.Transact(opts, "getInitialStatus")
 }
 
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
+// GetInitialStatus is a paid mutator transaction binding the contract method 0x07e5ae5f.
 //
-// Solidity: function owner() constant returns(address)
-func (_PromiseValidator *PromiseValidatorSession) Owner() (common.Address, error) {
-	return _PromiseValidator.Contract.Owner(&_PromiseValidator.CallOpts)
+// Solidity: function getInitialStatus() returns(status uint8)
+func (_MirrorRules *MirrorRulesSession) GetInitialStatus() (*types.Transaction, error) {
+	return _MirrorRules.Contract.GetInitialStatus(&_MirrorRules.TransactOpts)
 }
 
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
+// GetInitialStatus is a paid mutator transaction binding the contract method 0x07e5ae5f.
 //
-// Solidity: function owner() constant returns(address)
-func (_PromiseValidator *PromiseValidatorCallerSession) Owner() (common.Address, error) {
-	return _PromiseValidator.Contract.Owner(&_PromiseValidator.CallOpts)
+// Solidity: function getInitialStatus() returns(status uint8)
+func (_MirrorRules *MirrorRulesTransactorSession) GetInitialStatus() (*types.Transaction, error) {
+	return _MirrorRules.Contract.GetInitialStatus(&_MirrorRules.TransactOpts)
 }
 
-// ChangeOwner is a paid mutator transaction binding the contract method 0xa6f9dae1.
+// GetStatus is a paid mutator transaction binding the contract method 0xd39eb301.
 //
-// Solidity: function changeOwner(_newOwner address) returns()
-func (_PromiseValidator *PromiseValidatorTransactor) ChangeOwner(opts *bind.TransactOpts, _newOwner common.Address) (*types.Transaction, error) {
-	return _PromiseValidator.contract.Transact(opts, "changeOwner", _newOwner)
+// Solidity: function getStatus(witnessState uint8, trialStatus uint8) returns(status uint8)
+func (_MirrorRules *MirrorRulesTransactor) GetStatus(opts *bind.TransactOpts, witnessState uint8, trialStatus uint8) (*types.Transaction, error) {
+	return _MirrorRules.contract.Transact(opts, "getStatus", witnessState, trialStatus)
 }
 
-// ChangeOwner is a paid mutator transaction binding the contract method 0xa6f9dae1.
+// GetStatus is a paid mutator transaction binding the contract method 0xd39eb301.
 //
-// Solidity: function changeOwner(_newOwner address) returns()
-func (_PromiseValidator *PromiseValidatorSession) ChangeOwner(_newOwner common.Address) (*types.Transaction, error) {
-	return _PromiseValidator.Contract.ChangeOwner(&_PromiseValidator.TransactOpts, _newOwner)
+// Solidity: function getStatus(witnessState uint8, trialStatus uint8) returns(status uint8)
+func (_MirrorRules *MirrorRulesSession) GetStatus(witnessState uint8, trialStatus uint8) (*types.Transaction, error) {
+	return _MirrorRules.Contract.GetStatus(&_MirrorRules.TransactOpts, witnessState, trialStatus)
 }
 
-// ChangeOwner is a paid mutator transaction binding the contract method 0xa6f9dae1.
+// GetStatus is a paid mutator transaction binding the contract method 0xd39eb301.
 //
-// Solidity: function changeOwner(_newOwner address) returns()
-func (_PromiseValidator *PromiseValidatorTransactorSession) ChangeOwner(_newOwner common.Address) (*types.Transaction, error) {
-	return _PromiseValidator.Contract.ChangeOwner(&_PromiseValidator.TransactOpts, _newOwner)
+// Solidity: function getStatus(witnessState uint8, trialStatus uint8) returns(status uint8)
+func (_MirrorRules *MirrorRulesTransactorSession) GetStatus(witnessState uint8, trialStatus uint8) (*types.Transaction, error) {
+	return _MirrorRules.Contract.GetStatus(&_MirrorRules.TransactOpts, witnessState, trialStatus)
 }
 
-// IsEvidentSubmited is a paid mutator transaction binding the contract method 0x70e39acd.
+// GetWitness is a paid mutator transaction binding the contract method 0xdb061563.
 //
-// Solidity: function isEvidentSubmited(caseId bytes32, serviceId bytes32, clientAddress address) returns(bool)
-func (_PromiseValidator *PromiseValidatorTransactor) IsEvidentSubmited(opts *bind.TransactOpts, caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
-	return _PromiseValidator.contract.Transact(opts, "isEvidentSubmited", caseId, serviceId, clientAddress)
+// Solidity: function getWitness(trialStatus uint8) returns(address)
+func (_MirrorRules *MirrorRulesTransactor) GetWitness(opts *bind.TransactOpts, trialStatus uint8) (*types.Transaction, error) {
+	return _MirrorRules.contract.Transact(opts, "getWitness", trialStatus)
 }
 
-// IsEvidentSubmited is a paid mutator transaction binding the contract method 0x70e39acd.
+// GetWitness is a paid mutator transaction binding the contract method 0xdb061563.
 //
-// Solidity: function isEvidentSubmited(caseId bytes32, serviceId bytes32, clientAddress address) returns(bool)
-func (_PromiseValidator *PromiseValidatorSession) IsEvidentSubmited(caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
-	return _PromiseValidator.Contract.IsEvidentSubmited(&_PromiseValidator.TransactOpts, caseId, serviceId, clientAddress)
+// Solidity: function getWitness(trialStatus uint8) returns(address)
+func (_MirrorRules *MirrorRulesSession) GetWitness(trialStatus uint8) (*types.Transaction, error) {
+	return _MirrorRules.Contract.GetWitness(&_MirrorRules.TransactOpts, trialStatus)
 }
 
-// IsEvidentSubmited is a paid mutator transaction binding the contract method 0x70e39acd.
+// GetWitness is a paid mutator transaction binding the contract method 0xdb061563.
 //
-// Solidity: function isEvidentSubmited(caseId bytes32, serviceId bytes32, clientAddress address) returns(bool)
-func (_PromiseValidator *PromiseValidatorTransactorSession) IsEvidentSubmited(caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
-	return _PromiseValidator.Contract.IsEvidentSubmited(&_PromiseValidator.TransactOpts, caseId, serviceId, clientAddress)
+// Solidity: function getWitness(trialStatus uint8) returns(address)
+func (_MirrorRules *MirrorRulesTransactorSession) GetWitness(trialStatus uint8) (*types.Transaction, error) {
+	return _MirrorRules.Contract.GetWitness(&_MirrorRules.TransactOpts, trialStatus)
 }
 
-// SubmitPromise is a paid mutator transaction binding the contract method 0xb31e6b91.
+// StartGracePeriod is a paid mutator transaction binding the contract method 0xa7edcbe4.
 //
-// Solidity: function submitPromise(caseId bytes32, serviceId bytes32, beneficiary address, blockNumber uint256, sig_v uint8, sig_r bytes32, sig_s bytes32) returns(bool)
-func (_PromiseValidator *PromiseValidatorTransactor) SubmitPromise(opts *bind.TransactOpts, caseId [32]byte, serviceId [32]byte, beneficiary common.Address, blockNumber *big.Int, sig_v uint8, sig_r [32]byte, sig_s [32]byte) (*types.Transaction, error) {
-	return _PromiseValidator.contract.Transact(opts, "submitPromise", caseId, serviceId, beneficiary, blockNumber, sig_v, sig_r, sig_s)
+// Solidity: function startGracePeriod(caseId bytes32, status uint8) returns(bool)
+func (_MirrorRules *MirrorRulesTransactor) StartGracePeriod(opts *bind.TransactOpts, caseId [32]byte, status uint8) (*types.Transaction, error) {
+	return _MirrorRules.contract.Transact(opts, "startGracePeriod", caseId, status)
 }
 
-// SubmitPromise is a paid mutator transaction binding the contract method 0xb31e6b91.
+// StartGracePeriod is a paid mutator transaction binding the contract method 0xa7edcbe4.
 //
-// Solidity: function submitPromise(caseId bytes32, serviceId bytes32, beneficiary address, blockNumber uint256, sig_v uint8, sig_r bytes32, sig_s bytes32) returns(bool)
-func (_PromiseValidator *PromiseValidatorSession) SubmitPromise(caseId [32]byte, serviceId [32]byte, beneficiary common.Address, blockNumber *big.Int, sig_v uint8, sig_r [32]byte, sig_s [32]byte) (*types.Transaction, error) {
-	return _PromiseValidator.Contract.SubmitPromise(&_PromiseValidator.TransactOpts, caseId, serviceId, beneficiary, blockNumber, sig_v, sig_r, sig_s)
+// Solidity: function startGracePeriod(caseId bytes32, status uint8) returns(bool)
+func (_MirrorRules *MirrorRulesSession) StartGracePeriod(caseId [32]byte, status uint8) (*types.Transaction, error) {
+	return _MirrorRules.Contract.StartGracePeriod(&_MirrorRules.TransactOpts, caseId, status)
 }
 
-// SubmitPromise is a paid mutator transaction binding the contract method 0xb31e6b91.
+// StartGracePeriod is a paid mutator transaction binding the contract method 0xa7edcbe4.
 //
-// Solidity: function submitPromise(caseId bytes32, serviceId bytes32, beneficiary address, blockNumber uint256, sig_v uint8, sig_r bytes32, sig_s bytes32) returns(bool)
-func (_PromiseValidator *PromiseValidatorTransactorSession) SubmitPromise(caseId [32]byte, serviceId [32]byte, beneficiary common.Address, blockNumber *big.Int, sig_v uint8, sig_r [32]byte, sig_s [32]byte) (*types.Transaction, error) {
-	return _PromiseValidator.Contract.SubmitPromise(&_PromiseValidator.TransactOpts, caseId, serviceId, beneficiary, blockNumber, sig_v, sig_r, sig_s)
-}
-
-// TestimonyFor is a paid mutator transaction binding the contract method 0xc4b45283.
-//
-// Solidity: function testimonyFor(caseId bytes32, serviceId bytes32, clientAddress address) returns(uint8)
-func (_PromiseValidator *PromiseValidatorTransactor) TestimonyFor(opts *bind.TransactOpts, caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
-	return _PromiseValidator.contract.Transact(opts, "testimonyFor", caseId, serviceId, clientAddress)
-}
-
-// TestimonyFor is a paid mutator transaction binding the contract method 0xc4b45283.
-//
-// Solidity: function testimonyFor(caseId bytes32, serviceId bytes32, clientAddress address) returns(uint8)
-func (_PromiseValidator *PromiseValidatorSession) TestimonyFor(caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
-	return _PromiseValidator.Contract.TestimonyFor(&_PromiseValidator.TransactOpts, caseId, serviceId, clientAddress)
-}
-
-// TestimonyFor is a paid mutator transaction binding the contract method 0xc4b45283.
-//
-// Solidity: function testimonyFor(caseId bytes32, serviceId bytes32, clientAddress address) returns(uint8)
-func (_PromiseValidator *PromiseValidatorTransactorSession) TestimonyFor(caseId [32]byte, serviceId [32]byte, clientAddress common.Address) (*types.Transaction, error) {
-	return _PromiseValidator.Contract.TestimonyFor(&_PromiseValidator.TransactOpts, caseId, serviceId, clientAddress)
+// Solidity: function startGracePeriod(caseId bytes32, status uint8) returns(bool)
+func (_MirrorRules *MirrorRulesTransactorSession) StartGracePeriod(caseId [32]byte, status uint8) (*types.Transaction, error) {
+	return _MirrorRules.Contract.StartGracePeriod(&_MirrorRules.TransactOpts, caseId, status)
 }
 
 // TrialRulesAbstractABI is the input ABI used to generate the binding from.

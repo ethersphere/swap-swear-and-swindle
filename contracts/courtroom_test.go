@@ -3,7 +3,7 @@ package contracts
 //go:generate abigen --sol ./courtroom.sol --pkg contracts --out ./courtroom.go
 //go:generate abigen --sol ./mirrorens.sol --pkg mirrorens --out ./mirrorgame/witnesses/mirrorens/mirrorens.go
 //go:generate abigen --sol ./promisevalidator.sol --pkg promisevalidator --out ./mirrorgame/witnesses/promisevalidator/promisevalidator.go
-//go:generate abigen --sol ./mirrortransitions.sol --pkg mirrortransitions --out ./mirrorgame/mirrortransitions/mirrortransitions.go
+//go:generate abigen --sol ./mirrorrules.sol --pkg mirrorrules --out ./mirrorgame/rules/mirrorrules.go
 
 import (
 	"crypto/ecdsa"
@@ -17,7 +17,7 @@ import (
 	"github.com/ethereum/go-ethereum/contracts/ens/contract"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/crypto"
-	mirrortransitions "github.com/jaakmusic/swap-swear-and-swindle/contracts/mirrorgame/mirrortransitions"
+	mirrorrules "github.com/jaakmusic/swap-swear-and-swindle/contracts/mirrorgame/rules"
 	mirrorens "github.com/jaakmusic/swap-swear-and-swindle/contracts/mirrorgame/witnesses/mirrorens"
 	promisevalidator "github.com/jaakmusic/swap-swear-and-swindle/contracts/mirrorgame/witnesses/promisevalidator"
 )
@@ -82,7 +82,7 @@ func deployMirrorTransitions(prvKey *ecdsa.PrivateKey, amount *big.Int, backend 
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
 	deployTransactor.Value = amount
 
-	addr, _, _, err := mirrortransitions.DeployMirrorTransistions(deployTransactor, backend, paymentValidatorContract, ENSMirrotValidatorContract)
+	addr, _, _, err := mirrorrules.DeployMirrorRules(deployTransactor, backend, paymentValidatorContract, ENSMirrotValidatorContract)
 	if err != nil {
 		return common.Address{}, err
 	}

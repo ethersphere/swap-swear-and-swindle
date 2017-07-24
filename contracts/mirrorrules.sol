@@ -1,11 +1,11 @@
 pragma solidity ^0.4.0;
-import "./abstracts/trialtransitionsabstract.sol";
+import "./abstracts/trialrulesabstract.sol";
 
-contract MirrorTransistions is TrialTransistionsAbstract {
+contract MirrorRules is TrialRulesAbstract {
 
 
-uint8 constant MIRROR_CHALLENGE       = uint8(TrialTransistionsAbstract.Status.NOT_GUILTY) +1;
-uint8 constant VALID_MIRROR_CHALLENGE = uint8(TrialTransistionsAbstract.Status.NOT_GUILTY) +2;
+uint8 constant MIRROR_CHALLENGE       = uint8(TrialRulesAbstract.Status.NOT_GUILTY) +1;
+uint8 constant VALID_MIRROR_CHALLENGE = uint8(TrialRulesAbstract.Status.NOT_GUILTY) +2;
 
 uint constant MIRROR_CHALLENGE_GRACE_PERIOD = 35;//Grace period set to 35 blocks to submit evident.
 uint constant VALID_MIRROR_CHALLENGE_GRACE_PERIOD = 35;
@@ -16,15 +16,15 @@ mapping(uint8 => uint) public gracePeriods;
 //map caseId to map status to time elapse
 mapping(bytes32 => mapping(uint8 => uint)) gracePeriodStartTime;
 
-  function MirrorTransistions(address paymentValidatorContract,address ENSMirrotValidatorContract){
+  function MirrorRules(address paymentValidatorContract,address ENSMirrotValidatorContract){
 
     witnesses[MIRROR_CHALLENGE]       = paymentValidatorContract;
     witnesses[VALID_MIRROR_CHALLENGE] = ENSMirrotValidatorContract;
 
     transitions[uint8(WitnessAbstract.Status.VALID)][MIRROR_CHALLENGE]         = VALID_MIRROR_CHALLENGE;
-    transitions[uint8(WitnessAbstract.Status.INVALID)][MIRROR_CHALLENGE]       = uint8(TrialTransistionsAbstract.Status.NOT_GUILTY);
-    transitions[uint8(WitnessAbstract.Status.VALID)][VALID_MIRROR_CHALLENGE]   = uint8(TrialTransistionsAbstract.Status.GUILTY);
-    transitions[uint8(WitnessAbstract.Status.INVALID)][VALID_MIRROR_CHALLENGE] = uint8(TrialTransistionsAbstract.Status.NOT_GUILTY);
+    transitions[uint8(WitnessAbstract.Status.INVALID)][MIRROR_CHALLENGE]       = uint8(TrialRulesAbstract.Status.NOT_GUILTY);
+    transitions[uint8(WitnessAbstract.Status.VALID)][VALID_MIRROR_CHALLENGE]   = uint8(TrialRulesAbstract.Status.GUILTY);
+    transitions[uint8(WitnessAbstract.Status.INVALID)][VALID_MIRROR_CHALLENGE] = uint8(TrialRulesAbstract.Status.NOT_GUILTY);
 
     gracePeriods[MIRROR_CHALLENGE] = MIRROR_CHALLENGE_GRACE_PERIOD;
     gracePeriods[VALID_MIRROR_CHALLENGE] = VALID_MIRROR_CHALLENGE_GRACE_PERIOD;
