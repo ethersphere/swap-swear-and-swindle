@@ -31,7 +31,7 @@ If the case is valid a refund + compensation will send to the client from the co
 
 
 ### repository structure and files
- /
+ /contracts/
  -courtroom.sol - SwearGame contract is SwearGameAbstract
 
  -mirrorens.sol - MirrorENS contract is WitnessAbstract
@@ -48,9 +48,9 @@ If the case is valid a refund + compensation will send to the client from the co
 
  -courtroom_test.go - go contract functionality tests
 
- /abstracts - include all abstract contracts solidity files used by this project contracts
+ /contracts/abstracts - include all abstract contracts solidity files used by this project contracts
 
- /mirrorgame - include the automaticly generated contract go binding files
+ /contracts/mirrorgame - include the automaticly generated contract go binding files
  
  /vendor     - vendor dir needed for the go tests.
 
