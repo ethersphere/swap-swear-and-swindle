@@ -2,7 +2,7 @@ pragma solidity ^0.4.0;
 
 import "./abstracts/witnessabstract.sol";
 import "./abstracts/trialrulesabstract.sol";
-import "./owned.sol";
+import "./abstracts/owned.sol";
 
 contract PromiseValidator is WitnessAbstract,Owned {
 
@@ -21,7 +21,18 @@ contract PromiseValidator is WitnessAbstract,Owned {
 
   function PromiseValidator() {
 	}
-
+  /// @notice submitPromise - submit a signed promise by client
+  /// for this case it validate the service promise which is submitted by the client.
+  ///
+  /// @param caseId case id
+  /// @param serviceId the service id
+  /// @param beneficiary beneficiary address
+  /// @param blockNumber the Promise is valid until this block number
+  /// @param sig_v signature parameter v
+  /// @param sig_r signature parameter r
+  /// @param sig_s signature parameter s
+  /// @return bool  - true if promise already submitted for this case,service and  beneficiary
+  ///                 otherwise false
   function submitPromise(bytes32 caseId,bytes32 serviceId,address beneficiary, uint256 blockNumber,
 			uint8 sig_v, bytes32 sig_r, bytes32 sig_s) returns (bool) {
 
@@ -32,9 +43,22 @@ contract PromiseValidator is WitnessAbstract,Owned {
 		return true;
 
 	}
+  /// @notice isEvidenceSubmited - check if an evidence was submited for a specific case ,service and client
+  ///
+  /// @param caseId case id
+  /// @param serviceId the service id which
+  /// @param clientAddress client address
+  /// @return bool - true or false
   function isEvidentSubmited(bytes32 caseId, bytes32 serviceId,address clientAddress) returns (bool){
     return promises[caseId][serviceId][clientAddress].exist;
   }
+  /// @notice testimonyFor - request for testimony for a specific case ,service and client
+  /// for this case it validate the service promise which is submitted by the client.
+  ///
+  /// @param caseId case id
+  /// @param serviceId the service id which
+  /// @param clientAddress client address
+  /// @return Status { VALID,INVALID, PENDING}
   function testimonyFor(bytes32 caseId, bytes32 serviceId,address clientAddress) returns (WitnessAbstract.Status){
 
     if (!validatePromise(promises[caseId][serviceId][clientAddress].beneficiary,

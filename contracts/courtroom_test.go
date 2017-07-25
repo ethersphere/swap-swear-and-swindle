@@ -94,7 +94,7 @@ func deploySwearGame(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backend
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
 	deployTransactor.Value = amount
 
-	addr, _, swearGame, err := DeploySwearGame(deployTransactor, backend, tokenContractAddr, mirrorTransistions, rewordCompansation)
+	addr, _, swearGame, err := DeploySwearGame(deployTransactor, backend, tokenContractAddr, mirrorTransistions)
 	if err != nil {
 		return common.Address{}, nil, err
 	}
@@ -168,7 +168,7 @@ func deposit(t *testing.T, backend *backends.SimulatedBackend, sampleToken *Samp
 	}
 	commit(backend)
 }
-func openClaimForMirrorGame(t *testing.T, clientContent string, serviceContent string, numberOfBlocksToWait int, pendingTest bool) {
+func openCaseForMirrorGame(t *testing.T, clientContent string, serviceContent string, numberOfBlocksToWait int, pendingTest bool) {
 	backend := newTestBackend()
 
 	_, swearGame, sampleToken, promiseValidator, promiseValidatorAddress, mirrorEns := deployTheGame(t, backend)
@@ -277,21 +277,21 @@ func openClaimForMirrorGame(t *testing.T, clientContent string, serviceContent s
 	if err != nil {
 		t.Fatalf("balanceOfClientBefore : expected no error, got %v", err)
 	}
-	//If the client submit a claim a valid claim (ens are not equal) and the claim is within the time period the service promised
-	//so it is a valid claim
+	//If the client submit a case a valid case (ens are not equal) and the case is within the time period the service promised
+	//so it is a valid case
 	if (clientContent != serviceContent) && (numberOfBlocksToWait <= PromiseTillNextBlocks) {
 		if depositBefore.Int64()-depositAfter.Int64() != int64(compensationAmount) {
-			t.Fatalf("After a valid claim proccess : deposit at the contract should reduce by %d  ( got %d)", compensationAmount, (depositBefore.Int64() - depositAfter.Int64()))
+			t.Fatalf("After a valid case proccess : deposit at the contract should reduce by %d  ( got %d)", compensationAmount, (depositBefore.Int64() - depositAfter.Int64()))
 		}
 		if balanceOfClientAfter.Int64()-balanceOfClientBefore.Int64() != int64(compensationAmount) {
-			t.Fatalf("After a valid claim proccess : the balance of client should increase by %d   ( got %d)", compensationAmount, (balanceOfClientAfter.Int64() - balanceOfClientBefore.Int64()))
+			t.Fatalf("After a valid case proccess : the balance of client should increase by %d   ( got %d)", compensationAmount, (balanceOfClientAfter.Int64() - balanceOfClientBefore.Int64()))
 		}
 	} else {
 		if depositBefore.Int64() != depositAfter.Int64() {
-			t.Fatalf("non valid claim proccess : deposit at the contract should be the same as before  ( got %d)", (depositBefore.Int64() - depositAfter.Int64()))
+			t.Fatalf("non valid case proccess : deposit at the contract should be the same as before  ( got %d)", (depositBefore.Int64() - depositAfter.Int64()))
 		}
 		if balanceOfClientAfter.Int64() != balanceOfClientBefore.Int64() {
-			t.Fatalf("non valid  claim proccess should end by no change to the client balance   ( got %d)", (balanceOfClientAfter.Int64() - balanceOfClientBefore.Int64()))
+			t.Fatalf("non valid  case proccess should end by no change to the client balance   ( got %d)", (balanceOfClientAfter.Int64() - balanceOfClientBefore.Int64()))
 		}
 	}
 
@@ -299,28 +299,28 @@ func openClaimForMirrorGame(t *testing.T, clientContent string, serviceContent s
 func TestPromiseOk(t *testing.T) {
 	//client and service content are diffrent  but number of block to wait is 6
 	// the service promise to serve client for the next PromiseTillNextBlocks(5) blocks.
-	//This test will fail if client will  get compensated for its claim.
-	openClaimForMirrorGame(t, "1234", "4567", 6, false)
+	//This test will fail if client will  get compensated for its case.
+	openCaseForMirrorGame(t, "1234", "4567", 6, false)
 }
 
-func TestOpenValidClaimPending(t *testing.T) {
+func TestOpenValidCasePending(t *testing.T) {
 	//client and service content are diffrent and number of block to wait is 0
-	//This test will fail if client will not get compensated for its claim.
+	//This test will fail if client will not get compensated for its case.
 	//This test also submit a newCase ...without submiting enough evident ...
 	//check the status submit the missing evident and resumeCase.
-	openClaimForMirrorGame(t, "1234", "4567", 0, true)
+	openCaseForMirrorGame(t, "1234", "4567", 0, true)
 }
 
-func TestOpenValidClaim(t *testing.T) {
+func TestOpenValidCase(t *testing.T) {
 	//client and service content are diffrent and number of block to wait is 0
-	//This test will fail if client will not get compensated for its claim.
-	openClaimForMirrorGame(t, "1234", "4567", 0, false)
+	//This test will fail if client will not get compensated for its case.
+	openCaseForMirrorGame(t, "1234", "4567", 0, false)
 }
 
-func TestOpenNoneValidClaim(t *testing.T) {
+func TestOpenNoneValidCase(t *testing.T) {
 	//client and service content are the same and number of blocks to wait is 0
-	//This test will fail if client will get compensated for its claim.
-	openClaimForMirrorGame(t, "1234", "1234", 0, false)
+	//This test will fail if client will get compensated for its case.
+	openCaseForMirrorGame(t, "1234", "1234", 0, false)
 }
 
 func TestRegisterAndNewCase(t *testing.T) {
@@ -367,17 +367,17 @@ func TestRegisterAndNewCase(t *testing.T) {
 	}
 	commit(backend)
 
-	claimid, err := swearGame.Ids(&bind.CallOpts{}, clientAddr, big.NewInt(0))
-	t.Log("claim", claimid)
+	caseid, err := swearGame.Ids(&bind.CallOpts{}, clientAddr, big.NewInt(0))
+	t.Log("case", caseid)
 	counter := 0
 	for i := 0; i < 32; i++ {
 		counter++
-		if claimid[i] != 0 {
+		if caseid[i] != 0 {
 			break
 		}
 	}
 	if counter == 32 {
-		t.Fatal("expected claim id not zero")
+		t.Fatal("expected case id not zero")
 	}
 }
 
@@ -400,10 +400,10 @@ func TestNewCaseNotRegister(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Register: expected no error, got %v", err)
 	}
-	claimid, err := swearGame.Ids(&bind.CallOpts{}, clientAddr, big.NewInt(0))
+	caseid, err := swearGame.Ids(&bind.CallOpts{}, clientAddr, big.NewInt(0))
 	for i := 0; i < 32; i++ {
-		if claimid[i] != 0 {
-			t.Fatalf("ClaimId: expected 0, got %v", claimid)
+		if caseid[i] != 0 {
+			t.Fatalf("CaseId: expected 0, got %v", caseid)
 		}
 	}
 }

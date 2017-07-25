@@ -1,6 +1,6 @@
 pragma solidity ^0.4.0;
 
-import "./owned.sol";
+import "./abstracts/owned.sol";
 import "./standardtoken.sol";
 
 

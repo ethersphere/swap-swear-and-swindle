@@ -1,13 +1,13 @@
 pragma solidity ^0.4.0;
 
-import "./owned.sol";
+import "./abstracts/CourtroomAbstract.sol";
 import "./sampletoken.sol";
 import "./abstracts/trialrulesabstract.sol";
 
-contract SwearGame is Owned {
+
+contract SwearGame is SwearGameAbstract {
 
 	uint256 public deposit;
-	uint public reward;
 	uint  public playerCount;
 	SampleToken public token;
   TrialRulesAbstract public trialRules;
@@ -22,13 +22,22 @@ contract SwearGame is Owned {
   mapping(address => bool) public players;
 	mapping(address => bytes32[]) public ids;
 
-  function SwearGame(address _token, address _trialRules, uint _reward) {
+	/// @notice SwearGame - Swear game constructor this function is called along with
+	/// the contract deployment time.
+  ///
+  /// @param _token address of the token contract
+	/// @param _trialRules - address of the trial specific rules contract
+  /// @return WitnessAbstract - return a witness contract instance
+  function SwearGame(address _token, address _trialRules) {
 		token        = SampleToken(_token);
     trialRules    = TrialRulesAbstract(_trialRules);
-		reward = _reward;
 		playerCount = 0;
 	}
-
+	/// @notice _newCase - open a new case and add it to OpenCases
+  ///
+  /// @param _plaintiff  - the plaintiff address for the case
+	/// @param _serviceId - service id related to the case
+  /// @return _status - the status of the case
   function _newCase(address _plaintiff,bytes32 _serviceId,uint8 _status) private returns (bytes32 id) {
      id = sha3(_plaintiff,_serviceId, now);
      if (OpenCases[id].valid != 0)return 0x0;
@@ -46,18 +55,21 @@ contract SwearGame is Owned {
    return true;
   }
 
-  function resolveClaim(bytes32 _id) private {
+  function resolveCase(bytes32 _id) private {
 
     if (OpenCases[_id].status == uint8(TrialRulesAbstract.Status.UNCHALLENGED)) throw;
     OpenCases[_id].plaintiff = 0;
     OpenCases[_id].valid = 0;
     OpenCases[_id].status = uint8(TrialRulesAbstract.Status.UNCHALLENGED);
   }
-  function getClaim(bytes32 _id) private returns (address plaintiff,bytes32 serviceId) {
+  function getCase(bytes32 _id) private returns (address plaintiff,bytes32 serviceId) {
           return (OpenCases[_id].plaintiff,OpenCases[_id].serviceId);
   }
 
-  /* The function without name is the default function that is called whenever anyone sends funds to a contract */
+	/// @notice () - a payable function which is used by the service as a deposit functionality
+  ///
+	///The function without name is the default function that is called whenever anyone sends funds to a contract
+	/// It is used by the service for deposit
   function () payable {
         uint amount = msg.value;
     		require(token.transferFrom(owner, address(this), amount));
@@ -68,19 +80,20 @@ contract SwearGame is Owned {
 	function verdict(bytes32 _id,uint8 status,address plaintiff) private returns(bool) {
 
     if (status == uint8(TrialRulesAbstract.Status.NOT_GUILTY)){
-       ClaimResolved(_id, plaintiff, 0,status);
+       CaseResolved(_id, plaintiff, 0,status);
        return false;
      }
-
-	  bool caseCompensated = compensate(plaintiff);
-		resolveClaim(_id);
+    uint reward = trialRules.getReward();
+	  bool caseCompensated = compensate(plaintiff,reward);
+		resolveCase(_id);
     _leaveGame(plaintiff);
-		ClaimResolved(_id, plaintiff, reward,status);
+		CaseResolved(_id, plaintiff, reward,status);
 		return caseCompensated;
 
 	}
 
-	function compensate(address _beneficiary) private returns(bool compensated) {
+	function compensate(address _beneficiary,uint reward) private returns(bool compensated) {
+
 
 		compensated = token.transferFrom(address(this), _beneficiary, reward);
 
@@ -93,10 +106,18 @@ contract SwearGame is Owned {
 		return compensated;
 
 	}
-
+	/// @notice register - register a player to the game
+  ///
+	/// The function will throw if the player is already register or there is not
+	/// enough deposit in the contract to ensure the player could be compensated for the
+	/// case of a valid case.
+  /// @param _player  - the player address
+  /// @return bool registered - true for success registration.
 	function register(address _player) onlyOwner public returns (bool registered) {
 
 		require(!players[_player]);
+
+		uint reward = trialRules.getReward();
 
 		if (playerCount == 0){
 			require(deposit >= reward);
@@ -113,9 +134,12 @@ contract SwearGame is Owned {
 		return true;
 
 	}
+	/// @notice leaveGame - dismiss a player from the game (unregister)
+  /// allow only plaintiff which do not have openCases on it name to leave game
+  /// @param _player  - the player address
 	function leaveGame(address _player) {
 
-		for (uint256 i=0;i<ids[msg.sender].length;i++){ //allow only plaintiff wihich do not have openCases on it name to leave game
+		for (uint256 i=0;i<ids[msg.sender].length;i++){ //allow only plaintiff which do not have openCases on it name to leave game
 			require(OpenCases[ids[msg.sender][i]].valid == 0);
 		}
 		return _leaveGame(msg.sender);
@@ -132,11 +156,18 @@ contract SwearGame is Owned {
 		playerCount--;
 
   }
-
+	/// @notice getStatus - return the trial status of a case
+  ///
+	/// @param id  - case id
+  /// @return  status  - the status of a case
   function getStatus(bytes32 id) public constant returns (uint8 status){
     return OpenCases[id].status;
   }
-
+	/// @notice newCase - open a new case for a service id
+  ///
+	/// the function require that the msg sender is already register to the game.
+  /// @param serviceId  - service id
+	/// @return bool - true for successful operation.
 	function newCase(bytes32 serviceId) public returns (bool) {
 
 		require(players[msg.sender]);
@@ -150,6 +181,11 @@ contract SwearGame is Owned {
 		return true;
 	}
 
+	/// @notice trial - initiate or restart a trial proccess for a certain case
+  ///
+	/// the function requiere that the case is a valid one.
+  /// @param id  - case id
+	/// @return bool - true for successful operation.
   function trial(bytes32 id) public returns (bool){
     require(players[msg.sender]);
 
@@ -168,7 +204,7 @@ contract SwearGame is Owned {
 
   uint8 status =  getStatus(id);
 
-  var(plaintiff,serviceId) = getClaim(id);
+  var(plaintiff,serviceId) = getCase(id);
 
   if (status == uint8(TrialRulesAbstract.Status.UNCHALLENGED)) {
       return;
@@ -212,9 +248,9 @@ contract SwearGame is Owned {
 	event Compensate(address recipient, uint reward);
 	event NewPlayer(address playerId);
 	event PlayerLeftGame(address playerId);
-	event NewClaimOpened(bytes32 id, address plaintiff);
+	event NewCaseOpened(bytes32 id, address plaintiff);
 	event NewEvidenceSubmitted(bytes32 id, address plaintiff);
-	event ClaimResolved(bytes32 id, address plaintiff, uint reward,uint8 status);
+	event CaseResolved(bytes32 id, address plaintiff, uint reward,uint8 status);
 	event Payment(address from,address to ,uint256 value);
 	event AdditionalDepositRequired(uint256 deposit);
 
