@@ -219,7 +219,7 @@ contract SwearGame is SwearGameAbstract {
             return;
         } else {
 					 bool expired = trialRules.expired(id,status);
-					 if (witness.isEvidentSubmited(id,serviceId,plaintiff) && !expired){
+					 if (witness.isEvidenceSubmitted(id,serviceId,plaintiff) && !expired){
 					   outcome = witness.testimonyFor(id,serviceId,plaintiff);
 					 }else{
 						  if(trialRules.startGracePeriod(id,status)||(!expired)){

@@ -37,13 +37,13 @@ contract MirrorENS is WitnessAbstract{
 		ensNameHashePairs[caseId][serviceId] = ensNameHashePair(clientNameHash,serviceNameHash);
 		return true;
   }
-	/// @notice isEvidenceSubmited - check if an evidence was submited for a specific case ,service and client
+	/// @notice isEvidenceSubmitted - check if an evidence was submitted for a specific case ,service and client
   ///
   /// @param caseId case id
   /// @param serviceId the service id which
   /// @param clientAddress client address
   /// @return bool - true or false
-  function isEvidentSubmited(bytes32 caseId, bytes32 serviceId,address clientAddress) returns (bool){
+  function isEvidenceSubmitted(bytes32 caseId, bytes32 serviceId,address clientAddress) returns (bool){
 	  return (ensNameHashePairs[caseId][serviceId].clientNameHash != bytes32(0x0));
   }
 	/// @notice ensResolve - resolve the ens
