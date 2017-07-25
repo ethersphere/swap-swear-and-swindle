@@ -7,7 +7,7 @@ contract MirrorRules is TrialRulesAbstract {
 uint8 constant MIRROR_CHALLENGE       = uint8(TrialRulesAbstract.Status.NOT_GUILTY) +1;
 uint8 constant VALID_MIRROR_CHALLENGE = uint8(TrialRulesAbstract.Status.NOT_GUILTY) +2;
 
-uint constant MIRROR_CHALLENGE_GRACE_PERIOD = 35;//Grace period set to 35 blocks to submit evident.
+uint constant MIRROR_CHALLENGE_GRACE_PERIOD = 35;//Grace period set to 35 blocks to submit evidence.
 uint constant VALID_MIRROR_CHALLENGE_GRACE_PERIOD = 35;
 uint constant REWARD = 5; //plaintiff reward for the case of a valid case
 

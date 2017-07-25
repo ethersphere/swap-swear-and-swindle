@@ -82,7 +82,7 @@ function trial(bytes32 id) public returns (bool);
  A smart contract which responsible to testimony for a pre defined
  evidence submitted to it.
 
- Testimony means it is doing a validation for the evident submitted to it.  
+ Testimony means it is doing a validation for the evidence submitted to it.  
 
  The witness contract is specific to the game which is offers by the service ,
  which means that each service will have its own witnesses contracts.

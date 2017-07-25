@@ -306,8 +306,8 @@ func TestPromiseOk(t *testing.T) {
 func TestOpenValidCasePending(t *testing.T) {
 	//client and service content are diffrent and number of block to wait is 0
 	//This test will fail if client will not get compensated for its case.
-	//This test also submit a newCase ...without submiting enough evident ...
-	//check the status submit the missing evident and resumeCase.
+	//This test also submit a newCase ...without submiting enough evidence ...
+	//check the status submit the missing evidence and resume the trial on the same case.
 	openCaseForMirrorGame(t, "1234", "4567", 0, true)
 }
 
@@ -589,7 +589,7 @@ type Promise struct {
 }
 
 //issuePromise creates a promise signed by the serive's private key .
-//this signed promise could later be submited by the client of the service as an evident that the service promise to serve it
+//this signed promise could later be submitted by the client of the service as an evidence that the service promise to serve it
 func issuePromise(prvKey *ecdsa.PrivateKey, beneficiary common.Address, blockNumber *big.Int, contractAddress common.Address) (promise *Promise, err error) {
 
 	sig, err := crypto.Sign(sigHash(contractAddress, beneficiary, blockNumber), prvKey)
