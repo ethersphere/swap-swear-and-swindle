@@ -2,12 +2,9 @@
 
 This repository include a basic abstract example of a courtroom contracts game.
 
-
 ## Courtroom structure
-The courtroom suite includes :
- - an abstract generic contract "SwearGame" which iterates over the specific game witnesses, trial statuses and makes a verdict accordingly.
- - a specific game rules contract which defined the trial rules such as transitions statuses,grace periods per state..  .(in our example it is "MirrorRules")
- - A specific game witnesses contracts which are "expert witnesses" which can validate submitted evidences.  
+
+The courtroom suite includes an abstract generic contract "SwearGame" , a specific game rules contract and a specific game witnesses contracts.
 
 ### SwearGame contract
 
@@ -119,8 +116,7 @@ function trial(bytes32 id) public returns (bool);
 
 ### Trial statuses,transitions and grace periods
 
-While the main SwearGame contract conducts a trial to resolve a specific case it iterates between different
-trial statuses.
+While the main SwearGame contract conducts a trial to resolve a specific case it iterates between different trial statuses.
 
 For each game there are a specific pre defined trial statuses and a specific trial transitions scheme which which define the transition for a certain status to the next one.
 
@@ -195,8 +191,8 @@ As evidence the client submits to court the signed promise it got from the servi
 If the case is valid, a refund + compensation will sent to the client from the contract.
 
 ### witnesses
- - PromiseValidator - validate a signed promise for the case it is submitted and it is ask for testimony .
- - MirrorENS        - resolve and compare the 2 enss for the case it is submitted and it is ask for testimony .
+ - PromiseValidator - testify that a signed promise which was submitted to it is a valid one.
+ - MirrorENS        - resolves and compares two ENS entries, to check for the presence of a hash.
 
 
 ### repository structure and files
