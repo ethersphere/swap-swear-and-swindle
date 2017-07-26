@@ -74,10 +74,9 @@ function newCase(bytes32 serviceId) public returns (bool);
 
 function trial(bytes32 id) public returns (bool);
 
-### Expert witness contract
+### Witness contract
 
- A smart contract which responsible to testimony for a pre defined
- evidence submitted to it.
+ A smart contract which responsible to testimony according to a certain type of evidence which is submitted to it.
 
  Testimony means it is doing a validation for the evidence submitted to it.  
 
