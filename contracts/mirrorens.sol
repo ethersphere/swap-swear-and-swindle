@@ -5,12 +5,12 @@ import "./abstracts/ensabstract.sol";
 
 contract MirrorENS is WitnessAbstract{
 
-	struct ensNameHashePair{
+	struct ensNameHashPair{
     bytes32 clientNameHash;
 		bytes32 serviceNameHash;
   }
-  //map caseId to map serviceId to ensNameHashePair
-	mapping(bytes32=> mapping(bytes32=> ensNameHashePair))  ensNameHashePairs;
+  //map caseId to map serviceId to ensNameHashPair
+	mapping(bytes32=> mapping(bytes32=> ensNameHashPair))  ensNameHashPairs;
 
 	ENSAbstract ens;
 
@@ -33,8 +33,8 @@ contract MirrorENS is WitnessAbstract{
   }
 
 	function submitNameHashes(bytes32 caseId,bytes32 serviceId, bytes32 clientNameHash , bytes32 serviceNameHash) returns (bool) {
-		if (ensNameHashePairs[caseId][serviceId].clientNameHash != bytes32(0x0)) return false; //do not allow override submition
-		ensNameHashePairs[caseId][serviceId] = ensNameHashePair(clientNameHash,serviceNameHash);
+		if (ensNameHashPairs[caseId][serviceId].clientNameHash != bytes32(0x0)) return false; //do not allow override submition
+		ensNameHashPairs[caseId][serviceId] = ensNameHashPair(clientNameHash,serviceNameHash);
 		return true;
   }
 	/// @notice isEvidenceSubmitted - check if an evidence was submitted for a specific case ,service and client
@@ -44,7 +44,7 @@ contract MirrorENS is WitnessAbstract{
   /// @param clientAddress client address
   /// @return bool - true or false
   function isEvidenceSubmitted(bytes32 caseId, bytes32 serviceId,address clientAddress) returns (bool){
-	  return (ensNameHashePairs[caseId][serviceId].clientNameHash != bytes32(0x0));
+	  return (ensNameHashPairs[caseId][serviceId].clientNameHash != bytes32(0x0));
   }
 	/// @notice ensResolve - resolve the ens
   ///
@@ -65,7 +65,7 @@ contract MirrorENS is WitnessAbstract{
 		  //check if the two nodes resolved ENS are equal
 			//for each specific game the the decision should be take diffrently
 			ens = ENSAbstract(ensAddress);
-			if (ensResolve(ensNameHashePairs[caseId][serviceId].clientNameHash)!= ensResolve(ensNameHashePairs[caseId][serviceId].serviceNameHash)){
+			if (ensResolve(ensNameHashPairs[caseId][serviceId].clientNameHash)!= ensResolve(ensNameHashPairs[caseId][serviceId].serviceNameHash)){
 				return true;
 			}
 			return false;

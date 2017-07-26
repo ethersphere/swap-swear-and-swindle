@@ -5,9 +5,9 @@ This repository include a basic abstract example of a courtroom contracts game.
 
 ## Courtroom structure
 The courtroom suite includes :
- - an abstract generic contract "SwearGame" which in a sense conduct the trial: iterate over the specific game witnesses ,trial statuses and verdict accordingly .
+ - an abstract generic contract "SwearGame" which iterates over the specific game witnesses, trial statuses and makes a verdict accordingly.
  - a specific game rules contract which defined the trial rules such as transitions statuses,grace periods per state..  .(in our example it is "MirrorRules")
- - A specific game witnesses contracts which in a sense are "expert witnesses" which can validate submitted evidences.  
+ - A specific game witnesses contracts which are "expert witnesses" which can validate submitted evidences.  
 
 ### SwearGame contract
 
@@ -18,7 +18,7 @@ and to check for expiry time for a specific case and trial status.
 
 It calls the specific game witnesses contracts to testimony and validate for a submitted evidence.
 
-The SwearGame contract is align with the ABIs defined at SwearGameAbstract (courtroomabstract.sol).
+The SwearGame contract is aligned with the ABIs defined at SwearGameAbstract (courtroomabstract.sol).
 
 /// @notice () - a payable function which is used by the service as a deposit functionality
 
@@ -42,7 +42,7 @@ function register(address _player) onlyOwner public returns (bool registered);
 
 /// @notice leaveGame - dismiss a player from the game (unregister)
 
-/// allow only plaintiff which do not have openCases on it name to leave game
+/// only allow plaintiff which does not have openCases on its name to leave game
 
 /// @param _player  - the player address
 
@@ -61,7 +61,7 @@ function getStatus(bytes32 id) public constant returns (uint8 status);
 
 /// the function require that the msg sender is already register to the game.
 
-/// @param serviceId  - service id
+/// @param serviceId  - the accuse service id  
 
 /// @return bool - true for successful operation.
 
@@ -84,10 +84,10 @@ function trial(bytes32 id) public returns (bool);
 
  Testimony means it is doing a validation for the evidence submitted to it.  
 
- The witness contract is specific to the game which is offers by the service ,
+ The witness contract is specific to the game which is offered by the service ,
  which means that each service will have its own witnesses contracts.
 
- The witness contract is access by the main SwearGame contract and is align with  
+ The witness contract is accessed by the main SwearGame contract and is aligned with  
  the ABIs defined at witnessAbstract.sol contract:
 
  /// @notice testimonyFor - request for testimony for a specific case ,service and client
@@ -95,7 +95,7 @@ function trial(bytes32 id) public returns (bool);
  ///
  /// @param caseId case id
 
- /// @param serviceId the service id which
+ /// @param serviceId the service id which the witness is request to testimony for.
 
  /// @param clientAddress client address
 
@@ -103,13 +103,13 @@ function trial(bytes32 id) public returns (bool);
 
  function testimonyFor(bytes32 caseId,bytes32 serviceId,address clientAddress) returns (Status);
 
- /// @notice isEvidenceSubmitted - check if an evidence was submitted for a specific case ,service and client
+ /// @notice isEvidenceSubmitted - check if evidence was submitted for a specific case ,service and client
 
  ///
 
  /// @param caseId case id
 
- /// @param serviceId the service id which
+ /// @param serviceId the service id which the evidence was submitted for
 
  /// @param clientAddress client address
 
@@ -119,17 +119,16 @@ function trial(bytes32 id) public returns (bool);
 
 ### Trial statuses,transitions and grace periods
 
-While the main SwearGame contract conduct a trial to resolve a specific case it iterate between different
+While the main SwearGame contract conducts a trial to resolve a specific case it iterates between different
 trial statuses.
 
-For each game there is a specific pre defined trial statuses and a specific trial transitions scheme which defined
-the transition for a certain status to the next one.
+For each game there are a specific pre defined trial statuses and a specific trial transitions scheme which which define the transition for a certain status to the next one.
 
-The trial statuses and their transitions are defined per each game in a TrialRules contract.
+The trial statuses and their transitions are defined for each game in a TrialRules contract.
 
-The TrialRules contract also defined the grace period per each trial status.
+The TrialRules contract also defines the grace period for each trial status.
 
-This TrialRules contract is align with TrialRulesAbstract.sol  and should implement the following ABIs:
+This TrialRules contract is aligned with TrialRulesAbstract.sol  and should implement the following ABIs:
 
 /// @notice getStatus - get next trial status according to witness state and the current trial state
 
@@ -185,15 +184,15 @@ A very simple basic game where the service offers to mirror the client ENS("clie
 ### game flow
 -service will deposit some funds in the swear contact to ensure the service in the case of a court case/litigation
 
--client receive a signed promise from the service to mirror its ens during the next X blocks.
+-client receives a signed promise from the service to mirror its ENS during the next X blocks.
 
--client update the client.game ENS.
+-client updates the client.game ENS.
 
-If after X blocks the service ENS does not "mirror" its client ENS ..the client can submit a new case for the swear contract.
+If after X blocks the service ENS does not "mirror" its client ENS, the client can submit a new case for the swear contract.
 
-As an evidence the client submits to court the signed promise it got from the service and the ENSNameHashes for both client and service.
+As evidence the client submits to court the signed promise it got from the service and the ENSNameHashes for both client and service.
 
-If the case is valid a refund + compensation will send to the client from the contract.
+If the case is valid, a refund + compensation will sent to the client from the contract.
 
 ### witnesses
  - PromiseValidator - validate a signed promise for the case it is submitted and it is ask for testimony .
