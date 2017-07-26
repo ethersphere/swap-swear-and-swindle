@@ -4,10 +4,9 @@ import "./owned.sol";
 
 contract SwearGameAbstract is Owned {
 
-  /// @notice () - open a new case and add it to OpenCases
+  /// @notice () - a payable function which is used by the service as a deposit functionality
   ///
-	///The function without name is the default function that is called whenever anyone sends funds to a contract
-	/// It is used by the service for deposit
+  ///The function without name is the default function that is called whenever anyone sends funds to a contract
   function () payable;
 	/// @notice register - register a player to the game
   ///
@@ -30,14 +29,14 @@ contract SwearGameAbstract is Owned {
   ///
 	/// the function require that the msg sender is already register to the game.
   /// @param serviceId  - service id
-	/// @return bool - true for succesfull operation.
+	/// @return bool - true for successful operation.
 	function newCase(bytes32 serviceId) public returns (bool);
 
-	/// @notice trial - initiate or restart a trial proccess for a certian case
+  /// @notice trial - initiate or restart a trial proccess for a certain case
   ///
 	/// the function requiere that the case is a valid one.
   /// @param id  - case id
-	/// @return bool - true for succesfull operation.
+	/// @return bool - true for successful operation.
   function trial(bytes32 id) public returns (bool);
 
 	event Decision(string decide);
