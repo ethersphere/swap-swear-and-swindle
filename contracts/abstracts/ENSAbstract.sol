@@ -1,5 +1,6 @@
 pragma solidity ^0.4.0;
 
+
 contract ENSAbstract {
     function owner(bytes32 node) constant returns (address);
     function resolver(bytes32 node) constant returns (address);
@@ -9,6 +10,7 @@ contract ENSAbstract {
     function setResolver(bytes32 node, address resolver);
     function setTTL(bytes32 node, uint64 ttl);
 }
+
 
 contract ResolverAbstract {
     function content(bytes32 node) constant returns (bytes32 content);

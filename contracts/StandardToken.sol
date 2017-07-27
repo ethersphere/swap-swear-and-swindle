@@ -10,6 +10,7 @@ Implements ERC 20 Token standard: https://github.com/ethereum/EIPs/issues/20
 
 import "./abstracts/token.sol";
 
+
 contract StandardToken is Token {
 
     function transfer(address _to, uint256 _value) returns (bool success) {
@@ -22,7 +23,9 @@ contract StandardToken is Token {
             balances[_to] += _value;
             Transfer(msg.sender, _to, _value);
             return true;
-        } else { throw; }
+        } else {
+            throw;
+        }
     }
 
     function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
@@ -34,7 +37,9 @@ contract StandardToken is Token {
             allowed[_from][msg.sender] -= _value;
             Transfer(_from, _to, _value);
             return true;
-        } else { throw; }
+        } else {
+            throw;
+        }
     }
 
     function balanceOf(address _owner) constant returns (uint256 balance) {
@@ -48,7 +53,7 @@ contract StandardToken is Token {
     }
 
     function allowance(address _owner, address _spender) constant returns (uint256 remaining) {
-      return allowed[_owner][_spender];
+        return allowed[_owner][_spender];
     }
 
     mapping (address => uint256) balances;
