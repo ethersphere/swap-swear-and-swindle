@@ -1,16 +1,16 @@
 # swap-swear-and-swindle-suite
 
-This repository include a basic abstract example of a courtroom contracts game.
+This repository includes a basic example of a courtroom contracts suite.
 
 ## Courtroom structure
 
-The courtroom suite includes an abstract generic contract "SwearGame" , a specific game rules contract and a specific game witnesses contracts.
+The courtroom suite includes an abstract generic [SwearGame contract](#sweargame-contract) , a specific [trial rules contract](#trial-rules-contract) and a specific [witnesses](#witness-contract) contracts.
 
 ### SwearGame contract
 
 This is the main general swear contract which conduct the trial.
 
-It calls the specific TrialRules contract to get the witnesses ,get the trial statuses and transitions
+It calls the specific [trial rules contract](#trial-rules-contract) to get the [witnesses](#witness-contract),get the trial statuses and transitions
 and to check for expiry time for a specific case and trial status.
 
 It calls the specific game witnesses contracts to testimony and validate for a submitted evidence.
@@ -113,15 +113,15 @@ function trial(bytes32 id) public returns (bool);
 
  function isEvidenceSubmitted(bytes32 caseId, bytes32 serviceId,address clientAddress) returns (bool);
 
-### Trial statuses,transitions and grace periods
+### Trial rules contract
+
+A contract which defines a specific set of rules for a game:
+
+- The trial statuses transitions map. A scheme which define the transition for a certain status to the next one.
+- Grace periods for each trial status.
+- The reward which will be transfer to the plaintiff as a compensation for the case of a valid claim.
 
 While the main SwearGame contract conducts a trial to resolve a specific case it iterates between different trial statuses.
-
-For each game there are a specific pre defined trial statuses and a specific trial transitions scheme which which define the transition for a certain status to the next one.
-
-The trial statuses and their transitions are defined for each game in a TrialRules contract.
-
-The TrialRules contract also defines the grace period for each trial status.
 
 This TrialRules contract is aligned with TrialRulesAbstract.sol  and should implement the following ABIs:
 
