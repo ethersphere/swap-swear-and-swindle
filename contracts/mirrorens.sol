@@ -27,7 +27,7 @@ contract MirrorENS is WitnessAbstract {
     function testimonyFor(bytes32 caseId,bytes32 serviceId,address clientAddress) returns (WitnessAbstract.Status) {
 
         if (compareNameHashPair(caseId,serviceId))
-        return WitnessAbstract.Status.VALID;
+            return WitnessAbstract.Status.VALID;
         return WitnessAbstract.Status.INVALID;
     }
 

@@ -17,10 +17,10 @@ contract MirrorRules is TrialRulesAbstract {
     //map caseId to map status to time elapse
     mapping(bytes32 => mapping(uint8 => uint)) gracePeriodStartTime;
 
-    function MirrorRules(address paymentValidatorContract,address ensMirrotValidatorContract) {
+    function MirrorRules(address paymentValidatorContract,address ensMirrorValidatorContract) {
 
         witnesses[MIRROR_CHALLENGE] = paymentValidatorContract;
-        witnesses[VALID_MIRROR_CHALLENGE] = ensMirrotValidatorContract;
+        witnesses[VALID_MIRROR_CHALLENGE] = ensMirrorValidatorContract;
 
         transitions[uint8(WitnessAbstract.Status.VALID)][MIRROR_CHALLENGE] = VALID_MIRROR_CHALLENGE;
         transitions[uint8(WitnessAbstract.Status.INVALID)][MIRROR_CHALLENGE] = uint8(TrialRulesAbstract.Status.NOT_GUILTY);
