@@ -45,7 +45,7 @@ contract SwearGame is SwearGameAbstract {
     function _newCase(address _plaintiff,bytes32 _serviceId,uint8 _status) private returns (bytes32 id) {
         id = sha3(_plaintiff,_serviceId, now);
         if (OpenCases[id].valid != 0)
-        return 0x0;
+            return 0x0;
         OpenCases[id] = Case(
             _plaintiff,
             _serviceId,
@@ -60,8 +60,6 @@ contract SwearGame is SwearGameAbstract {
     }
 
     function setStatus(bytes32 id,uint8 status) private constant  returns (bool) {
-        if (msg.sender == owner)
-        throw;
         OpenCases[id].status = status;
         return true;
     }
@@ -69,7 +67,7 @@ contract SwearGame is SwearGameAbstract {
     function resolveCase(bytes32 _id) private {
 
         if (OpenCases[_id].status == uint8(TrialRulesAbstract.Status.UNCHALLENGED))
-        throw;
+            throw;
         OpenCases[_id].plaintiff = 0;
         OpenCases[_id].valid = 0;
         OpenCases[_id].status = uint8(TrialRulesAbstract.Status.UNCHALLENGED);
@@ -184,8 +182,7 @@ contract SwearGame is SwearGameAbstract {
         require(players[msg.sender]);
         bytes32 id = _newCase(msg.sender,serviceId,uint8(trialRules.getInitialStatus()));
         if (id == 0x0)
-        return false;
-
+            return false;
         ids[msg.sender].push(id);
         return true;
     }
@@ -211,10 +208,8 @@ contract SwearGame is SwearGameAbstract {
 
         uint8 status = getStatus(id);
         var(plaintiff,serviceId) = getCase(id);
-        if (status == uint8(TrialRulesAbstract.Status.UNCHALLENGED)) {
-            return;
-        }
-        for (;status != uint8(TrialRulesAbstract.Status.UNCHALLENGED);) {
+
+        while (status != uint8(TrialRulesAbstract.Status.UNCHALLENGED)) {
             WitnessAbstract witness = trialRules.getWitness(status);
             WitnessAbstract.Status outcome;
             if (witness == WitnessAbstract(0x0)) {
