@@ -1,6 +1,6 @@
 pragma solidity ^0.4.0;
 
-import "./owned.sol";
+import "./abstracts/owned.sol";
 import "./standardtoken.sol";
 
 
@@ -10,9 +10,8 @@ contract SampleToken is StandardToken, Owned {
 
     function SampleToken(uint initialSupply) {
 
-      balances[msg.sender] = initialSupply;               // Give the creator all initial tokens
-      totalSupply = initialSupply;                        // Update total supply
-
+        balances[msg.sender] = initialSupply;               // Give the creator all initial tokens
+        totalSupply = initialSupply;                        // Update total supply
     }
 
     function createTokens(address beneficiary, uint amount, bytes32 ref) onlyOwner {
@@ -21,7 +20,6 @@ contract SampleToken is StandardToken, Owned {
         TokenMined(beneficiary, amount, ref);
         Transfer(0, beneficiary, amount);
     }
-
 
     function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
         // Allow the owner to move any token.
