@@ -504,8 +504,6 @@ func TestDeposit(t *testing.T) {
 	if deposit.Int64() != big.NewInt(serviceDeposit).Int64()*2 {
 		t.Fatalf("AmountStaked ", deposit.Int64(), "is not equal to the deposit amount", big.NewInt(serviceDeposit))
 	}
-	t.Log("amountstaked", deposit)
-
 }
 
 func deployTheGame(t *testing.T, backend *backends.SimulatedBackend) (
