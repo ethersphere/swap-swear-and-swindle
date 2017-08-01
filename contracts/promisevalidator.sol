@@ -103,7 +103,7 @@ contract PromiseValidator is WitnessAbstract,Owned {
 
         //check current block number is less than the Promise blocknumber
         if (block.number >= blockNumber )
-            return false;
+        return false;
         // Check the digital signature of the Promise.
         bytes32 hash = sha3(address(this), beneficiary, blockNumber);
         if (owner != ecrecover(

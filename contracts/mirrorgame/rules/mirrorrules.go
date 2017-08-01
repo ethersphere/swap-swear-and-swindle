@@ -14,10 +14,10 @@ import (
 )
 
 // MirrorRulesABI is the input ABI used to generate the binding from.
-const MirrorRulesABI = "[{\"constant\":false,\"inputs\":[],\"name\":\"getInitialStatus\",\"outputs\":[{\"name\":\"status\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getReward\",\"outputs\":[{\"name\":\"reward\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"uint8\"},{\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"transitions\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"status\",\"type\":\"uint8\"}],\"name\":\"startGracePeriod\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"witnesses\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"witnessStatus\",\"type\":\"uint8\"},{\"name\":\"trialStatus\",\"type\":\"uint8\"}],\"name\":\"getStatus\",\"outputs\":[{\"name\":\"status\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"trialStatus\",\"type\":\"uint8\"}],\"name\":\"getWitness\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"gracePeriods\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"status\",\"type\":\"uint8\"}],\"name\":\"expired\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"inputs\":[{\"name\":\"paymentValidatorContract\",\"type\":\"address\"},{\"name\":\"ensMirrorValidatorContract\",\"type\":\"address\"}],\"payable\":false,\"type\":\"constructor\"}]"
+const MirrorRulesABI = "[{\"constant\":false,\"inputs\":[],\"name\":\"getInitialStatus\",\"outputs\":[{\"name\":\"status\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getReward\",\"outputs\":[{\"name\":\"reward\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getEpoch\",\"outputs\":[{\"name\":\"epoch\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"uint8\"},{\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"transitions\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"status\",\"type\":\"uint8\"}],\"name\":\"startGracePeriod\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"witnesses\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"witnessStatus\",\"type\":\"uint8\"},{\"name\":\"trialStatus\",\"type\":\"uint8\"}],\"name\":\"getStatus\",\"outputs\":[{\"name\":\"status\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"trialStatus\",\"type\":\"uint8\"}],\"name\":\"getWitness\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"gracePeriods\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"status\",\"type\":\"uint8\"}],\"name\":\"expired\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"inputs\":[{\"name\":\"paymentValidatorContract\",\"type\":\"address\"},{\"name\":\"ensMirrorValidatorContract\",\"type\":\"address\"}],\"payable\":false,\"type\":\"constructor\"}]"
 
 // MirrorRulesBin is the compiled bytecode used for deploying new contracts.
-const MirrorRulesBin = `0x6060604052341561000f57600080fd5b60405160408061066683398101604052808051919060200180519150505b8160008060025b60010160ff1660ff16815260200190815260200160002060006101000a815481600160a060020a030219169083600160a060020a031602179055508060008060028081111561007f57fe5b600290810160ff16825260208201929092526040016000208054600160a060020a031916600160a060020a0393909316929092179091555b60020160016000805b60ff168152602081019190915260400160009081209060025b60010160ff90811682526020820192909252604001600020805460ff19169290911691909117905560025b60016000815b60ff168152602081019190915260400160009081209060025b600190810160ff908116835260208301939093526040909101600020805460ff1916939092169290921790555b60016000805b60ff168152602081019190915260400160009081209060025b600290810160ff908116835260208301939093526040909101600020805460ff1916939092169290921790555b60016000815b60ff168152602081019190915260400160009081209060025b60020160ff1660ff16815260200190815260200160002060006101000a81548160ff021916908360ff1602179055506023600260006002808111156101fc57fe5b60010160ff1660ff1681526020019081526020016000208190555060236002600060028081111561022957fe5b60020160ff1660ff168152602001908152602001600020819055505b50505b61040f806102576000396000f300606060405236156100965763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166307e5ae5f811461009b5780633d18b912146100c45780639c2a1029146100e9578063a7edcbe41461011e578063b2400f091461014e578063d39eb30114610190578063db061563146101c5578063fa778a0f14610207578063fcc0a2ae14610232575b600080fd5b34156100a657600080fd5b6100ae610262565b60405160ff909116815260200160405180910390f35b34156100cf57600080fd5b6100d7610270565b60405190815260200160405180910390f35b34156100f457600080fd5b6100ae60ff60043581169060243516610276565b60405160ff909116815260200160405180910390f35b341561012957600080fd5b61013a60043560ff60243516610296565b604051901515815260200160405180910390f35b341561015957600080fd5b61016760ff600435166102ea565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f35b341561019b57600080fd5b6100ae60ff60043581169060243516610312565b60405160ff909116815260200160405180910390f35b34156101d057600080fd5b61016760ff6004351661033b565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f35b341561021257600080fd5b6100d760ff6004351661036a565b60405190815260200160405180910390f35b341561023d57600080fd5b61013a60043560ff6024351661037c565b604051901515815260200160405180910390f35b600060025b60010190505b90565b60055b90565b600160209081526000928352604080842090915290825290205460ff1681565b600082815260036020908152604080832060ff8516845290915281205415156102e05750600082815260036020908152604080832060ff85168452909152902043905560016102e4565b5060005b92915050565b60006020819052908152604090205473ffffffffffffffffffffffffffffffffffffffff1681565b60ff80831660009081526001602090815260408083208585168452909152902054165b92915050565b60ff811660009081526020819052604090205473ffffffffffffffffffffffffffffffffffffffff165b919050565b60026020526000908152604090205481565b600082815260036020908152604080832060ff85168452909152812054156102e05760ff82166000818152600260209081526040808320548784526003835281842094845293909152902054430311156102e0575060016102e4565b5b5060005b929150505600a165627a7a72305820881a5cdb6f6c25576c69521eb4bb5fd0c27e87bfe38032805ef0cb2957d7b2ae0029`
+const MirrorRulesBin = `0x6060604052341561000f57600080fd5b60405160408061069c83398101604052808051919060200180519150505b8160008060025b60010160ff1660ff16815260200190815260200160002060006101000a815481600160a060020a030219169083600160a060020a031602179055508060008060028081111561007f57fe5b600290810160ff16825260208201929092526040016000208054600160a060020a031916600160a060020a0393909316929092179091555b60020160016000805b60ff168152602081019190915260400160009081209060025b60010160ff90811682526020820192909252604001600020805460ff19169290911691909117905560025b60016000815b60ff168152602081019190915260400160009081209060025b600190810160ff908116835260208301939093526040909101600020805460ff1916939092169290921790555b60016000805b60ff168152602081019190915260400160009081209060025b600290810160ff908116835260208301939093526040909101600020805460ff1916939092169290921790555b60016000815b60ff168152602081019190915260400160009081209060025b60020160ff1660ff16815260200190815260200160002060006101000a81548160ff021916908360ff1602179055506023600260006002808111156101fc57fe5b60010160ff1660ff1681526020019081526020016000208190555060236002600060028081111561022957fe5b60020160ff1660ff168152602001908152602001600020819055505b50505b610445806102576000396000f300606060405236156100a15763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166307e5ae5f81146100a65780633d18b912146100cf578063757991a8146100f45780639c2a102914610119578063a7edcbe41461014e578063b2400f091461017e578063d39eb301146101c0578063db061563146101f5578063fa778a0f14610237578063fcc0a2ae14610262575b600080fd5b34156100b157600080fd5b6100b9610292565b60405160ff909116815260200160405180910390f35b34156100da57600080fd5b6100e26102a0565b60405190815260200160405180910390f35b34156100ff57600080fd5b6100e26102a6565b60405190815260200160405180910390f35b341561012457600080fd5b6100b960ff600435811690602435166102ac565b60405160ff909116815260200160405180910390f35b341561015957600080fd5b61016a60043560ff602435166102cc565b604051901515815260200160405180910390f35b341561018957600080fd5b61019760ff60043516610320565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f35b34156101cb57600080fd5b6100b960ff60043581169060243516610348565b60405160ff909116815260200160405180910390f35b341561020057600080fd5b61019760ff60043516610371565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f35b341561024257600080fd5b6100e260ff600435166103a0565b60405190815260200160405180910390f35b341561026d57600080fd5b61016a60043560ff602435166103b2565b604051901515815260200160405180910390f35b600060025b60010190505b90565b60055b90565b60035b90565b600160209081526000928352604080842090915290825290205460ff1681565b600082815260036020908152604080832060ff8516845290915281205415156103165750600082815260036020908152604080832060ff851684529091529020439055600161031a565b5060005b92915050565b60006020819052908152604090205473ffffffffffffffffffffffffffffffffffffffff1681565b60ff80831660009081526001602090815260408083208585168452909152902054165b92915050565b60ff811660009081526020819052604090205473ffffffffffffffffffffffffffffffffffffffff165b919050565b60026020526000908152604090205481565b600082815260036020908152604080832060ff85168452909152812054156103165760ff82166000818152600260209081526040808320548784526003835281842094845293909152902054430311156103165750600161031a565b5b5060005b929150505600a165627a7a7230582006692c1098d531bd7065709ebeeb4efc074f41f4f382035f22a4882c4b69c8f80029`
 
 // DeployMirrorRules deploys a new Ethereum contract, binding an instance of MirrorRules to it.
 func DeployMirrorRules(auth *bind.TransactOpts, backend bind.ContractBackend, paymentValidatorContract common.Address, ensMirrorValidatorContract common.Address) (common.Address, *types.Transaction, *MirrorRules, error) {
@@ -157,6 +157,32 @@ func (_MirrorRules *MirrorRulesTransactorRaw) Transfer(opts *bind.TransactOpts) 
 // Transact invokes the (paid) contract method with params as input values.
 func (_MirrorRules *MirrorRulesTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
 	return _MirrorRules.Contract.contract.Transact(opts, method, params...)
+}
+
+// GetEpoch is a free data retrieval call binding the contract method 0x757991a8.
+//
+// Solidity: function getEpoch() constant returns(epoch uint256)
+func (_MirrorRules *MirrorRulesCaller) GetEpoch(opts *bind.CallOpts) (*big.Int, error) {
+	var (
+		ret0 = new(*big.Int)
+	)
+	out := ret0
+	err := _MirrorRules.contract.Call(opts, out, "getEpoch")
+	return *ret0, err
+}
+
+// GetEpoch is a free data retrieval call binding the contract method 0x757991a8.
+//
+// Solidity: function getEpoch() constant returns(epoch uint256)
+func (_MirrorRules *MirrorRulesSession) GetEpoch() (*big.Int, error) {
+	return _MirrorRules.Contract.GetEpoch(&_MirrorRules.CallOpts)
+}
+
+// GetEpoch is a free data retrieval call binding the contract method 0x757991a8.
+//
+// Solidity: function getEpoch() constant returns(epoch uint256)
+func (_MirrorRules *MirrorRulesCallerSession) GetEpoch() (*big.Int, error) {
+	return _MirrorRules.Contract.GetEpoch(&_MirrorRules.CallOpts)
 }
 
 // GetReward is a free data retrieval call binding the contract method 0x3d18b912.
@@ -369,7 +395,7 @@ func (_MirrorRules *MirrorRulesTransactorSession) StartGracePeriod(caseId [32]by
 }
 
 // TrialRulesAbstractABI is the input ABI used to generate the binding from.
-const TrialRulesAbstractABI = "[{\"constant\":false,\"inputs\":[],\"name\":\"getInitialStatus\",\"outputs\":[{\"name\":\"status\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getReward\",\"outputs\":[{\"name\":\"reward\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"status\",\"type\":\"uint8\"}],\"name\":\"startGracePeriod\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"witnessStatus\",\"type\":\"uint8\"},{\"name\":\"trialStatus\",\"type\":\"uint8\"}],\"name\":\"getStatus\",\"outputs\":[{\"name\":\"status\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"trialStatus\",\"type\":\"uint8\"}],\"name\":\"getWitness\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"status\",\"type\":\"uint8\"}],\"name\":\"expired\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"}]"
+const TrialRulesAbstractABI = "[{\"constant\":false,\"inputs\":[],\"name\":\"getInitialStatus\",\"outputs\":[{\"name\":\"status\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getReward\",\"outputs\":[{\"name\":\"reward\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getEpoch\",\"outputs\":[{\"name\":\"epoch\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"status\",\"type\":\"uint8\"}],\"name\":\"startGracePeriod\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"witnessStatus\",\"type\":\"uint8\"},{\"name\":\"trialStatus\",\"type\":\"uint8\"}],\"name\":\"getStatus\",\"outputs\":[{\"name\":\"status\",\"type\":\"uint8\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"trialStatus\",\"type\":\"uint8\"}],\"name\":\"getWitness\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"caseId\",\"type\":\"bytes32\"},{\"name\":\"status\",\"type\":\"uint8\"}],\"name\":\"expired\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"type\":\"function\"}]"
 
 // TrialRulesAbstractBin is the compiled bytecode used for deploying new contracts.
 const TrialRulesAbstractBin = `0x`
@@ -512,6 +538,32 @@ func (_TrialRulesAbstract *TrialRulesAbstractTransactorRaw) Transfer(opts *bind.
 // Transact invokes the (paid) contract method with params as input values.
 func (_TrialRulesAbstract *TrialRulesAbstractTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
 	return _TrialRulesAbstract.Contract.contract.Transact(opts, method, params...)
+}
+
+// GetEpoch is a free data retrieval call binding the contract method 0x757991a8.
+//
+// Solidity: function getEpoch() constant returns(epoch uint256)
+func (_TrialRulesAbstract *TrialRulesAbstractCaller) GetEpoch(opts *bind.CallOpts) (*big.Int, error) {
+	var (
+		ret0 = new(*big.Int)
+	)
+	out := ret0
+	err := _TrialRulesAbstract.contract.Call(opts, out, "getEpoch")
+	return *ret0, err
+}
+
+// GetEpoch is a free data retrieval call binding the contract method 0x757991a8.
+//
+// Solidity: function getEpoch() constant returns(epoch uint256)
+func (_TrialRulesAbstract *TrialRulesAbstractSession) GetEpoch() (*big.Int, error) {
+	return _TrialRulesAbstract.Contract.GetEpoch(&_TrialRulesAbstract.CallOpts)
+}
+
+// GetEpoch is a free data retrieval call binding the contract method 0x757991a8.
+//
+// Solidity: function getEpoch() constant returns(epoch uint256)
+func (_TrialRulesAbstract *TrialRulesAbstractCallerSession) GetEpoch() (*big.Int, error) {
+	return _TrialRulesAbstract.Contract.GetEpoch(&_TrialRulesAbstract.CallOpts)
 }
 
 // GetReward is a free data retrieval call binding the contract method 0x3d18b912.

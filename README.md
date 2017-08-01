@@ -2,77 +2,22 @@
 
 This repository includes a basic example of a courtroom contracts suite.
 
+The courtroom concept is based on [swarm swap swear and swindle](http://swarm-gateways.net/bzz:/theswarm.eth/ethersphere/orange-papers/1/sw%5E3.pdf)
+
 ## Courtroom structure
 
-The courtroom suite includes an abstract generic [SwearGame contract](#sweargame-contract) , a specific [trial rules contract](#trial-rules-contract) and a specific [witnesses](#witness-contract) contracts.
+The courtroom suite includes an abstract generic [SwearGame contract](#sweargame-contract) , a specific [trial rules contract](#trial-rules-contract) , a specific [witnesses](#witness-contract) contracts and a specific [registrar](#trial-registrar).
 
 ### SwearGame contract
 
-This is the main general swear contract which conduct the trial.
+This is the main general swear contract which conducts the trial.
 
 It calls the specific [trial rules contract](#trial-rules-contract) to get the [witnesses](#witness-contract),get the trial statuses and transitions
 and to check for expiry time for a specific case and trial status.
 
-It calls the specific game witnesses contracts to testimony and validate for a submitted evidence.
+It calls the specific game witnesses contracts to testimony and validates for a submitted evidence.
 
-The SwearGame contract is aligned with the ABIs defined at SwearGameAbstract (courtroomabstract.sol).
-
-/// @notice () - a payable function which is used by the service as a deposit functionality
-
-///The function without name is the default function that is called whenever anyone sends funds to a contract
-
-function () payable;
-
-/// @notice register - register a player to the game
-
-/// The function will throw if the player is already register or there is not
-
-/// enough deposit in the contract to ensure the player could be compensated for the
-
-/// case of a valid case.
-
-/// @param _player  - the player address
-
-/// @return bool registered - true for success registration.
-
-function register(address _player) onlyOwner public returns (bool registered);
-
-/// @notice leaveGame - dismiss a player from the game (unregister)
-
-/// only allow plaintiff which does not have openCases on its name to leave game
-
-/// @param _player  - the player address
-
-function leaveGame(address _player);
-
-/// @notice getStatus - return the trial status of a case
-///
-
-/// @param id  - case id
-
-/// @return  status  - the status of a case
-
-function getStatus(bytes32 id) public constant returns (uint8 status);
-
-/// @notice newCase - open a new case for a service id
-
-/// the function require that the msg sender is already register to the game.
-
-/// @param serviceId  - the accuse service id  
-
-/// @return bool - true for successful operation.
-
-function newCase(bytes32 serviceId) public returns (bool);
-
-/// @notice trial - initiate or restart a trial process for a certain case
-///
-/// the function require that the case is a valid one.
-
-/// @param id  - case id
-
-/// @return bool - true for successful operation.
-
-function trial(bytes32 id) public returns (bool);
+The SwearGame contract is aligned with the ABIs defined at [SwearGameAbstract](contracts/abstracts/courtroomAbstract.sol).
 
 ### Witness contract
 
@@ -80,104 +25,38 @@ function trial(bytes32 id) public returns (bool);
 
  Testimony means it is doing a validation for the evidence submitted to it.  
 
- The witness contract is specific to the game which is offered by the service ,
+ The witness contract is specific to the game which is offered by the service,
  which means that each service will have its own witnesses contracts.
 
  The witness contract is accessed by the main SwearGame contract and is aligned with  
- the ABIs defined at witnessAbstract.sol contract:
+ the ABIs defined at [witnessAbstract](contracts/abstracts/witnessAbstract.sol) contract.
 
- /// @notice testimonyFor - request for testimony for a specific case ,service and client
-
- ///
- /// @param caseId case id
-
- /// @param serviceId the service id which the witness is request to testimony for.
-
- /// @param clientAddress client address
-
- /// @return Status { VALID,INVALID, PENDING}
-
- function testimonyFor(bytes32 caseId,bytes32 serviceId,address clientAddress) returns (Status);
-
- /// @notice isEvidenceSubmitted - check if evidence was submitted for a specific case ,service and client
-
- ///
-
- /// @param caseId case id
-
- /// @param serviceId the service id which the evidence was submitted for
-
- /// @param clientAddress client address
-
- /// @return bool - true or false
-
- function isEvidenceSubmitted(bytes32 caseId, bytes32 serviceId,address clientAddress) returns (bool);
 
 ### Trial rules contract
 
 A contract which defines a specific set of rules for a game:
 
-- The trial statuses transitions map. A scheme which define the transition for a certain status to the next one.
+- The trial statuses transitions map. A scheme which defines the transition from a certain status to the next one.
 - Grace periods for each trial status.
-- The reward which will be transfer to the plaintiff as a compensation for the case of a valid claim.
+- The reward which will be transferred to the plaintiff as a compensation for the case of a valid claim.
 
 While the main SwearGame contract conducts a trial to resolve a specific case it iterates between different trial statuses.
 
-This TrialRules contract is aligned with TrialRulesAbstract.sol  and should implement the following ABIs:
+This TrialRules contract is aligned with [TrialRulesAbstract](contracts/abstracts/trialrulesabstract.sol) contract.
 
-/// @notice getStatus - get next trial status according to witness state and the current trial state
+### Trial registrar
 
-/// @param witnessStatus witness status (VALID , INVALID,PENDING)
-
-/// @param trialStatus current trial status
-
-/// @return status - next trial status - can be also GUILTY or NOT GUILTY.
-
-function getStatus(uint8 witnessStatus,uint8 trialStatus) returns (uint8 status);
-
-/// @notice getWitness - get witness according to the trial status
-
-/// @param trialStatus current trial status
-
-/// @return WitnessAbstract - return a witness contract instance
-
-function getWitness(uint8 trialStatus) returns (WitnessAbstract);
-
-/// @notice getInitialStatus - get initial trial status
-
-/// @return status -
-
-function getInitialStatus() public returns (uint8 status);
-
-/// @notice expired - check expiration for a certain case and trial status.
-
-/// @return bool - true if expired otherwise false.
-
-function expired(bytes32 caseId,uint8 status) returns (bool);
-
-/// @notice startGracePeriod - start counting for a grace period for a certain case and status.
-
-/// @return bool - true if it actually start counting for the grace period
-
-///                false -if the grace period already started
-
-function startGracePeriod(bytes32 caseId,uint8 status) returns (bool);
-
-/// @notice getReward - return the reward for a valid case
-
-///
-
-/// @return reward - the reward for a valid case
-
-function getReward()returns (uint reward);
-
+A contract which manages registrations and deposits for the game players.
+A player who wishes to register and/or deposit to the swear game should do that via this contract.
+The registrar contract is accessed by the main SwearGame contract and is aligned with  
+the ABIs defined at [RegistrarAbstract](contracts/abstracts/registrarabstract.sol) contract.
 
 
 ## Mirror game
 A very simple basic game where the service offers to mirror the client ENS("client.game") content on its own ENS("service.game").
 
 ### game flow
--service will deposit some funds in the swear contact to ensure the service in the case of a court case/litigation
+-service will deposit some funds in the swear contact to make sure the service in the case of a court case/litigation
 
 -client receives a signed promise from the service to mirror its ENS during the next X blocks.
 
@@ -185,9 +64,9 @@ A very simple basic game where the service offers to mirror the client ENS("clie
 
 If after X blocks the service ENS does not "mirror" its client ENS, the client can submit a new case for the swear contract.
 
-As evidence the client submits to court the signed promise it got from the service and the ENSNameHashes for both client and service.
+As evidence,the client submits to court the signed promise it got from the service and the ENSNameHashes for both client and service.
 
-If the case is valid, a refund + compensation will sent to the client from the contract.
+If the case is valid, a refund + compensation will be sent to the client from the contract.
 
 ### witnesses
  - PromiseValidator - testify that a signed promise which was submitted to it is a valid one.
@@ -204,11 +83,13 @@ If the case is valid, a refund + compensation will sent to the client from the c
 
  -promisevalidator.sol -PromiseValidator contract is WitnessAbstract
 
+ -mirrorregistrar.sol - MirrorRegistrar is RegistrarAbstract
+
  -Owned.sol -  Owned contract
 
  -sampletoken.sol -  SampleToken is StandardToken
 
- -standardtoken.sol -StandardToken is Token (erc20)
+ -standardtoken.sol -StandardToken is Token (ERC20)
 
  -courtroom_test.go - go contract functionality tests
 

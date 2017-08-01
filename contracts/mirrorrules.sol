@@ -10,6 +10,7 @@ contract MirrorRules is TrialRulesAbstract {
     uint constant MIRROR_CHALLENGE_GRACE_PERIOD = 35;//Grace period set to 35 blocks to submit evidence.
     uint constant VALID_MIRROR_CHALLENGE_GRACE_PERIOD = 35;
     uint constant REWARD = 5; //plaintiff reward for the case of a valid case
+    uint constant EPOCH  = 3;//Ephoch time for the mirror game
 
     mapping(uint8 => address) public witnesses;
     mapping(uint8 => mapping(uint8 => uint8)) public transitions;
@@ -85,6 +86,13 @@ contract MirrorRules is TrialRulesAbstract {
     /// @return reward - the reward for a valid case
     function getReward() constant returns (uint reward) {
         return REWARD;
+    }
+
+    /// @notice getEpoch - return the reward for a valid case
+    ///
+    /// @return epoch - the epoch period for this game
+    function getEpoch() constant returns (uint epoch) {
+        return EPOCH;
     }
 
 }

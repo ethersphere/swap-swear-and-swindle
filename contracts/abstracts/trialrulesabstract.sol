@@ -40,4 +40,9 @@ contract TrialRulesAbstract {
     /// @return reward - the reward for a valid case
     function getReward() constant returns (uint reward);
 
+    /// @notice getEpoch - return the reward for a valid case
+    ///
+    /// @return epoch - the epoch period for this game
+    function getEpoch() constant returns (uint epoch);
+
 }
