@@ -63,6 +63,10 @@ contract MirrorRegistrar is RegistrarAbstract {
 
     function deposit(uint epochs) payable returns (bool) {
 
+        //A client must be register before deposit
+        if (msg.sender != owner){
+           require(isRegistered(msg.sender));
+        }
         require(token.transferFrom(msg.sender, address(this), msg.value));
         if (deposits[msg.sender].inDepositPeriod) {
             deposits[msg.sender].depositedAmount += msg.value;
@@ -76,13 +80,18 @@ contract MirrorRegistrar is RegistrarAbstract {
     function collectDeposit() external returns (bool) {
 
         require(OpenCases[msg.sender] == 0);//check that there is no open case for the specific caller.
-
-        if (playerCount > 0) {
-            //check that there is enough deposit left in thec contract for the case of a valid case compensation.
-            uint reward = trialRules.getReward();
-            if ((deposits[owner].depositedAmount / playerCount) < reward)
+        //Client which collect deposit is beeing un register for the game.
+        if ((msg.sender !=owner)&& (!_unRegister(msg.sender))){
              return false;
         }
+
+        if (playerCount > 0) {
+            //check that there is enough deposit left in the contract for the case of a valid case compensation.
+            uint reward = trialRules.getReward();
+            if ((deposits[owner].depositedAmount / playerCount) < reward)
+                 return false;
+        }
+
         Deposit storage depositInfo = deposits[msg.sender];
         if (depositInfo.inDepositPeriod && depositInfo.vestingPeriod <= block.number) {
             uint toTransfer = depositInfo.depositedAmount;
@@ -93,7 +102,7 @@ contract MirrorRegistrar is RegistrarAbstract {
         return false;
     }
 
-    function isRegister(address player) returns (bool) {
+    function isRegistered(address player) returns (bool) {
         return players[player];
     }
 
@@ -109,10 +118,16 @@ contract MirrorRegistrar is RegistrarAbstract {
     function unRegister(address _player) {
 
         require(swearGame == msg.sender);
+        _unRegister(_player);
+    }
+
+    function _unRegister(address _player) private returns (bool){
+
         require(players[_player]);
         PlayerLeftGame(_player);
         players[_player] = false;
         playerCount--;
+        return true;
     }
 
     function setSwearContractAddress(address _swearAddress) returns(bool) {

@@ -45,7 +45,7 @@ var (
 
 type TheGame struct {
 	swearGameContractAddress common.Address
-	swearGame                *SwearGame
+	swearGame                *Swear
 	sampleToken              *SampleToken
 	promiseValidator         *promisevalidator.PromiseValidator
 	promiseValidatorAddress  common.Address
@@ -117,11 +117,11 @@ func deployMirrorRegistrar(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *b
 	return addr, mirrorRegistrar, nil
 }
 
-func deploySwearGame(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend, tokenContractAddr common.Address, mirrorTransistions common.Address, rewordCompansation *big.Int) (common.Address, *SwearGame, error) {
+func deploySwear(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend, tokenContractAddr common.Address, mirrorTransistions common.Address, rewordCompansation *big.Int) (common.Address, *Swear, error) {
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
 	deployTransactor.Value = amount
 
-	addr, _, swearGame, err := DeploySwearGame(deployTransactor, backend, tokenContractAddr, mirrorTransistions)
+	addr, _, swearGame, err := DeploySwear(deployTransactor, backend, tokenContractAddr, mirrorTransistions)
 	if err != nil {
 		return common.Address{}, nil, err
 	}
@@ -201,9 +201,10 @@ func openCaseForMirrorGame(t *testing.T, clientContent string, serviceContent st
 
 	theGame := deployTheGame(t, backend)
 
+	opts := bind.NewKeyedTransactor(serviceKey)
+
 	deposit(t, backend, theGame.sampleToken, theGame.mirrorRegistrar, depositVestingPeriod)
 
-	opts := bind.NewKeyedTransactor(serviceKey)
 	_, err := theGame.mirrorRegistrar.Register(opts, clientAddr)
 	if err != nil {
 		t.Fatalf("Register: expected no error, got %v", err)
@@ -462,7 +463,7 @@ func TestCollectDeposit(t *testing.T) {
 	}
 
 	if balanceBefore.Int64() == balanceAfter.Int64() {
-		t.Fatalf("balance should be changed because vesting period passed")
+		t.Fatalf("balance should change because vesting period passed")
 	}
 
 }
@@ -675,7 +676,7 @@ func deployTheGame(t *testing.T, backend *backends.SimulatedBackend) *TheGame {
 		t.Fatalf("deploy contract: expected no error, got %v", err)
 	}
 
-	swearGameContractAddress, swearGame, err := deploySwearGame(serviceKey, big.NewInt(0), backend, mirrorRegistrarContractAddress, mirrorRulesContractAddress, big.NewInt(compensationAmount))
+	swearGameContractAddress, swearGame, err := deploySwear(serviceKey, big.NewInt(0), backend, mirrorRegistrarContractAddress, mirrorRulesContractAddress, big.NewInt(compensationAmount))
 	if err != nil {
 		t.Fatalf("deploy contract: expected no error, got %v", err)
 	}

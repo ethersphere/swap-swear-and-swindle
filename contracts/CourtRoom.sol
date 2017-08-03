@@ -6,7 +6,7 @@ import "./abstracts/trialrulesabstract.sol";
 import "./abstracts/registrarabstract.sol";
 
 
-contract SwearGame is SwearGameAbstract {
+contract Swear is SwearAbstract {
 
     TrialRulesAbstract public trialRules;
     RegistrarAbstract public registrar;
@@ -21,12 +21,12 @@ contract SwearGame is SwearGameAbstract {
     mapping(bytes32 => Case)  OpenCases;
     mapping(address => bytes32[]) public ids;
 
-    /// @notice SwearGame - Swear game constructor this function is called along with
+    /// @notice Swear - Swear game constructor this function is called along with
     /// the contract deployment time.
     /// @param _registrar - address of the registrar contract
     /// @param _trialRules - address of the trial specific rules contract
     /// @return WitnessAbstract - return a witness contract instance
-    function SwearGame(address _registrar,address _trialRules) {
+    function Swear(address _registrar,address _trialRules) {
         registrar = RegistrarAbstract(_registrar);
         require(registrar.setSwearContractAddress(address(this)));
         trialRules = TrialRulesAbstract(_trialRules);
@@ -98,18 +98,6 @@ contract SwearGame is SwearGameAbstract {
         return caseCompensated;
     }
 
-    /// @notice leaveGame - dismiss a player from the game (unregister)
-    /// allow only plaintiff which do not have openCases on it name to leave game
-    /// @param _player  - the player address
-    function leaveGame(address _player) {
-
-        for (uint256 i = 0;i<ids[_player].length;i++) {
-        //allow only plaintiff which do not have openCases on it name to leave game
-            require(OpenCases[ids[_player][i]].valid == 0);
-        }
-        return registrar.unRegister(_player);
-    }
-
     /// @notice getStatus - return the trial status of a case
     ///
     /// @param id  - case id
@@ -125,7 +113,7 @@ contract SwearGame is SwearGameAbstract {
     /// @return bool - true for successful operation.
     function newCase(bytes32 serviceId) public returns (bool) {
 
-        require(registrar.isRegister(msg.sender));
+        require(registrar.isRegistered(msg.sender));
         bytes32 id = _newCase(msg.sender,serviceId,uint8(trialRules.getInitialStatus()));
         if (id == 0x0)
             return false;
@@ -143,7 +131,7 @@ contract SwearGame is SwearGameAbstract {
     /// @return bool - true for successful operation.
     function trial(bytes32 id) public returns (bool) {
 
-        require(registrar.isRegister(msg.sender));
+        require(registrar.isRegistered(msg.sender));
         require(isValid(id));
         _trial(id);
         return true;

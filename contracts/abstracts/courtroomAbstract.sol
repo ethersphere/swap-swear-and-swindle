@@ -3,12 +3,7 @@ pragma solidity ^0.4.0;
 import "./owned.sol";
 
 
-contract SwearGameAbstract is Owned {
-
-    /// @notice leaveGame - dismiss a player from the game (unregister)
-    /// allow only plaintiff which do not have openCases on it name to leave game
-    /// @param _player  - the player address
-    function leaveGame(address _player);
+contract SwearAbstract is Owned {
 
     /// @notice getStatus - return the trial status of a case
     ///

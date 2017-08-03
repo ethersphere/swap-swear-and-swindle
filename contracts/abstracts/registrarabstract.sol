@@ -30,11 +30,11 @@ contract RegistrarAbstract is Owned {
     /// @return bool  true for success otherwise false.
     function collectDeposit() external returns (bool);
 
-    /// @notice isRegister - Check if a player is register to the game
+    /// @notice isRegistered - Check if a player is registered to the game
     ///
     /// @param player  - player address
     /// @return bool  true for success otherwise false.
-    function isRegister(address player) returns (bool);
+    function isRegistered(address player) returns (bool);
 
     /// @notice compensate - compensate the beneficiary with the reward amount
     ///
