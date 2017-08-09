@@ -52,11 +52,14 @@ The registrar contract is accessed by the main Swear contract and is aligned wit
 the ABIs defined at [RegistrarAbstract](contracts/abstracts/registrarabstract.sol) contract.
 
 
-## Mirror game
+## Reflector game
+
+This is an example game flow for a "reflection service"
 A very simple basic game where the service offers to mirror the client ENS("client.game") content on its own ENS("service.game").
+Might want to clarify that this is an example game flow for a "reflection service"
 
 ### game flow
--service will deposit some funds in the swear contact to make sure the service in the case of a court case/litigation
+-Service provider deposits some funds in the Registrar contract to insure the service and assure potentially interested  participants that they are committed to providing this service. This deposit is used for compensation allocations in valid litigation cases.
 
 -client receives a signed promise from the service to mirror its ENS during the next X blocks.
 
