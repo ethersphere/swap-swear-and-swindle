@@ -1,12 +1,12 @@
 pragma solidity ^0.4.0;
 
-import "./abstracts/registrarabstract.sol";
+import "./abstracts/swearabstract.sol";
 import "./abstracts/trialrulesabstract.sol";
 import "./abstracts/token.sol";
 import "./sampletoken.sol";
 
 
-contract MirrorRegistrar is RegistrarAbstract {
+contract Swear is SwearAbstract {
 
     mapping(address=>Deposit) public deposits;
     mapping(address => bool) public players;
@@ -14,7 +14,7 @@ contract MirrorRegistrar is RegistrarAbstract {
     uint  public playerCount;
     SampleToken public token;
     TrialRulesAbstract public trialRules;
-    address swearGame;
+    address swindle;
     mapping(address => uint256)  OpenCases;
 
     struct Deposit {
@@ -23,18 +23,18 @@ contract MirrorRegistrar is RegistrarAbstract {
         uint depositedAmount;
     }
 
-    function MirrorRegistrar(address _trialRules,address _token) {
+    function Swear(address _trialRules,address _token) {
         token = SampleToken(_token);
         trialRules = TrialRulesAbstract(_trialRules);
     }
 
     function incrementOpenCases(address _address) {
-        require(msg.sender == swearGame);
+        require(msg.sender == swindle);
         OpenCases[_address]++;
     }
 
     function decrementOpenCases(address _address) {
-        require(msg.sender == swearGame);
+        require(msg.sender == swindle);
         OpenCases[_address]--;
     }
 
@@ -64,8 +64,8 @@ contract MirrorRegistrar is RegistrarAbstract {
     function deposit(uint epochs) payable returns (bool) {
 
         //A client must be register before deposit
-        if (msg.sender != owner){
-           require(isRegistered(msg.sender));
+        if (msg.sender != owner) {
+            require(isRegistered(msg.sender));
         }
         require(token.transferFrom(msg.sender, address(this), msg.value));
         if (deposits[msg.sender].inDepositPeriod) {
@@ -81,8 +81,8 @@ contract MirrorRegistrar is RegistrarAbstract {
 
         require(OpenCases[msg.sender] == 0);//check that there is no open case for the specific caller.
         //Client which collect deposit is beeing un register for the game.
-        if ((msg.sender !=owner)&& (!_unRegister(msg.sender))){
-             return false;
+        if ((msg.sender != owner) && (!_unRegister(msg.sender))) {
+            return false;
         }
 
         if (playerCount > 0) {
@@ -107,7 +107,7 @@ contract MirrorRegistrar is RegistrarAbstract {
     }
 
     function compensate(address _beneficiary,uint reward) returns(bool compensated) {
-        require(msg.sender == swearGame);
+        require(msg.sender == swindle);
         compensated = token.transferFrom(address(this), _beneficiary, reward);
         require(compensated);
         deposits[owner].depositedAmount -= reward;
@@ -117,11 +117,11 @@ contract MirrorRegistrar is RegistrarAbstract {
 
     function unRegister(address _player) {
 
-        require(swearGame == msg.sender);
+        require(swindle == msg.sender);
         _unRegister(_player);
     }
 
-    function _unRegister(address _player) private returns (bool){
+    function _unRegister(address _player) private returns (bool) {
 
         require(players[_player]);
         PlayerLeftGame(_player);
@@ -130,9 +130,9 @@ contract MirrorRegistrar is RegistrarAbstract {
         return true;
     }
 
-    function setSwearContractAddress(address _swearAddress) returns(bool) {
-        require(swearGame == address(0x0));
-        swearGame = _swearAddress;
+    function setSwindleContractAddress(address _swindle) returns(bool) {
+        require(swindle == address(0x0));
+        swindle = _swindle;
         return true;
     }
 

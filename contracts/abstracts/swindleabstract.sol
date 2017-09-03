@@ -3,7 +3,7 @@ pragma solidity ^0.4.0;
 import "./owned.sol";
 
 
-contract SwearAbstract is Owned {
+contract SwindleAbstract is Owned {
 
     /// @notice getStatus - return the trial status of a case
     ///

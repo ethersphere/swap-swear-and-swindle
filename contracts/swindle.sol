@@ -1,15 +1,15 @@
 pragma solidity ^0.4.0;
 
-import "./abstracts/CourtroomAbstract.sol";
+import "./abstracts/swindleabstract.sol";
 import "./sampletoken.sol";
 import "./abstracts/trialrulesabstract.sol";
-import "./abstracts/registrarabstract.sol";
+import "./abstracts/swearabstract.sol";
 
 
-contract Swear is SwearAbstract {
+contract Swindle is SwindleAbstract {
 
     TrialRulesAbstract public trialRules;
-    RegistrarAbstract public registrar;
+    SwearAbstract public swear;
 
     struct Case {
         address plaintiff;
@@ -21,14 +21,14 @@ contract Swear is SwearAbstract {
     mapping(bytes32 => Case)  OpenCases;
     mapping(address => bytes32[]) public ids;
 
-    /// @notice Swear - Swear game constructor this function is called along with
+    /// @notice Swindle - Swindle constructor this function is called along with
     /// the contract deployment time.
-    /// @param _registrar - address of the registrar contract
+    /// @param _swear - address of the swear contract
     /// @param _trialRules - address of the trial specific rules contract
     /// @return WitnessAbstract - return a witness contract instance
-    function Swear(address _registrar,address _trialRules) {
-        registrar = RegistrarAbstract(_registrar);
-        require(registrar.setSwearContractAddress(address(this)));
+    function Swindle(address _swear,address _trialRules) {
+        swear = SwearAbstract(_swear);
+        require(swear.setSwindleContractAddress(address(this)));
         trialRules = TrialRulesAbstract(_trialRules);
     }
 
@@ -86,9 +86,9 @@ contract Swear is SwearAbstract {
             return false;
         }
         uint reward = trialRules.getReward();
-        bool caseCompensated = registrar.compensate(plaintiff,reward);
+        bool caseCompensated = swear.compensate(plaintiff,reward);
         resolveCase(_id);
-        registrar.unRegister(plaintiff);
+        swear.unRegister(plaintiff);
         CaseResolved(
             _id,
             plaintiff,
@@ -113,12 +113,12 @@ contract Swear is SwearAbstract {
     /// @return bool - true for successful operation.
     function newCase(bytes32 serviceId) public returns (bool) {
 
-        require(registrar.isRegistered(msg.sender));
+        require(swear.isRegistered(msg.sender));
         bytes32 id = _newCase(msg.sender,serviceId,uint8(trialRules.getInitialStatus()));
         if (id == 0x0)
             return false;
-        registrar.incrementOpenCases(msg.sender);
-        registrar.incrementOpenCases(owner);
+        swear.incrementOpenCases(msg.sender);
+        swear.incrementOpenCases(owner);
         ids[msg.sender].push(id);
 
         return true;
@@ -131,7 +131,7 @@ contract Swear is SwearAbstract {
     /// @return bool - true for successful operation.
     function trial(bytes32 id) public returns (bool) {
 
-        require(registrar.isRegistered(msg.sender));
+        require(swear.isRegistered(msg.sender));
         require(isValid(id));
         _trial(id);
         return true;
@@ -172,8 +172,8 @@ contract Swear is SwearAbstract {
                 (status == uint8(TrialRulesAbstract.Status.NOT_GUILTY))){
                 verdict(id,status,plaintiff);
                 status = uint8(TrialRulesAbstract.Status.UNCHALLENGED);
-                registrar.decrementOpenCases(plaintiff);
-                registrar.decrementOpenCases(owner);
+                swear.decrementOpenCases(plaintiff);
+                swear.decrementOpenCases(owner);
                 setStatus(id,status);
                 }
         }

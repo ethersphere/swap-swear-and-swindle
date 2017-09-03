@@ -5,7 +5,7 @@ import "./token.sol";
 import "./owned.sol";
 
 
-contract RegistrarAbstract is Owned {
+contract SwearAbstract is Owned {
 
 
     /// @notice register - register a player to the game
@@ -42,7 +42,7 @@ contract RegistrarAbstract is Owned {
     /// @param reward        - reward amount
     /// The function will throw if it is not called by the swear contract.
     /// @return bool  true for success otherwise false.
-    function compensate(address _beneficiary,uint reward) returns(bool compensated);
+    function compensate(address _beneficiary,uint reward)  returns(bool compensated);
 
     /// @notice unRegister - un register a player
     ///
@@ -50,13 +50,13 @@ contract RegistrarAbstract is Owned {
     /// @param _player  - player address
     function unRegister(address _player);
 
-    /// @notice setSwearContractAddress - set the swear contract address
+    /// @notice setSwindleContractAddress - set the swindle contract address
     ///
-    /// The function will enable to set the swear contract address only one time.otherwise
+    /// The function will enable to set the swindle contract address only one time.otherwise
     /// it will throw.
-    /// @param _swearAddress  - swear contract address
+    /// @param _swindle  - swindle contract address
     /// @return bool  true for success otherwise false.
-    function setSwearContractAddress(address _swearAddress) returns(bool);
+    function setSwindleContractAddress(address _swindle) returns(bool);
 
     /// @notice incrementOpenCases - increment open cases number for a specific address
     ///

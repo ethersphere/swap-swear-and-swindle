@@ -6,18 +6,25 @@ The courtroom concept is based on [swarm swap swear and swindle](http://swarm-ga
 
 ## Courtroom structure
 
-The courtroom suite includes an abstract generic [Swear contract](#swear-contract) , a specific [trial rules contract](#trial-rules-contract) , a specific [witnesses](#witness-contract) contracts and a specific [registrar](#trial-registrar).
+The courtroom suite includes an abstract generic [Swindle contract](#swindle-contract) ,a generic [Swear contract](#swear-contract) ,a specific [trial rules contract](#trial-rules-contract) and a specific [witnesses](#witness-contract) contracts.
 
 ### Swear contract
 
-This is the main general swear contract which conducts the trial.
+A contract which manages registrations and deposits for the swear game players.
+A player who wishes to register and/or deposit to the swear game should do that via this contract.
+The swear contract is accessed by the Swindle contract and is aligned with  
+the ABIs defined at [SwearAbstract](contracts/abstracts/swearabstract.sol) contract.
+
+### Swindle contract
+
+This is the main general swindle contract which conducts the trial.
 
 It calls the specific [trial rules contract](#trial-rules-contract) to get the [witnesses](#witness-contract),get the trial statuses and transitions
 and to check for expiry time for a specific case and trial status.
 
 It calls the specific game witness contracts to give testimony which they do based on validating evidence previously submitted to them.
 
-The Swear contract is aligned with the ABIs defined at [SwearAbstract](contracts/abstracts/courtroomAbstract.sol).
+The Swindle contract is aligned with the ABIs defined at [SwindleAbstract](contracts/abstracts/swindleAbstract.sol).
 
 ### Witness contract
 
@@ -43,14 +50,6 @@ A contract which defines a specific set of rules for a game:
 While the main Swear contract conducts a trial to resolve a specific case it iterates between different trial statuses.
 
 This TrialRules contract is aligned with [TrialRulesAbstract](contracts/abstracts/trialrulesabstract.sol) contract.
-
-### Trial registrar
-
-A contract which manages registrations and deposits for the game players.
-A player who wishes to register and/or deposit to the swear game should do that via this contract.
-The registrar contract is accessed by the main Swear contract and is aligned with  
-the ABIs defined at [RegistrarAbstract](contracts/abstracts/registrarabstract.sol) contract.
-
 
 ## Reflector game
 
@@ -78,7 +77,7 @@ If the case is valid, a refund + compensation will be sent to the client from th
 
 ### repository structure and files
  /contracts/
- -courtroom.sol - Swear contract is SwearAbstract
+ -swindle.sol - Swindle contract is SwindleAbstract
 
  -mirrorens.sol - MirrorENS contract is WitnessAbstract
 
@@ -86,7 +85,7 @@ If the case is valid, a refund + compensation will be sent to the client from th
 
  -promisevalidator.sol -PromiseValidator contract is WitnessAbstract
 
- -mirrorregistrar.sol - MirrorRegistrar is RegistrarAbstract
+ -swear.sol - Swear is SwearAbstract
 
  -Owned.sol -  Owned contract
 
