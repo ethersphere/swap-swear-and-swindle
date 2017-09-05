@@ -16,64 +16,41 @@ and to check for expiry time for a specific case and trial status.
 It calls the specific game witnesses contracts to testimony and validate for a submitted evidence.
 
 The SwearGame contract is aligned with the ABIs defined at SwearGameAbstract (courtroomabstract.sol).
-
+```
 /// @notice () - a payable function which is used by the service as a deposit functionality
-
 ///The function without name is the default function that is called whenever anyone sends funds to a contract
-
 function () payable;
 
 /// @notice register - register a player to the game
-
 /// The function will throw if the player is already register or there is not
-
 /// enough deposit in the contract to ensure the player could be compensated for the
-
 /// case of a valid case.
-
 /// @param _player  - the player address
-
 /// @return bool registered - true for success registration.
-
 function register(address _player) onlyOwner public returns (bool registered);
 
 /// @notice leaveGame - dismiss a player from the game (unregister)
-
 /// only allow plaintiff which does not have openCases on its name to leave game
-
 /// @param _player  - the player address
-
 function leaveGame(address _player);
 
 /// @notice getStatus - return the trial status of a case
-///
-
 /// @param id  - case id
-
 /// @return  status  - the status of a case
-
 function getStatus(bytes32 id) public constant returns (uint8 status);
 
 /// @notice newCase - open a new case for a service id
-
 /// the function require that the msg sender is already register to the game.
-
 /// @param serviceId  - the accuse service id  
-
 /// @return bool - true for successful operation.
-
 function newCase(bytes32 serviceId) public returns (bool);
 
 /// @notice trial - initiate or restart a trial process for a certain case
-///
 /// the function require that the case is a valid one.
-
 /// @param id  - case id
-
 /// @return bool - true for successful operation.
-
 function trial(bytes32 id) public returns (bool);
-
+```
 ### Witness contract
 
  A smart contract which responsible to testimony according to a certain type of evidence which is submitted to it.
@@ -85,34 +62,21 @@ function trial(bytes32 id) public returns (bool);
 
  The witness contract is accessed by the main SwearGame contract and is aligned with  
  the ABIs defined at witnessAbstract.sol contract:
-
+```
  /// @notice testimonyFor - request for testimony for a specific case ,service and client
-
- ///
  /// @param caseId case id
-
  /// @param serviceId the service id which the witness is request to testimony for.
-
  /// @param clientAddress client address
-
  /// @return Status { VALID,INVALID, PENDING}
-
  function testimonyFor(bytes32 caseId,bytes32 serviceId,address clientAddress) returns (Status);
 
  /// @notice isEvidenceSubmitted - check if evidence was submitted for a specific case ,service and client
-
- ///
-
  /// @param caseId case id
-
  /// @param serviceId the service id which the evidence was submitted for
-
  /// @param clientAddress client address
-
  /// @return bool - true or false
-
  function isEvidenceSubmitted(bytes32 caseId, bytes32 serviceId,address clientAddress) returns (bool);
-
+```
 ### Trial rules contract
 
 A contract which defines a specific set of rules for a game:
@@ -124,64 +88,47 @@ A contract which defines a specific set of rules for a game:
 While the main SwearGame contract conducts a trial to resolve a specific case it iterates between different trial statuses.
 
 This TrialRules contract is aligned with TrialRulesAbstract.sol  and should implement the following ABIs:
-
+```
 /// @notice getStatus - get next trial status according to witness state and the current trial state
-
 /// @param witnessStatus witness status (VALID , INVALID,PENDING)
-
 /// @param trialStatus current trial status
-
 /// @return status - next trial status - can be also GUILTY or NOT GUILTY.
-
 function getStatus(uint8 witnessStatus,uint8 trialStatus) returns (uint8 status);
 
 /// @notice getWitness - get witness according to the trial status
-
 /// @param trialStatus current trial status
-
 /// @return WitnessAbstract - return a witness contract instance
-
 function getWitness(uint8 trialStatus) returns (WitnessAbstract);
 
 /// @notice getInitialStatus - get initial trial status
-
 /// @return status -
-
 function getInitialStatus() public returns (uint8 status);
 
 /// @notice expired - check expiration for a certain case and trial status.
-
 /// @return bool - true if expired otherwise false.
-
 function expired(bytes32 caseId,uint8 status) returns (bool);
 
 /// @notice startGracePeriod - start counting for a grace period for a certain case and status.
-
 /// @return bool - true if it actually start counting for the grace period
-
 ///                false -if the grace period already started
-
 function startGracePeriod(bytes32 caseId,uint8 status) returns (bool);
 
 /// @notice getReward - return the reward for a valid case
-
-///
-
 /// @return reward - the reward for a valid case
-
 function getReward()returns (uint reward);
-
+```
 
 
 ## Mirror game
 A very simple basic game where the service offers to mirror the client ENS("client.game") content on its own ENS("service.game").
 
 ### game flow
--service will deposit some funds in the swear contact to ensure the service in the case of a court case/litigation
 
--client receives a signed promise from the service to mirror its ENS during the next X blocks.
+- service will deposit some funds in the swear contact to ensure the service in the case of a court case/litigation
 
--client updates the client.game ENS.
+- client receives a signed promise from the service to mirror its ENS during the next X blocks.
+
+- client updates the client.game ENS.
 
 If after X blocks the service ENS does not "mirror" its client ENS, the client can submit a new case for the swear contract.
 
@@ -195,30 +142,35 @@ If the case is valid, a refund + compensation will sent to the client from the c
 
 
 ### repository structure and files
- /contracts/
- -courtroom.sol - SwearGame contract is SwearGameAbstract
+ 
+ `/contracts/` - contains the following files
+ 
+ - courtroom.sol - SwearGame contract is SwearGameAbstract
 
- -mirrorens.sol - MirrorENS contract is WitnessAbstract
+ - mirrorens.sol - MirrorENS contract is WitnessAbstract
 
- -mirrorrules.sol - MirrorRules contract is TrialRulesAbstract
+ - mirrorrules.sol - MirrorRules contract is TrialRulesAbstract
 
- -promisevalidator.sol -PromiseValidator contract is WitnessAbstract
+ - promisevalidator.sol -PromiseValidator contract is WitnessAbstract
 
- -Owned.sol -  Owned contract
+ - Owned.sol -  Owned contract
 
- -sampletoken.sol -  SampleToken is StandardToken
+ - sampletoken.sol -  SampleToken is StandardToken
 
- -standardtoken.sol -StandardToken is Token (erc20)
+ - standardtoken.sol -StandardToken is Token (erc20)
 
- -courtroom_test.go - go contract functionality tests
+ - courtroom_test.go - go contract functionality tests
 
- /contracts/abstracts - include all abstract contracts solidity files used by this project contracts
+ `/contracts/abstracts` - includes all abstract contracts solidity files used by this project contracts
 
- /contracts/mirrorgame - include the automatically generated contract go binding files
+ `/contracts/mirrorgame` - includes the automatically generated contract go binding files
 
- /vendor     - vendor dir needed for the go tests.
+ `/vendor`     - vendor dir needed for the go tests.
 
 ## rebuild solidity files
- go generate
+
+ `go generate`
+ 
 ## test
-go test ./contracts/ -v --run Test
+
+ `go test ./contracts/ -v --run Test`
