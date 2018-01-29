@@ -19,11 +19,11 @@ import (
 	"github.com/ethereum/go-ethereum/contracts/ens/contract"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/crypto"
-	mirrorrules "github.com/jaakmusic/swap-swear-and-swindle/contracts/mirrorgame/rules"
-	mirrorens "github.com/jaakmusic/swap-swear-and-swindle/contracts/mirrorgame/witnesses/mirrorens"
-	promisevalidator "github.com/jaakmusic/swap-swear-and-swindle/contracts/mirrorgame/witnesses/promisevalidator"
-	swear "github.com/jaakmusic/swap-swear-and-swindle/contracts/swear"
-	swindle "github.com/jaakmusic/swap-swear-and-swindle/contracts/swindle"
+	mirrorrules "github.com/ethersphere/swap-swear-and-swindle/contracts/mirrorgame/rules"
+	mirrorens "github.com/ethersphere/swap-swear-and-swindle/contracts/mirrorgame/witnesses/mirrorens"
+	promisevalidator "github.com/ethersphere/swap-swear-and-swindle/contracts/mirrorgame/witnesses/promisevalidator"
+	swear "github.com/ethersphere/swap-swear-and-swindle/contracts/swear"
+	swindle "github.com/ethersphere/swap-swear-and-swindle/contracts/swindle"
 )
 
 var (
