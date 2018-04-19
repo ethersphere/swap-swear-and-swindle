@@ -139,7 +139,6 @@ contract Swap {
     uint diff = deposit.amount - deposit.next;
 
     deposit.amount = deposit.next;
-
     deposit.timeout = 0;
 
     totalDeposit = totalDeposit.sub(diff);
@@ -149,10 +148,15 @@ contract Swap {
 
   function increaseHardDeposit(address beneficiary, uint amount) public {
     require(msg.sender == owner);
+    /* ensure hard deposits don't exceed the global balance */
     require(totalDeposit.add(amount) <= address(this).balance);
-    hardDeposits[beneficiary].amount = hardDeposits[beneficiary].amount.add(amount);
+
+    HardDeposit storage deposit = hardDeposits[beneficiary];
+    deposit.amount = deposit.amount.add(amount);
     totalDeposit = totalDeposit.add(amount);
-    emit HardDepositChanged(beneficiary, hardDeposits[beneficiary].amount);
+    /* disable any pending decrease */
+    deposit.timeout = 0;
+    emit HardDepositChanged(beneficiary, deposit.amount);
   }
 
   function withdraw(uint amount) public {
