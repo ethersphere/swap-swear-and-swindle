@@ -11,10 +11,15 @@ const epoch = 24 * 3600
 contract('swap', function(accounts) {
   const [owner, bob, alice] = accounts
 
-  async function submitCheque(signer, beneficiary, serial, amount) {
+  async function signCheque(signer, beneficiary, serial, amount) {
     const swap = await Swap.deployed();
     const hash = await swap.chequeHash(beneficiary, serial, amount);
-    const { r, s, v } = sign(signer, hash);
+    return sign(signer, hash);
+  }
+
+  async function submitCheque(signer, beneficiary, serial, amount) {
+    const swap = await Swap.deployed();
+    const { r, s, v } = await signCheque(signer, beneficiary, serial, amount);
 
     return swap.submitCheque(beneficiary, serial, amount, r, s, v);
   }
@@ -155,7 +160,10 @@ contract('swap', function(accounts) {
     const serial = 3;
     const amount = firstCheque;
 
-    const { logs } = await submitCheque(bob, bob, serial, amount);
+    const sigOwner = await signCheque(owner, bob, serial, amount);
+    const sigBob = await signCheque(bob, bob, serial, amount);
+
+    const { logs } = await swap.submitChequeLower(bob, serial, amount, sigOwner.r, sigOwner.s, sigOwner.v, sigBob.r, sigBob.s, sigBob.v);
 
     matchLogs(logs, [
       { event: 'ChequeSubmitted', args: { beneficiary: bob, serial, amount }}

@@ -55,18 +55,10 @@ contract Swap {
     return ecrecover(keccak256("\x19Ethereum Signed Message:\n32", hash), v, r, s);
   }
 
-  function submitCheque(address beneficiary, uint serial, uint amount, bytes32 r, bytes32 s, uint8 v) public {
+  function _submitChequeInternal(address beneficiary, uint serial, uint amount) internal {
     /* ensure serial is increasing */
     ChequeInfo storage info = infos[beneficiary];
     require(serial > info.serial);
-
-    /* verify signature */
-    address signer = recoverSignature(chequeHash(beneficiary, serial, amount), r, s, v);
-
-    require(
-      (signer == owner && amount > info.amount) || /* allow owner to increase the cheque value */
-      (signer == beneficiary && amount < info.amount) /* allow beneficiary to decrease the cheque value */
-    );
 
     /* update the stored info */
     info.serial = serial;
@@ -75,6 +67,21 @@ contract Swap {
     info.timeout = now + timeout;
 
     emit ChequeSubmitted(beneficiary, serial, amount);
+  }
+
+  function submitCheque(address beneficiary, uint serial, uint amount, bytes32 r, bytes32 s, uint8 v) public {
+    /* verify signature */
+    require(owner ==  recoverSignature(chequeHash(beneficiary, serial, amount), r, s, v));
+    require(amount > infos[beneficiary].amount);
+    _submitChequeInternal(beneficiary, serial, amount);
+  }
+
+  function submitChequeLower(address beneficiary, uint serial, uint amount, bytes32 r, bytes32 s, uint8 v, bytes32 r2, bytes32 s2, uint8 v2) public {
+    /* verify signature */
+    require(owner == recoverSignature(chequeHash(beneficiary, serial, amount), r, s, v));
+    require(beneficiary == recoverSignature(chequeHash(beneficiary, serial, amount), r2, s2, v2));
+
+    _submitChequeInternal(beneficiary, serial, amount);
   }
 
   function cashCheque(address beneficiary) public {
