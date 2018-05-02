@@ -70,6 +70,7 @@ contract Swap {
   }
 
   function submitCheque(address beneficiary, uint serial, uint amount, bytes32 r, bytes32 s, uint8 v) public {
+    require(msg.sender == beneficiary);
     /* verify signature */
     require(owner ==  recoverSignature(chequeHash(beneficiary, serial, amount), r, s, v));
     require(amount > infos[beneficiary].amount);

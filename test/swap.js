@@ -21,7 +21,7 @@ contract('swap', function(accounts) {
     const swap = await Swap.deployed();
     const { r, s, v } = await signCheque(signer, beneficiary, serial, amount);
 
-    return swap.submitCheque(beneficiary, serial, amount, r, s, v);
+    return swap.submitCheque(beneficiary, serial, amount, r, s, v, { from: beneficiary });
   }
 
   const firstDeposit = 1000;
