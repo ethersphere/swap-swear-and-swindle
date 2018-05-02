@@ -11,14 +11,14 @@ contract Swap {
   event ChequeBounced(address indexed beneficiary, uint indexed serial, uint paid, uint bounced);
 
   event HardDepositChanged(address indexed beneficiary, uint amount);
-  event HardDepositDecreasePrepared(address indexed beneficiary, uint amount);
+  event HardDepositDecreasePrepared(address indexed beneficiary, uint diff);
 
   uint constant timeout = 1 days;
 
   struct HardDeposit {
     uint amount;
     uint timeout;
-    uint next;
+    uint diff;
   }
 
   struct ChequeInfo {
@@ -119,15 +119,15 @@ contract Swap {
     beneficiary.transfer(payout);
   }
 
-  function prepareDecreaseHardDeposit(address beneficiary, uint amount) public {
+  function prepareDecreaseHardDeposit(address beneficiary, uint diff) public {
     require(msg.sender == owner);
     HardDeposit storage deposit = hardDeposits[beneficiary];
-    require(amount < deposit.amount);
+    require(diff < deposit.amount);
 
     /* timeout is twice the normal timeout to ensure users can submit and cash in time */
     deposit.timeout = now + timeout * 2;
-    deposit.next = amount;
-    emit HardDepositDecreasePrepared(beneficiary, amount);
+    deposit.diff = diff;
+    emit HardDepositDecreasePrepared(beneficiary, diff);
   }
 
   function decreaseHardDeposit(address beneficiary) {
@@ -136,12 +136,10 @@ contract Swap {
     require(deposit.timeout != 0);
     require(now >= deposit.timeout);
 
-    uint diff = deposit.amount - deposit.next;
-
-    deposit.amount = deposit.next;
+    deposit.amount = deposit.amount.sub(deposit.diff);
     deposit.timeout = 0;
 
-    totalDeposit = totalDeposit.sub(diff);
+    totalDeposit = totalDeposit.sub(deposit.diff);
 
     emit HardDepositChanged(beneficiary, deposit.amount);
   }

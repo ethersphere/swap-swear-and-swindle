@@ -25,14 +25,6 @@ contract('swap', function(accounts) {
   }
 
   const firstDeposit = 1000;
-  const firstCheque = 600;
-  const secondCheque = firstCheque + 200;
-  const thirdCheque = secondCheque + 300;
-  const refill = 500;
-  const hardDepositBob1 = 200;
-  const fourthCheque = thirdCheque + 100;
-  const aliceCheque = 250;
-  const hardDepositBob2 = 50;
 
   it('should accept deposits', async() => {
     const swap = await Swap.deployed();
@@ -46,6 +38,8 @@ contract('swap', function(accounts) {
 
     (await getBalance(swap.address)).should.bignumber.equal(value);
   })
+
+  const firstCheque = 600;
 
   it('should not accept a cheque with serial 0', async() => {
     const swap = await Swap.deployed();
@@ -108,6 +102,8 @@ contract('swap', function(accounts) {
 
     await expectFail(submitCheque(owner, bob, 2, firstCheque));
   })
+
+  const secondCheque = firstCheque + 200;
 
   it('should accept valid cheque with higher amount', async() => {
     const swap = await Swap.deployed();
@@ -175,6 +171,8 @@ contract('swap', function(accounts) {
     storedAmount.should.bignumber.equal(firstCheque)
   })
 
+  const thirdCheque = secondCheque + 300;
+
   it('should allow parital payment for a bouncing check', async () => {
     const swap = await Swap.deployed();
 
@@ -198,6 +196,8 @@ contract('swap', function(accounts) {
     (await getBalance(bob)).should.be.bignumber.equal(beneficiaryExpectedBalance);
   })
 
+  const refill = 500;
+
   it('should allow cheque to clear fully after refill', async () => {
     const swap = await Swap.deployed();
 
@@ -214,6 +214,8 @@ contract('swap', function(accounts) {
 
     (await getBalance(bob)).should.be.bignumber.equal(beneficiaryExpectedBalance);
   })
+
+  const hardDepositBob1 = 200;
 
   it('should allow hard deposits if they do not exceed the global deposit', async() => {
     const swap = await Swap.deployed();
@@ -235,6 +237,8 @@ contract('swap', function(accounts) {
 
     await expectFail(swap.increaseHardDeposit(bob, await getBalance(swap.address) - hardDepositBob1 + 1));
   })
+
+  const fourthCheque = thirdCheque + 100;
 
   it('should use the hard deposit on valid cheque', async() => {
     const swap = await Swap.deployed();
@@ -261,6 +265,8 @@ contract('swap', function(accounts) {
     (await getBalance(bob)).should.be.bignumber.equal(beneficiaryExpectedBalance);
   })
 
+  const aliceCheque = 250;
+
   /* NOTE: at this point there are 300 wei in the contract with 100 wei locked for bob */
   it('should not spend ether locked away by hard deposit of another address', async() => {
     const swap = await Swap.deployed();
@@ -268,14 +274,19 @@ contract('swap', function(accounts) {
     await submitCheque(owner, alice, 1, aliceCheque);
     await increaseTime(1 * epoch);
 
+    let swapBalance = await getBalance(swap.address)
+
     /* sanity check - make sure there is actually enough left so we know we're testing the right thing */
-    (await getBalance(swap.address)).should.be.bignumber.gte(aliceCheque);
-    const expectedBalanceAlice = (await getBalance(alice)).plus(200);
+    swapBalance.should.bignumber.gte(aliceCheque);
+    let paid = swapBalance.sub((await swap.hardDeposits(bob))[0])
+    let bounced = aliceCheque - paid
+
+    const expectedBalanceAlice = (await getBalance(alice)).plus(paid);
 
     const { logs } = await swap.cashCheque(alice);
 
     matchLogs(logs, [
-      { event: 'ChequeBounced', args: { beneficiary: alice, paid: 200, bounced: 50, serial: 1 } }
+      { event: 'ChequeBounced', args: { beneficiary: alice, paid, bounced, serial: 1 } }
     ]);
 
     (await getBalance(alice)).should.bignumber.equal(expectedBalanceAlice);
@@ -287,18 +298,20 @@ contract('swap', function(accounts) {
     await expectFail(swap.decreaseHardDeposit(bob));
   })
 
+  const hardDepositBobDecrease = 75;
+
   it('should allow to prepare a decrease for hard deposits', async() => {
     const swap = await Swap.deployed();
 
-    const { logs } = await swap.prepareDecreaseHardDeposit(bob, hardDepositBob2);
+    const { logs } = await swap.prepareDecreaseHardDeposit(bob, hardDepositBobDecrease);
 
     matchLogs(logs, [
-      { event: 'HardDepositDecreasePrepared', args: { beneficiary: bob, amount: hardDepositBob2 } }
+      { event: 'HardDepositDecreasePrepared', args: { beneficiary: bob, diff: hardDepositBobDecrease } }
     ]);
 
     const [, timeout, next] = await swap.hardDeposits(bob);
 
-    next.should.bignumber.equal(hardDepositBob2);
+    next.should.bignumber.equal(hardDepositBobDecrease);
     timeout.should.bignumber.gte(getTime() + 2 * epoch);
   })
 
@@ -311,16 +324,18 @@ contract('swap', function(accounts) {
   it('should allow to decrease hard deposit after the timeout', async() => {
     const swap = await Swap.deployed();
 
+    let expectedHardDeposit = (await swap.hardDeposits(bob))[0].sub(hardDepositBobDecrease);
+
     await increaseTime(2 * epoch);
     const { logs } = await swap.decreaseHardDeposit(bob);
 
     matchLogs(logs, [
-      { event: 'HardDepositChanged', args: { beneficiary: bob, amount: hardDepositBob2 } }
+      { event: 'HardDepositChanged', args: { beneficiary: bob, amount: expectedHardDeposit } }
     ]);
 
     const [deposit] = await swap.hardDeposits(bob);
-    deposit.should.bignumber.equal(hardDepositBob2);
-    (await swap.totalDeposit()).should.bignumber.equal(hardDepositBob2);
+    deposit.should.bignumber.equal(expectedHardDeposit);
+    (await swap.totalDeposit()).should.bignumber.equal(expectedHardDeposit);
   })
 
   it('should not allow to do the same decrease twice', async() => {
@@ -332,12 +347,14 @@ contract('swap', function(accounts) {
   it('should have enough liquid balance for the rest of the other accounts cheque now', async() => {
     const swap = await Swap.deployed();
 
-    const expectedBalanceAlice = (await getBalance(alice)).plus(50);
+    const amount = web3.toBigNumber(aliceCheque).minus((await swap.infos(alice))[2])
+
+    const expectedBalanceAlice = (await getBalance(alice)).plus(amount);
 
     const { logs } = await swap.cashCheque(alice);
 
     matchLogs(logs, [
-      { event: 'ChequeCashed', args: { beneficiary: alice, serial: 1, amount: 50 } }
+      { event: 'ChequeCashed', args: { beneficiary: alice, serial: 1, amount } }
     ]);
 
     (await getBalance(alice)).should.be.bignumber.equal(expectedBalanceAlice);

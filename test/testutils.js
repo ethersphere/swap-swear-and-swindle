@@ -36,8 +36,8 @@ function matchLogs (logs, template) {
       }
     }
 
-    temp.args.should.deep.equal(log.args)
-    temp.event.should.equal(log.event)
+    log.args.should.deep.equal(temp.args)
+    log.event.should.equal(temp.event)
   }
 }
 
