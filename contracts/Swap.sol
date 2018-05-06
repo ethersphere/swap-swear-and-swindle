@@ -1,6 +1,7 @@
 pragma solidity ^0.4.19;
 import "zeppelin/math/SafeMath.sol";
 import "zeppelin/math/Math.sol";
+import "./abstracts/AbstractWitness.sol";
 
 contract Swap {
   using SafeMath for uint;
@@ -31,6 +32,7 @@ contract Swap {
   struct NoteInfo {
     uint index;
     uint amount;
+    uint paidOut;
     uint timeout;
     address beneficiary;
     address witness;
@@ -201,6 +203,7 @@ contract Swap {
       index: index,
       amount: amount,
       beneficiary: beneficiary,
+      paidOut: 0,
       witness: witness,
       validFrom: validFrom,
       validUntil: validUntil,
@@ -209,12 +212,12 @@ contract Swap {
     });
   }
 
-  function cashNote(bytes32 noteId) public {
+  function cashNote(bytes32 noteId, uint amount) public {
     NoteInfo storage note = notes[noteId];
 
     require(now >= note.timeout);
     if(note.validFrom != 0) require(now >= note.validFrom);
-    if(note.validUntil != 0) require(now >= note.validUntil);
+    if(note.validUntil != 0) require(now <= note.validUntil);
 
     address beneficiary = note.beneficiary;
 
@@ -223,16 +226,20 @@ contract Swap {
     } else beneficiary = msg.sender;
 
     if(note.witness != address(0x0)) {
-      /* TODO: re-entrance considerations */
+      /* TODO: re-entrance considerations, should be called STATIC? */
       require(AbstractWitness(note.witness).testimonyFor(owner, beneficiary, noteId) == AbstractWitness.TestimonyStatus.VALID);
     }
 
-    if(note.amount == 0) {
-      /* TODO: recurring payments */
-      revert();
+    if(note.amount != 0) {
+      require(note.paidOut.add(amount) <= note.amount);
     }
 
-    /* TODO: cash out */
+    uint payout;
+    uint bounced;
+
+    (payout, bounced) = _payout(beneficiary, amount);
+
+    note.paidOut += payout;
   }
 
   function submitPaidInvoice(bytes32 noteId, address beneficiary, uint serial, uint amount, bytes32 r, bytes32 s, uint8 v) public {
