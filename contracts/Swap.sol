@@ -260,6 +260,7 @@ contract Swap {
 
     /* TODO: this breaks with note.amount = 0 */
     require(note.amount == amount);
+    note.paidOut = amount;
 
     _submitChequeInternal(note.beneficiary, serial + 1, swapBalance.add(amount));
   }
