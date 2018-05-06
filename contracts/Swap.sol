@@ -47,8 +47,8 @@ contract Swap {
     return liquidBalance().add(hardDeposits[beneficiary].amount);
   }
 
-  function chequeHash(address beneficiary, uint serial, uint amount) public pure returns (bytes32) {
-    return keccak256(serial, beneficiary, amount);
+  function chequeHash(address beneficiary, uint serial, uint amount) public view returns (bytes32) {
+    return keccak256(address(this), serial, beneficiary, amount);
   }
 
   function recoverSignature(bytes32 hash, bytes32 r, bytes32 s, uint8 v) public pure returns (address) {
