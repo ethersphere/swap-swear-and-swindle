@@ -98,18 +98,9 @@ contract Swap {
     _submitChequeInternal(beneficiary, serial, amount);
   }
 
-  function cashCheque(address beneficiary) public {
-    ChequeInfo storage info = infos[beneficiary];
-
-    /* grace period must have ended */
-    require(now >= info.timeout);
-
-    /* ensure there is actually ether to be paid out */
-    uint value = info.amount.sub(info.paidOut); /* throws if paidOut > amount */
-    require(value > 0);
-
+  function _payout(address beneficiary, uint value) internal returns (uint payout, uint bounced) {
     /* part of hard deposit used */
-    uint payout = Math.min256(value, hardDeposits[beneficiary].amount);
+    payout = Math.min256(value, hardDeposits[beneficiary].amount);
     if(payout != 0) {
       hardDeposits[beneficiary].amount -= payout;
       totalDeposit -= payout;
@@ -122,15 +113,34 @@ contract Swap {
     if(liquid >= rest) {
       /* swap channel is solvent */
       payout = value;
-      emit ChequeCashed(beneficiary, info.serial, payout);
     } else {
       /* part of the cheque bounces */
       payout += liquid;
-      emit ChequeBounced(beneficiary, info.serial, payout, rest - liquid);
+      bounced = rest - liquid;
     }
 
-    info.paidOut = info.paidOut.add(payout);
     beneficiary.transfer(payout);
+  }
+
+  function cashCheque(address beneficiary) public {
+    ChequeInfo storage info = infos[beneficiary];
+
+    /* grace period must have ended */
+    require(now >= info.timeout);
+
+    /* ensure there is actually ether to be paid out */
+    uint value = info.amount.sub(info.paidOut); /* throws if paidOut > amount */
+    require(value > 0);
+
+    uint payout;
+    uint bounced;
+
+    (payout, bounced) = _payout(beneficiary, value);
+
+    if(bounced != 0) emit ChequeBounced(beneficiary, info.serial, payout, bounced);
+    else emit ChequeCashed(beneficiary, info.serial, payout);
+
+    info.paidOut = info.paidOut.add(payout);
   }
 
   function prepareDecreaseHardDeposit(address beneficiary, uint diff) public {
