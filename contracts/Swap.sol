@@ -242,8 +242,26 @@ contract Swap {
     note.paidOut += payout;
   }
 
-  function submitPaidInvoice(bytes32 noteId, address beneficiary, uint serial, uint amount, bytes32 r, bytes32 s, uint8 v) public {
+  function submitPaidInvoice(bytes32 noteId, uint swapBalance, uint serial, bytes32 r, bytes32 s, uint8 v, uint amount, bytes32 r2, bytes32 s2, uint8 v2) public {
     require(msg.sender == owner);
+    bytes32 invoiceId = keccak256(noteId, swapBalance, serial);
+
+    NoteInfo storage note = notes[noteId];
+    require(note.index != 0);
+    require(note.timeout != 0 && note.timeout < now);
+
+    /* TODO: this breaks with note.beneficiary = 0 */
+    require(note.beneficiary == recoverSignature(invoiceId, r, s, v));
+
+    require(infos[note.beneficiary].serial == serial);
+    require(infos[note.beneficiary].paidOut == swapBalance);
+
+    require(owner == recoverSignature(chequeHash(note.beneficiary, serial + 1, amount), r2, s2, v2));
+
+    /* TODO: this breaks with note.amount = 0 */
+    require(note.amount == amount);
+
+    _submitChequeInternal(note.beneficiary, serial + 1, swapBalance.add(amount));
   }
 
 }
