@@ -28,6 +28,18 @@ contract Swap {
     uint timeout;
   }
 
+  struct NoteInfo {
+    uint index;
+    uint amount;
+    uint timeout;
+    address beneficiary;
+    address witness;
+    uint validFrom;
+    uint validUntil;
+    bytes32 remark;
+  }
+
+  mapping (bytes32 => NoteInfo) public notes;
   mapping (address => ChequeInfo) public infos;
   mapping (address => HardDeposit) public hardDeposits;
   uint public totalDeposit;
@@ -77,6 +89,7 @@ contract Swap {
     _submitChequeInternal(beneficiary, serial, amount);
   }
 
+  /* TODO: security implications of anyone being able to call this and the resulting timeout delay */
   function submitChequeLower(address beneficiary, uint serial, uint amount, bytes32 r, bytes32 s, uint8 v, bytes32 r2, bytes32 s2, uint8 v2) public {
     /* verify signature */
     require(owner == recoverSignature(chequeHash(beneficiary, serial, amount), r, s, v));
@@ -166,6 +179,54 @@ contract Swap {
 
   function() payable public {
     emit Deposit(msg.sender, msg.value);
+  }
+
+  function submitNote(uint index, uint amount, address beneficiary, address witness, uint validFrom, uint validUntil, bytes32 remark, bytes32 r, bytes32 s, uint8 v) public {
+    bytes32 noteId = keccak256(address(this), index, amount, beneficiary, witness, validFrom, validUntil, remark);
+
+    require(owner == recoverSignature(noteId, r, s, v));
+    require(notes[noteId].index == 0);
+
+    notes[noteId] = NoteInfo({
+      index: index,
+      amount: amount,
+      beneficiary: beneficiary,
+      witness: witness,
+      validFrom: validFrom,
+      validUntil: validUntil,
+      remark: remark,
+      timeout: now + timeout
+    });
+  }
+
+  function cashNote(bytes32 noteId) public {
+    NoteInfo storage note = notes[noteId];
+
+    require(now >= note.timeout);
+    if(note.validFrom != 0) require(now >= note.validFrom);
+    if(note.validUntil != 0) require(now >= note.validUntil);
+
+    address beneficiary = note.beneficiary;
+
+    if(beneficiary != address(0x0)) {
+      require(msg.sender == beneficiary);
+    } else beneficiary = msg.sender;
+
+    if(note.witness != address(0x0)) {
+      /* TODO: re-entrance considerations */
+      require(AbstractWitness(note.witness).testimonyFor(owner, beneficiary, noteId) == AbstractWitness.TestimonyStatus.VALID);
+    }
+
+    if(note.amount == 0) {
+      /* TODO: recurring payments */
+      revert();
+    }
+
+    /* TODO: cash out */
+  }
+
+  function submitPaidInvoice(bytes32 noteId, address beneficiary, uint serial, uint amount, bytes32 r, bytes32 s, uint8 v) public {
+    require(msg.sender == owner);
   }
 
 }
