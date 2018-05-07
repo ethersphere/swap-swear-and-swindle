@@ -250,19 +250,19 @@ contract Swap {
     require(note.index != 0);
     require(note.timeout != 0 && note.timeout < now);
 
+    uint cumulativeTotal = swapBalance.add(amount);
+
     /* TODO: this breaks with note.beneficiary = 0 */
     require(note.beneficiary == recoverSignature(invoiceId, r, s, v));
 
-    require(infos[note.beneficiary].serial == serial);
-    require(infos[note.beneficiary].paidOut == swapBalance);
-
-    require(owner == recoverSignature(chequeHash(note.beneficiary, serial + 1, amount), r2, s2, v2));
+    require(owner == recoverSignature(chequeHash(note.beneficiary, serial + 1, cumulativeTotal), r2, s2, v2));
 
     /* TODO: this breaks with note.amount = 0 */
     require(note.amount == amount);
     note.paidOut = amount;
 
-    _submitChequeInternal(note.beneficiary, serial + 1, swapBalance.add(amount));
+    if(serial + 1 > infos[note.beneficiary].serial)
+      _submitChequeInternal(note.beneficiary, serial + 1, cumulativeTotal);
   }
 
 }
