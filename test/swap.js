@@ -1,20 +1,34 @@
 const Swap = artifacts.require("./Swap.sol");
+const OracleWitness = artifacts.require("./OracleWitness.sol");
+
 require('chai')
     .use(require('chai-as-promised'))
     .use(require('chai-bignumber')(web3.BigNumber))
     .should();
 
-const { getBalance, getTime, increaseTime, expectFail, matchLogs, sign } = require('./testutils')
+const { getBalance, getTime, increaseTime, expectFail, matchLogs, sign, nulladdress, computeCost } = require('./testutils')
 
 const epoch = 24 * 3600
 
 contract('swap', function(accounts) {
-  const [owner, bob, alice] = accounts
+  const [owner, bob, alice, carol] = accounts
 
   async function signCheque(signer, beneficiary, serial, amount) {
     const swap = await Swap.deployed();
     const hash = await swap.chequeHash(beneficiary, serial, amount);
     return sign(signer, hash);
+  }
+
+  async function signNote(signer, beneficiary, serial, amount, witness, validFrom, validUntil, remark) {
+    const swap = await Swap.deployed();
+    const hash = await swap.noteHash(beneficiary, serial, amount, witness, validFrom, validUntil, remark);
+    return { ...sign(signer, hash), hash };
+  }
+
+  async function signInvoice(signer, noteId, swapBalance, serial) {
+    const swap = await Swap.deployed();
+    const hash = await swap.invoiceHash(noteId, swapBalance, serial);
+    return { ...sign(signer, hash), hash };
   }
 
   async function submitCheque(signer, beneficiary, serial, amount) {
@@ -132,7 +146,6 @@ contract('swap', function(accounts) {
 
   it('should allow cheque payout after timeout (with difference, no hard deposit)', async() => {
     const swap = await Swap.deployed();
-
     await increaseTime(1 * epoch);
 
     let beneficiaryExpectedBalance = (await getBalance(bob)).plus(secondCheque).minus(firstCheque);
@@ -288,7 +301,6 @@ contract('swap', function(accounts) {
     matchLogs(logs, [
       { event: 'ChequeBounced', args: { beneficiary: alice, paid, bounced, serial: 1 } }
     ]);
-
     (await getBalance(alice)).should.bignumber.equal(expectedBalanceAlice);
   })
 
@@ -358,6 +370,139 @@ contract('swap', function(accounts) {
     ]);
 
     (await getBalance(alice)).should.be.bignumber.equal(expectedBalanceAlice);
+  })
+
+  let carolBond = 1000
+  let carolBondValidTimeout = 3 * epoch
+
+  it('should accept a valid note (bond)', async() => {
+    const swap = await Swap.deployed();
+
+    await swap.send(carolBond);
+
+    let validity = getTime() + carolBondValidTimeout
+
+    let { r, s, v, hash } = await signNote(owner, carol, 1, carolBond, 0, validity, 0, "")
+
+    await swap.submitNote(1, carolBond, carol, 0, validity, 0, "", r, s, v, { from: carol });
+
+    const [index, amount, paidOut, timeout, beneficiary, witness, validFrom, validUntil, remark] = await swap.notes(hash)
+
+    index.should.bignumber.equal(1)
+    amount.should.bignumber.equal(carolBond)
+    paidOut.should.bignumber.equal(0)
+    timeout.should.bignumber.gte(getTime() + 1 * epoch)
+    beneficiary.should.be.equal(carol)
+    witness.should.be.equal(nulladdress)
+    validFrom.should.bignumber.equal(validity)
+    validUntil.should.bignumber.equal(0)
+
+    /* cashout too soon */
+    await expectFail(swap.cashNote(hash, carolBond, { from: carol }))
+
+    await increaseTime(1 * epoch)
+
+    /* still too soon */
+    await expectFail(swap.cashNote(hash, carolBond, { from: carol }))
+
+    await increaseTime(2 * epoch)
+
+    let expectedBalanceCarol = (await getBalance(carol)).plus(carolBond)
+
+    let { receipt } = await swap.cashNote(hash, carolBond, { from: carol });
+
+    expectedBalanceCarol = expectedBalanceCarol.minus(await computeCost(receipt));
+
+    (await getBalance(carol)).should.bignumber.equal(expectedBalanceCarol)
+
+    /* already fully cashed out */
+    await expectFail(swap.cashNote(hash, carolBond, { from: carol }));
+  })
+
+  it('should accept a valid note (conditional bond)', async() => {
+    const swap = await Swap.deployed();
+    const oracle = await OracleWitness.deployed();
+
+    await swap.send(carolBond);
+
+    let bondTimeout = getTime() + carolBondValidTimeout
+
+    let { r, s, v, hash } = await signNote(owner, carol, 1, carolBond, oracle.address, 0, bondTimeout, "")
+
+    await swap.submitNote(1, carolBond, carol, oracle.address, 0, bondTimeout, "", r, s, v, { from: carol });
+
+    const [index, amount, paidOut, timeout, beneficiary, witness, validFrom, validUntil, remark] = await swap.notes(hash)
+
+    index.should.bignumber.equal(1)
+    amount.should.bignumber.equal(carolBond)
+    paidOut.should.bignumber.equal(0)
+    timeout.should.bignumber.gte(getTime() + 1 * epoch)
+    beneficiary.should.be.equal(carol)
+    witness.should.be.equal(oracle.address)
+    validFrom.should.bignumber.equal(0)
+    validUntil.should.bignumber.equal(bondTimeout)
+
+    /* cashout too soon */
+    await expectFail(swap.cashNote(hash, carolBond, { from: carol }))
+
+    await increaseTime(1 * epoch)
+
+    /* oracle says no */
+    await expectFail(swap.cashNote(hash, carolBond, { from: carol }))
+
+    await oracle.testify(hash, 1)
+
+    /* partial payment */
+    let expectedBalanceCarol = (await getBalance(carol)).plus(carolBond / 4)
+    var { receipt } = await swap.cashNote(hash, carolBond / 4, { from: carol });
+    expectedBalanceCarol = expectedBalanceCarol.minus(await computeCost(receipt));
+    (await getBalance(carol)).should.bignumber.equal(expectedBalanceCarol)
+
+    /* partial payment */
+    expectedBalanceCarol = (await getBalance(carol)).plus(carolBond / 4)
+    var { receipt } = await swap.cashNote(hash, carolBond / 4, { from: carol });
+    expectedBalanceCarol = expectedBalanceCarol.minus(await computeCost(receipt));
+    (await getBalance(carol)).should.bignumber.equal(expectedBalanceCarol)
+
+    await increaseTime(carolBondValidTimeout)
+
+    /* too late for the rest */
+    await expectFail(swap.cashNote(hash, carolBond / 4, { from: carol }))
+  })
+
+  it('should allow to submit paid invoices', async() => {
+    const swap = await Swap.deployed();
+
+    await swap.send(carolBond + 200);
+
+    await submitCheque(owner, carol, 1, 100)
+
+    /* completely offchain cheque of 100 */
+
+    /* owner issues note */
+    let note = await signNote(owner, carol, 1, carolBond, 0, 0, 0, "")
+
+    /* carol issues invoice */
+    let invoice = await signInvoice(carol, note.hash, 200, 2)
+
+    /* owner issues cheque for invoice */
+    let cheque = await signCheque(owner, carol, 3, carolBond + 200)
+
+    /* carol submits note anyway */
+    await swap.submitNote(1, carolBond, carol, 0, 0, 0, "", note.r, note.s, note.v, { from: carol });
+
+    /* owner presents paid invoice */
+    await swap.submitPaidInvoice(note.hash, 200, 2, invoice.r, invoice.s, invoice.v, carolBond, cheque.r, cheque.s, cheque.v)
+
+    await increaseTime(2 * epoch)
+
+    await expectFail(swap.cashNote(note.hash, carolBond))
+
+    let { logs } = await swap.cashCheque(carol)
+
+    matchLogs(logs, [
+      { event: 'ChequeCashed', args: { beneficiary: carol, serial: 3, amount: 1200 } }
+    ])
   })
 
 })

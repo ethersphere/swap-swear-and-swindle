@@ -7,7 +7,7 @@ async function computeCost(receipt) {
   return gasPrice.times(receipt.gasUsed);
 }
 
-let timeshift = 0;
+let timeshift = web3.eth.getBlock(web3.eth.blockNumber).timestamp - Math.floor(Date.now() / 1000);
 
 function getTime() {
   return Math.floor(Date.now() / 1000) + timeshift
@@ -72,5 +72,6 @@ module.exports = {
   getTime,
   computeCost,
   getBalance,
-  getTransaction
+  getTransaction,
+  nulladdress: '0x0000000000000000000000000000000000000000'
 }
