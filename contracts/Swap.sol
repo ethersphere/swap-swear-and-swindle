@@ -65,6 +65,14 @@ contract Swap {
     return keccak256(address(this), serial, beneficiary, amount);
   }
 
+  function noteHash(address beneficiary, uint index, uint amount, address witness, uint validFrom, uint validUntil, bytes32 remark) public view returns (bytes32) {
+    return keccak256(address(this), index, amount, witness, validFrom, validUntil, remark);
+  }
+
+  function invoiceHash(bytes32 noteId, uint swapBalance, uint serial) pure returns (bytes32) {
+    return keccak256(noteId, swapBalance, serial);
+  }
+
   function recoverSignature(bytes32 hash, bytes32 r, bytes32 s, uint8 v) public pure returns (address) {
     return ecrecover(keccak256("\x19Ethereum Signed Message:\n32", hash), v, r, s);
   }
@@ -194,7 +202,7 @@ contract Swap {
   }
 
   function submitNote(uint index, uint amount, address beneficiary, address witness, uint validFrom, uint validUntil, bytes32 remark, bytes32 r, bytes32 s, uint8 v) public {
-    bytes32 noteId = keccak256(address(this), index, amount, beneficiary, witness, validFrom, validUntil, remark);
+    bytes32 noteId = noteHash(beneficiary, index, amount, witness, validFrom, validUntil, remark);
 
     require(owner == recoverSignature(noteId, r, s, v));
     require(notes[noteId].index == 0);
@@ -215,6 +223,7 @@ contract Swap {
   function cashNote(bytes32 noteId, uint amount) public {
     NoteInfo storage note = notes[noteId];
 
+    require(note.index != 0);
     require(now >= note.timeout);
     if(note.validFrom != 0) require(now >= note.validFrom);
     if(note.validUntil != 0) require(now <= note.validUntil);
@@ -244,11 +253,11 @@ contract Swap {
 
   function submitPaidInvoice(bytes32 noteId, uint swapBalance, uint serial, bytes32 r, bytes32 s, uint8 v, uint amount, bytes32 r2, bytes32 s2, uint8 v2) public {
     require(msg.sender == owner);
-    bytes32 invoiceId = keccak256(noteId, swapBalance, serial);
+    bytes32 invoiceId = invoiceHash(noteId, swapBalance, serial);
 
     NoteInfo storage note = notes[noteId];
     require(note.index != 0);
-    require(note.timeout != 0 && note.timeout < now);
+    require(note.timeout != 0 && note.timeout > now);
 
     uint cumulativeTotal = swapBalance.add(amount);
 
@@ -261,7 +270,7 @@ contract Swap {
     require(note.amount == amount);
     note.paidOut = amount;
 
-    if(serial + 1 > infos[note.beneficiary].serial)
+    if(serial > infos[note.beneficiary].serial)
       _submitChequeInternal(note.beneficiary, serial + 1, cumulativeTotal);
   }
 
