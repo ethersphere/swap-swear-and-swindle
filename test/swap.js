@@ -76,7 +76,7 @@ contract('swap', function(accounts) {
 
     storedSerial.should.bignumber.equal(serial)
     storedAmount.should.bignumber.equal(amount)
-    timeout.should.bignumber.gte(getTime() + 1 * epoch) /* TODO: make sure there are no edge cases that could cause this to fail */
+    timeout.should.bignumber.gte(getTime() + 1 * epoch - 1)
   })
 
   it('should not allow cheque payout before timeout', async() => {
@@ -135,7 +135,7 @@ contract('swap', function(accounts) {
 
     storedSerial.should.bignumber.equal(serial)
     storedAmount.should.bignumber.equal(amount)
-    timeout.should.bignumber.gte(getTime() + 1 * epoch) /* TODO: make sure there are no edge cases that could cause this to fail */
+    timeout.should.bignumber.gte(getTime() + 1 * epoch - 1)
   })
 
   it('should not allow cheque payout before increased timeout', async() => {
@@ -324,7 +324,7 @@ contract('swap', function(accounts) {
     const [, timeout, next] = await swap.hardDeposits(bob);
 
     next.should.bignumber.equal(hardDepositBobDecrease);
-    timeout.should.bignumber.gte(getTime() + 2 * epoch);
+    timeout.should.bignumber.gte(getTime() + 2 * epoch - 1);
   })
 
   it('should not allow to decrease hard deposit before the timeout', async() => {
@@ -391,7 +391,7 @@ contract('swap', function(accounts) {
     index.should.bignumber.equal(1)
     amount.should.bignumber.equal(carolBond)
     paidOut.should.bignumber.equal(0)
-    timeout.should.bignumber.gte(getTime() + 1 * epoch)
+    timeout.should.bignumber.gte(getTime() + 1 * epoch - 1)
     beneficiary.should.be.equal(carol)
     witness.should.be.equal(nulladdress)
     validFrom.should.bignumber.equal(validity)
@@ -436,7 +436,7 @@ contract('swap', function(accounts) {
     index.should.bignumber.equal(1)
     amount.should.bignumber.equal(carolBond)
     paidOut.should.bignumber.equal(0)
-    timeout.should.bignumber.gte(getTime() + 1 * epoch)
+    timeout.should.bignumber.gte(getTime() + 1 * epoch - 1)
     beneficiary.should.be.equal(carol)
     witness.should.be.equal(oracle.address)
     validFrom.should.bignumber.equal(0)
