@@ -66,7 +66,7 @@ contract Swap {
   }
 
   function noteHash(address beneficiary, uint index, uint amount, address witness, uint validFrom, uint validUntil, bytes32 remark) public view returns (bytes32) {
-    return keccak256(address(this), index, amount, witness, validFrom, validUntil, remark);
+    return keccak256(address(this), index, beneficiary, amount, witness, validFrom, validUntil, remark);
   }
 
   function invoiceHash(bytes32 noteId, uint swapBalance, uint serial) pure returns (bytes32) {
