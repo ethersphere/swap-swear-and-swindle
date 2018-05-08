@@ -49,7 +49,7 @@ contract Swap {
   address public owner;
 
   /* constructor, allows setting the owner (needed for "setup wallet as payment") */
-  function Swap(address _owner) public {
+  constructor(address _owner) public {
     owner = _owner;
   }
 
@@ -69,7 +69,7 @@ contract Swap {
     return keccak256(address(this), index, beneficiary, amount, witness, validFrom, validUntil, remark);
   }
 
-  function invoiceHash(bytes32 noteId, uint swapBalance, uint serial) pure returns (bytes32) {
+  function invoiceHash(bytes32 noteId, uint swapBalance, uint serial) public pure returns (bytes32) {
     return keccak256(noteId, swapBalance, serial);
   }
 
@@ -164,7 +164,7 @@ contract Swap {
     emit HardDepositDecreasePrepared(beneficiary, diff);
   }
 
-  function decreaseHardDeposit(address beneficiary) {
+  function decreaseHardDeposit(address beneficiary) public {
     HardDeposit storage deposit = hardDeposits[beneficiary];
 
     require(deposit.timeout != 0);
@@ -201,7 +201,7 @@ contract Swap {
     emit Deposit(msg.sender, msg.value);
   }
 
-  function verifyNote(bytes32 noteId) internal {
+  function verifyNote(bytes32 noteId) internal view {
     NoteInfo storage note = notes[noteId];
 
     if(note.validFrom != 0) require(now >= note.validFrom);

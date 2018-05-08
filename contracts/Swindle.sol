@@ -61,7 +61,7 @@ contract Swindle is AbstractConstants {
     trial.lastAction = now;
     uint8 next = trial.rules.nextStatus(outcome, trial.status);
 
-    StateTransition(caseId, trial.status, next);
+    emit StateTransition(caseId, trial.status, next);
 
     trial.status = next;
   }

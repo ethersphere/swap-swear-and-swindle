@@ -11,7 +11,7 @@ contract Swear {
 
   Swindle public swindle;
 
-  function Swear(address _swindle) public {
+  constructor(address _swindle) public {
     swindle = Swindle(_swindle);
   }
 
@@ -48,7 +48,7 @@ contract Swear {
       cases: 0
     });
 
-    CommitmentAdded(commitmentHash, msg.sender, rules);
+    emit CommitmentAdded(commitmentHash, msg.sender, rules);
   }
 
   function compensate(bytes32 commitmentHash, address beneficiary, uint reward) public {
@@ -82,7 +82,7 @@ contract Swear {
 
     bytes32 caseId = swindle.startTrial(provider, plaintiff, commitment.noteId, commitmentHash, commitment.rules);
 
-    TrialStarted(commitmentHash, caseId);
+    emit TrialStarted(commitmentHash, caseId);
   }
 
   function notifyTrialEnd(bytes32 commitmentHash) public {
