@@ -73,7 +73,18 @@ contract Swap {
     return keccak256(abi.encodePacked(noteId, swapBalance, serial));
   }
 
-  function recoverSignature(bytes32 hash, bytes32 r, bytes32 s, uint8 v) public pure returns (address) {
+  function decodeSignature(bytes sig) pure returns (bytes32 r, bytes32 s, uint8 v) {
+    assembly {
+      r := mload(add(sig, 32))
+      s := mload(add(sig, 64))
+      v := and(mload(add(sig, 65)), 0xff)
+    }
+
+    v += 27; /* TODO: mainnet? */
+  }
+
+  function recoverSignature(bytes32 hash, bytes sig) public pure returns (address) {
+    var (r, s, v) = decodeSignature(sig);
     return ecrecover(keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", hash)), v, r, s);
   }
 
@@ -91,19 +102,19 @@ contract Swap {
     emit ChequeSubmitted(beneficiary, serial, amount);
   }
 
-  function submitCheque(address beneficiary, uint serial, uint amount, bytes32 r, bytes32 s, uint8 v) public {
+  function submitCheque(address beneficiary, uint serial, uint amount, bytes sig) public {
     require(msg.sender == beneficiary);
     /* verify signature */
-    require(owner ==  recoverSignature(chequeHash(beneficiary, serial, amount), r, s, v));
+    require(owner ==  recoverSignature(chequeHash(beneficiary, serial, amount), sig));
     require(amount > cheques[beneficiary].amount);
     _submitChequeInternal(beneficiary, serial, amount);
   }
 
   /* TODO: security implications of anyone being able to call this and the resulting timeout delay */
-  function submitChequeLower(address beneficiary, uint serial, uint amount, bytes32 r, bytes32 s, uint8 v, bytes32 r2, bytes32 s2, uint8 v2) public {
+  function submitChequeLower(address beneficiary, uint serial, uint amount, bytes ownerSig, bytes beneficarySig) public {
     /* verify signature */
-    require(owner == recoverSignature(chequeHash(beneficiary, serial, amount), r, s, v));
-    require(beneficiary == recoverSignature(chequeHash(beneficiary, serial, amount), r2, s2, v2));
+    require(owner == recoverSignature(chequeHash(beneficiary, serial, amount), ownerSig));
+    require(beneficiary == recoverSignature(chequeHash(beneficiary, serial, amount), beneficarySig));
 
     _submitChequeInternal(beneficiary, serial, amount);
   }
@@ -213,10 +224,10 @@ contract Swap {
     }
   }
 
-  function submitNote(uint index, uint amount, address beneficiary, address witness, uint validFrom, uint validUntil, bytes32 remark, bytes32 r, bytes32 s, uint8 v) public {
+  function submitNote(uint index, uint amount, address beneficiary, address witness, uint validFrom, uint validUntil, bytes32 remark, bytes sig) public {
     bytes32 noteId = noteHash(beneficiary, index, amount, witness, validFrom, validUntil, remark);
 
-    require(owner == recoverSignature(noteId, r, s, v));
+    require(owner == recoverSignature(noteId, sig));
     require(notes[noteId].index == 0);
 
     if(beneficiary == address(0x0)) beneficiary = msg.sender;
@@ -256,7 +267,7 @@ contract Swap {
     note.paidOut += payout;
   }
 
-  function submitPaidInvoice(bytes32 noteId, uint swapBalance, uint serial, bytes32 r, bytes32 s, uint8 v, uint amount, bytes32 r2, bytes32 s2, uint8 v2) public {
+  function submitPaidInvoice(bytes32 noteId, uint swapBalance, uint serial, bytes invoiceSig, uint amount, bytes chequeSig) public {
     require(msg.sender == owner);
     bytes32 invoiceId = invoiceHash(noteId, swapBalance, serial);
 
@@ -267,9 +278,8 @@ contract Swap {
     uint cumulativeTotal = swapBalance.add(amount);
 
     /* TODO: this breaks with note.beneficiary = 0 */
-    require(note.beneficiary == recoverSignature(invoiceId, r, s, v));
-
-    require(owner == recoverSignature(chequeHash(note.beneficiary, serial + 1, cumulativeTotal), r2, s2, v2));
+    require(note.beneficiary == recoverSignature(invoiceId, invoiceSig));
+    require(owner == recoverSignature(chequeHash(note.beneficiary, serial + 1, cumulativeTotal), chequeSig));
 
     /* TODO: this breaks with note.amount = 0 */
     require(note.amount == amount);

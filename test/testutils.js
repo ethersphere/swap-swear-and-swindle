@@ -48,7 +48,7 @@ function sign(signer, hash) {
   let s = "0x" + sig.substr(66, 64);
   let v = parseInt(sig.substr(130, 2), 16) + 27
 
-  return { r, s, v }
+  return { r, s, v, sig }
 }
 
 const increaseTime = (sec) => {

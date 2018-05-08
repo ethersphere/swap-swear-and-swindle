@@ -16,9 +16,9 @@ contract('swap', function(accounts) {
 
   async function submitCheque(signer, beneficiary, serial, amount) {
     const swap = await Swap.deployed();
-    const { r, s, v } = await signCheque(signer, beneficiary, serial, amount);
+    const { sig } = await signCheque(signer, beneficiary, serial, amount);
 
-    return swap.submitCheque(beneficiary, serial, amount, r, s, v, { from: beneficiary });
+    return swap.submitCheque(beneficiary, serial, amount, sig, { from: beneficiary });
   }
 
   const firstDeposit = 1000;
@@ -152,10 +152,10 @@ contract('swap', function(accounts) {
     const serial = 3;
     const amount = firstCheque;
 
-    const sigOwner = await signCheque(owner, bob, serial, amount);
-    const sigBob = await signCheque(bob, bob, serial, amount);
+    const { sig: sigOwner } = await signCheque(owner, bob, serial, amount);
+    const { sig: sigBob } = await signCheque(bob, bob, serial, amount);
 
-    const { logs } = await swap.submitChequeLower(bob, serial, amount, sigOwner.r, sigOwner.s, sigOwner.v, sigBob.r, sigBob.s, sigBob.v);
+    const { logs } = await swap.submitChequeLower(bob, serial, amount, sigOwner, sigBob);
 
     matchLogs(logs, [
       { event: 'ChequeSubmitted', args: { beneficiary: bob, serial, amount }}
@@ -365,11 +365,11 @@ contract('swap', function(accounts) {
 
     let validity = getTime() + carolBondValidTimeout
 
-    let { r, s, v, hash } = await signNote(owner, carol, 1, carolBond, 0, validity, 0, "")
+    let { sig, hash } = await signNote(owner, carol, 1, carolBond, 0, validity, 0, "")
 
     await increaseTime(4 * epoch)
 
-    await swap.submitNote(1, carolBond, carol, 0, validity, 0, "", r, s, v, { from: carol });
+    await swap.submitNote(1, carolBond, carol, 0, validity, 0, "", sig, { from: carol });
 
     const [index, amount, paidOut, timeout, beneficiary, witness, validFrom, validUntil, remark] = await swap.notes(hash)
 
@@ -404,11 +404,11 @@ contract('swap', function(accounts) {
 
     let bondTimeout = getTime() + carolBondValidTimeout
 
-    let { r, s, v, hash } = await signNote(owner, carol, 1, carolBond, oracle.address, 0, bondTimeout, "")
+    let { sig, hash } = await signNote(owner, carol, 1, carolBond, oracle.address, 0, bondTimeout, "")
 
     await oracle.testify(hash, 1)
 
-    await swap.submitNote(1, carolBond, carol, oracle.address, 0, bondTimeout, "", r, s, v, { from: carol });
+    await swap.submitNote(1, carolBond, carol, oracle.address, 0, bondTimeout, "", sig, { from: carol });
 
     const [index, amount, paidOut, timeout, beneficiary, witness, validFrom, validUntil, remark] = await swap.notes(hash)
 
@@ -470,10 +470,10 @@ contract('swap', function(accounts) {
     let cheque = await signCheque(owner, carol, 3, carolBond + 200)
 
     /* carol submits note anyway */
-    await swap.submitNote(1, carolBond, carol, 0, 0, 0, "", note.r, note.s, note.v, { from: carol });
+    await swap.submitNote(1, carolBond, carol, 0, 0, 0, "", note.sig, { from: carol });
 
     /* owner presents paid invoice */
-    await swap.submitPaidInvoice(note.hash, 200, 2, invoice.r, invoice.s, invoice.v, carolBond, cheque.r, cheque.s, cheque.v)
+    await swap.submitPaidInvoice(note.hash, 200, 2, invoice.sig, carolBond, cheque.sig)
 
     await increaseTime(2 * epoch)
 
