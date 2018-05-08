@@ -19,8 +19,9 @@ Then run the tests with `truffle test`.
 
 #### Swear
 
-* not yet included
+* does not use SWAP at the moment
+* heavy on-chain footprint
 
 #### Swindle
 
-* not yet included
+* anyone can start a case and is then treated as a swear contract
