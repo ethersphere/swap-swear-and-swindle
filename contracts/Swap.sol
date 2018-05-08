@@ -62,19 +62,19 @@ contract Swap {
   }
 
   function chequeHash(address beneficiary, uint serial, uint amount) public view returns (bytes32) {
-    return keccak256(address(this), serial, beneficiary, amount);
+    return keccak256(abi.encodePacked(address(this), serial, beneficiary, amount));
   }
 
   function noteHash(address beneficiary, uint index, uint amount, address witness, uint validFrom, uint validUntil, bytes32 remark) public view returns (bytes32) {
-    return keccak256(address(this), index, beneficiary, amount, witness, validFrom, validUntil, remark);
+    return keccak256(abi.encodePacked(address(this), index, beneficiary, amount, witness, validFrom, validUntil, remark));
   }
 
   function invoiceHash(bytes32 noteId, uint swapBalance, uint serial) public pure returns (bytes32) {
-    return keccak256(noteId, swapBalance, serial);
+    return keccak256(abi.encodePacked(noteId, swapBalance, serial));
   }
 
   function recoverSignature(bytes32 hash, bytes32 r, bytes32 s, uint8 v) public pure returns (address) {
-    return ecrecover(keccak256("\x19Ethereum Signed Message:\n32", hash), v, r, s);
+    return ecrecover(keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", hash)), v, r, s);
   }
 
   function _submitChequeInternal(address beneficiary, uint serial, uint amount) internal {
