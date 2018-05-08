@@ -72,7 +72,7 @@ contract('swap', function(accounts) {
       { event: 'ChequeSubmitted', args: { amount, beneficiary: bob, serial } }
     ])
 
-    const [storedSerial, storedAmount,, timeout] = await swap.infos(bob);
+    const [storedSerial, storedAmount,, timeout] = await swap.cheques(bob);
 
     storedSerial.should.bignumber.equal(serial)
     storedAmount.should.bignumber.equal(amount)
@@ -100,7 +100,7 @@ contract('swap', function(accounts) {
 
     (await getBalance(bob)).should.be.bignumber.equal(beneficiaryExpectedBalance);
 
-    const [,, paidOut,] = await swap.infos(bob);
+    const [,, paidOut,] = await swap.cheques(bob);
 
     paidOut.should.bignumber.equal(firstCheque);
   })
@@ -131,7 +131,7 @@ contract('swap', function(accounts) {
       { event: 'ChequeSubmitted', args: { amount, beneficiary: bob, serial } }
     ])
 
-    const [storedSerial, storedAmount,, timeout] = await swap.infos(bob);
+    const [storedSerial, storedAmount,, timeout] = await swap.cheques(bob);
 
     storedSerial.should.bignumber.equal(serial)
     storedAmount.should.bignumber.equal(amount)
@@ -158,7 +158,7 @@ contract('swap', function(accounts) {
 
     (await getBalance(bob)).should.be.bignumber.equal(beneficiaryExpectedBalance);
 
-    const [,, paidOut,] = await swap.infos(bob);
+    const [,, paidOut,] = await swap.cheques(bob);
 
     paidOut.should.bignumber.equal(secondCheque);
   })
@@ -178,7 +178,7 @@ contract('swap', function(accounts) {
       { event: 'ChequeSubmitted', args: { beneficiary: bob, serial, amount }}
     ]);
 
-    const [storedSerial, storedAmount,,] = await swap.infos(bob);
+    const [storedSerial, storedAmount,,] = await swap.cheques(bob);
 
     storedSerial.should.bignumber.equal(serial)
     storedAmount.should.bignumber.equal(firstCheque)
@@ -359,7 +359,7 @@ contract('swap', function(accounts) {
   it('should have enough liquid balance for the rest of the other accounts cheque now', async() => {
     const swap = await Swap.deployed();
 
-    const amount = web3.toBigNumber(aliceCheque).minus((await swap.infos(alice))[2])
+    const amount = web3.toBigNumber(aliceCheque).minus((await swap.cheques(alice))[2])
 
     const expectedBalanceAlice = (await getBalance(alice)).plus(amount);
 
@@ -384,6 +384,8 @@ contract('swap', function(accounts) {
 
     let { r, s, v, hash } = await signNote(owner, carol, 1, carolBond, 0, validity, 0, "")
 
+    await increaseTime(4 * epoch)
+
     await swap.submitNote(1, carolBond, carol, 0, validity, 0, "", r, s, v, { from: carol });
 
     const [index, amount, paidOut, timeout, beneficiary, witness, validFrom, validUntil, remark] = await swap.notes(hash)
@@ -397,15 +399,7 @@ contract('swap', function(accounts) {
     validFrom.should.bignumber.equal(validity)
     validUntil.should.bignumber.equal(0)
 
-    /* cashout too soon */
-    await expectFail(swap.cashNote(hash, carolBond, { from: carol }))
-
     await increaseTime(1 * epoch)
-
-    /* still too soon */
-    await expectFail(swap.cashNote(hash, carolBond, { from: carol }))
-
-    await increaseTime(2 * epoch)
 
     let expectedBalanceCarol = (await getBalance(carol)).plus(carolBond)
 
@@ -429,6 +423,8 @@ contract('swap', function(accounts) {
 
     let { r, s, v, hash } = await signNote(owner, carol, 1, carolBond, oracle.address, 0, bondTimeout, "")
 
+    await oracle.testify(hash, 1)
+
     await swap.submitNote(1, carolBond, carol, oracle.address, 0, bondTimeout, "", r, s, v, { from: carol });
 
     const [index, amount, paidOut, timeout, beneficiary, witness, validFrom, validUntil, remark] = await swap.notes(hash)
@@ -446,6 +442,8 @@ contract('swap', function(accounts) {
     await expectFail(swap.cashNote(hash, carolBond, { from: carol }))
 
     await increaseTime(1 * epoch)
+
+    await oracle.testify(hash, 0)
 
     /* oracle says no */
     await expectFail(swap.cashNote(hash, carolBond, { from: carol }))

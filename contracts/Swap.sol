@@ -42,7 +42,7 @@ contract Swap {
   }
 
   mapping (bytes32 => NoteInfo) public notes;
-  mapping (address => ChequeInfo) public infos;
+  mapping (address => ChequeInfo) public cheques;
   mapping (address => HardDeposit) public hardDeposits;
   uint public totalDeposit;
 
@@ -79,7 +79,7 @@ contract Swap {
 
   function _submitChequeInternal(address beneficiary, uint serial, uint amount) internal {
     /* ensure serial is increasing */
-    ChequeInfo storage info = infos[beneficiary];
+    ChequeInfo storage info = cheques[beneficiary];
     require(serial > info.serial);
 
     /* update the stored info */
@@ -95,7 +95,7 @@ contract Swap {
     require(msg.sender == beneficiary);
     /* verify signature */
     require(owner ==  recoverSignature(chequeHash(beneficiary, serial, amount), r, s, v));
-    require(amount > infos[beneficiary].amount);
+    require(amount > cheques[beneficiary].amount);
     _submitChequeInternal(beneficiary, serial, amount);
   }
 
@@ -133,7 +133,7 @@ contract Swap {
   }
 
   function cashCheque(address beneficiary) public {
-    ChequeInfo storage info = infos[beneficiary];
+    ChequeInfo storage info = cheques[beneficiary];
 
     /* grace period must have ended */
     require(now >= info.timeout);
@@ -201,11 +201,25 @@ contract Swap {
     emit Deposit(msg.sender, msg.value);
   }
 
+  function verifyNote(bytes32 noteId) internal {
+    NoteInfo storage note = notes[noteId];
+
+    if(note.validFrom != 0) require(now >= note.validFrom);
+    if(note.validUntil != 0) require(now <= note.validUntil);
+
+    if(note.witness != address(0x0)) {
+      /* TODO: re-entrance considerations, should be called STATIC? */
+      require(AbstractWitness(note.witness).testimonyFor(owner, note.beneficiary, noteId) == AbstractWitness.TestimonyStatus.VALID);
+    }
+  }
+
   function submitNote(uint index, uint amount, address beneficiary, address witness, uint validFrom, uint validUntil, bytes32 remark, bytes32 r, bytes32 s, uint8 v) public {
     bytes32 noteId = noteHash(beneficiary, index, amount, witness, validFrom, validUntil, remark);
 
     require(owner == recoverSignature(noteId, r, s, v));
     require(notes[noteId].index == 0);
+
+    if(beneficiary == address(0x0)) beneficiary = msg.sender;
 
     notes[noteId] = NoteInfo({
       index: index,
@@ -218,6 +232,8 @@ contract Swap {
       remark: remark,
       timeout: now + timeout
     });
+
+    verifyNote(noteId);
   }
 
   function cashNote(bytes32 noteId, uint amount) public {
@@ -225,19 +241,8 @@ contract Swap {
 
     require(note.index != 0);
     require(now >= note.timeout);
-    if(note.validFrom != 0) require(now >= note.validFrom);
-    if(note.validUntil != 0) require(now <= note.validUntil);
-
-    address beneficiary = note.beneficiary;
-
-    if(beneficiary != address(0x0)) {
-      require(msg.sender == beneficiary);
-    } else beneficiary = msg.sender;
-
-    if(note.witness != address(0x0)) {
-      /* TODO: re-entrance considerations, should be called STATIC? */
-      require(AbstractWitness(note.witness).testimonyFor(owner, beneficiary, noteId) == AbstractWitness.TestimonyStatus.VALID);
-    }
+    require(msg.sender == note.beneficiary);
+    verifyNote(noteId);
 
     if(note.amount != 0) {
       require(note.paidOut.add(amount) <= note.amount);
@@ -246,7 +251,7 @@ contract Swap {
     uint payout;
     uint bounced;
 
-    (payout, bounced) = _payout(beneficiary, amount);
+    (payout, bounced) = _payout(note.beneficiary, amount);
 
     note.paidOut += payout;
   }
@@ -270,7 +275,7 @@ contract Swap {
     require(note.amount == amount);
     note.paidOut = amount;
 
-    if(serial > infos[note.beneficiary].serial)
+    if(serial > cheques[note.beneficiary].serial)
       _submitChequeInternal(note.beneficiary, serial + 1, cumulativeTotal);
   }
 
