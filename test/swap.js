@@ -7,29 +7,12 @@ require('chai')
     .should();
 
 const { getBalance, getTime, increaseTime, expectFail, matchLogs, sign, nulladdress, computeCost } = require('./testutils')
+const { signCheque, signNote, signInvoice } = require('./swutils')
 
 const epoch = 24 * 3600
 
 contract('swap', function(accounts) {
   const [owner, bob, alice, carol] = accounts
-
-  async function signCheque(signer, beneficiary, serial, amount) {
-    const swap = await Swap.deployed();
-    const hash = await swap.chequeHash(beneficiary, serial, amount);
-    return sign(signer, hash);
-  }
-
-  async function signNote(signer, beneficiary, serial, amount, witness, validFrom, validUntil, remark) {
-    const swap = await Swap.deployed();
-    const hash = await swap.noteHash(beneficiary, serial, amount, witness, validFrom, validUntil, remark);
-    return { ...sign(signer, hash), hash };
-  }
-
-  async function signInvoice(signer, noteId, swapBalance, serial) {
-    const swap = await Swap.deployed();
-    const hash = await swap.invoiceHash(noteId, swapBalance, serial);
-    return { ...sign(signer, hash), hash };
-  }
 
   async function submitCheque(signer, beneficiary, serial, amount) {
     const swap = await Swap.deployed();
