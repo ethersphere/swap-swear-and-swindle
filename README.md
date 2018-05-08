@@ -2,6 +2,8 @@
 
 Contracts for Swap, Swear and Swindle.
 
+**Please note that all contracts within this repository are considered highly experimental, probably contain critical flaws and will cause loss of money if used in production. Also Swear / Swindle are pure experimentation at this time and will probably replaced completely.**
+
 ## Tests
 
 To run the tests first install `truffle`, then run `npm install` to set everything up.
