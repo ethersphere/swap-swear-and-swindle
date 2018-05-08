@@ -73,7 +73,7 @@ contract Swap {
     return keccak256(abi.encodePacked(noteId, swapBalance, serial));
   }
 
-  function decodeSignature(bytes sig) pure returns (bytes32 r, bytes32 s, uint8 v) {
+  function decodeSignature(bytes sig) internal pure returns (bytes32 r, bytes32 s, uint8 v) {
     assembly {
       r := mload(add(sig, 32))
       s := mload(add(sig, 64))
@@ -83,7 +83,7 @@ contract Swap {
     v += 27; /* TODO: mainnet? */
   }
 
-  function recoverSignature(bytes32 hash, bytes sig) public pure returns (address) {
+  function recoverSignature(bytes32 hash, bytes sig) internal pure returns (address) {
     var (r, s, v) = decodeSignature(sig);
     return ecrecover(keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", hash)), v, r, s);
   }
