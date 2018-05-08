@@ -37,7 +37,7 @@ contract OracleTrial is AbstractRules {
 
   /* get minimal deposit for service */
   function getDeposit() public view returns (uint deposit) {
-    return 10 ether;
+    return 100;
   }
 
   /* get minimal epoch for service */

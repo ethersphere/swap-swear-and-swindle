@@ -14,7 +14,8 @@ Then run the tests with `truffle test`.
 * hard deposits can be decreased without a payout to the owner. that way one can easily return the locked amount to the liquid balance.
 * hard deposit decreases on payout. I assumes this was the intent anyway, but it's not explicitly stated in the paper.
 * no support for soft deposits (not sure if there is anything even needed from the contract)
-* promissory notes from section 3 not yet implemented
+* index in promissory notes is ignored
+* remark is not used in the invoice process
 
 #### Swear
 
