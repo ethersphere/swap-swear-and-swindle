@@ -1,6 +1,6 @@
 pragma solidity ^0.4.19;
 import "../abstracts/AbstractRules.sol";
-import "./OracleWitness.sol";
+import "../witnesses/OracleWitness.sol";
 
 contract OracleTrial is AbstractRules {
   uint8 constant TRIAL_STATUS_WITNESS_1 = 3;
