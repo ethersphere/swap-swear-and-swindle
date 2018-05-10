@@ -109,8 +109,20 @@ contract Swear is AbstractWitness {
     return guiltyNotes[owner][noteId] ? AbstractWitness.TestimonyStatus.VALID : AbstractWitness.TestimonyStatus.INVALID;
   }
 
-  function _save(address provider, address trial, bytes32 noteId) internal {
+  function startTrialFromNote(address provider, bytes note, address trial, bytes32 payload) public returns(bytes32) {
+    bytes32 noteId = keccak256(note);
     bytes32 commitmentHash = keccak256(provider, trial, noteId);
+
+    address beneficiary;
+    bytes32 remark;
+
+    assembly {
+      beneficiary := div(mload(add(note, 32)), exp(2,96))
+      remark := mload(add(note, 220))
+    }
+
+    require(keccak256(abi.encodePacked(trial, payload)) == remark);
+
     commitments[commitmentHash] = Commitment({
       valid: true,
       provider: provider,
@@ -121,17 +133,8 @@ contract Swear is AbstractWitness {
       cases: 0,
       note: true
     });
-  }
 
-  /*
-  * validFrom assumed to be 0 and index 1
-  */
-  function startTrialFromNote(address provider, address swap, address beneficiary, uint amount, address witness, uint validUntil, address trial, bytes32 payload) public returns(bytes32) {
-    bytes32 noteId = keccak256(abi.encodePacked(swap, uint(1), beneficiary, amount, witness, uint(0), validUntil, keccak256(abi.encodePacked(trial, payload))));
-
-    _save(provider, trial, noteId);
-
-    bytes32 caseId = swindle.startTrial(provider, beneficiary, noteId, keccak256(provider, trial, noteId), AbstractRules(trial));
-    emit TrialStarted(keccak256(provider, trial, noteId), caseId, noteId);
+    bytes32 caseId = swindle.startTrial(provider, beneficiary, noteId, commitmentHash, AbstractRules(trial));
+    emit TrialStarted(commitmentHash, caseId, noteId);
   }
 }
