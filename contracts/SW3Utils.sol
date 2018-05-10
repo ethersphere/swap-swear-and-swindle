@@ -9,16 +9,16 @@ contract SW3Utils {
     return keccak256(abi.encodePacked(address(this), serial, beneficiary, amount));
   }
 
-  function noteHash(address beneficiary, uint index, uint amount, address witness, uint validFrom, uint validUntil, bytes32 remark) public view returns (bytes32) {
-    return keccak256(encodeNote(beneficiary, index, amount, witness, validFrom, validUntil, remark));
+  function noteHash(address swap, address beneficiary, uint index, uint amount, address witness, uint validFrom, uint validUntil, bytes32 remark) public view returns (bytes32) {
+    return keccak256(encodeNote(swap, beneficiary, index, amount, witness, validFrom, validUntil, remark));
   }
 
   function invoiceHash(bytes32 noteId, uint swapBalance, uint serial) public pure returns (bytes32) {
     return keccak256(abi.encodePacked(noteId, swapBalance, serial));
   }
 
-  function encodeNote(address beneficiary, uint index, uint amount, address witness, uint validFrom, uint validUntil, bytes32 remark) public view returns (bytes) {
-    return abi.encodePacked(address(this), index, beneficiary, amount, witness, validFrom, validUntil, remark);
+  function encodeNote(address swap, address beneficiary, uint index, uint amount, address witness, uint validFrom, uint validUntil, bytes32 remark) public view returns (bytes) {
+    return abi.encodePacked(swap, index, beneficiary, amount, witness, validFrom, validUntil, remark);
   }
 
   function decodeNote(bytes note)

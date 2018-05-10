@@ -199,7 +199,7 @@ contract Swap is SW3Utils {
   }
 
   function submitNote(uint index, uint amount, address beneficiary, address witness, uint validFrom, uint validUntil, bytes32 remark, bytes sig) public {
-    bytes32 noteId = noteHash(beneficiary, index, amount, witness, validFrom, validUntil, remark);
+    bytes32 noteId = noteHash(address(this), beneficiary, index, amount, witness, validFrom, validUntil, remark);
 
     require(owner == recoverSignature(noteId, sig));
     require(notes[noteId].index == 0);

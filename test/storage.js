@@ -49,7 +49,7 @@ contract('Storage (slashed)', (accounts) => {
 
     await expectFail(swap.submitNote(1, amount, dataOwner, witness, 0, expires, remark, note.sig, { from: dataOwner }));
 
-    let encoded = await swap.encodeNote(dataOwner, 1, amount, witness, 0, expires, remark);
+    let encoded = await swap.encodeNote(swap.address, dataOwner, 1, amount, witness, 0, expires, remark);
 
     var { logs } = await swear.startTrialFromNote(dataInsurer, encoded, trial.address, swarmHash)
     let { caseId, commitmentHash } = logs[0].args
@@ -94,7 +94,7 @@ contract('Storage (proof)', (accounts) => {
 
     await expectFail(swap.submitNote(1, amount, dataOwner, witness, 0, expires, remark, note.sig, { from: dataOwner }));
 
-    let encoded = await swap.encodeNote(dataOwner, 1, amount, witness, 0, expires, remark);
+    let encoded = await swap.encodeNote(swap.address, dataOwner, 1, amount, witness, 0, expires, remark);
 
     var { logs } = await swear.startTrialFromNote(dataInsurer, encoded, trial.address, swarmHash)
     let { caseId, commitmentHash } = logs[0].args

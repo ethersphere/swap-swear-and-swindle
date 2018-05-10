@@ -10,7 +10,7 @@ async function signCheque(signer, beneficiary, serial, amount) {
 
 async function signNote(signer, beneficiary, serial, amount, witness, validFrom, validUntil, remark) {
   const swap = await Swap.deployed();
-  const hash = await swap.noteHash(beneficiary, serial, amount, witness, validFrom, validUntil, remark);
+  const hash = await swap.noteHash(swap.address, beneficiary, serial, amount, witness, validFrom, validUntil, remark);
   return { ...sign(signer, hash), hash };
 }
 
