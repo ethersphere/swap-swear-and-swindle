@@ -4,7 +4,7 @@ const { sign } = require('./testutils')
 
 async function signCheque(signer, beneficiary, serial, amount) {
   const swap = await Swap.deployed();
-  const hash = await swap.chequeHash(beneficiary, serial, amount);
+  const hash = await swap.chequeHash(swap.address, beneficiary, serial, amount);
   return sign(signer, hash);
 }
 

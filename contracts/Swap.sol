@@ -79,7 +79,7 @@ contract Swap is SW3Utils {
   function submitCheque(address beneficiary, uint serial, uint amount, bytes sig) public {
     require(msg.sender == beneficiary);
     /* verify signature */
-    require(owner ==  recoverSignature(chequeHash(beneficiary, serial, amount), sig));
+    require(owner ==  recoverSignature(chequeHash(address(this), beneficiary, serial, amount), sig));
     require(amount > cheques[beneficiary].amount);
     _submitChequeInternal(beneficiary, serial, amount);
   }
@@ -87,8 +87,8 @@ contract Swap is SW3Utils {
   /* TODO: security implications of anyone being able to call this and the resulting timeout delay */
   function submitChequeLower(address beneficiary, uint serial, uint amount, bytes ownerSig, bytes beneficarySig) public {
     /* verify signature */
-    require(owner == recoverSignature(chequeHash(beneficiary, serial, amount), ownerSig));
-    require(beneficiary == recoverSignature(chequeHash(beneficiary, serial, amount), beneficarySig));
+    require(owner == recoverSignature(chequeHash(address(this), beneficiary, serial, amount), ownerSig));
+    require(beneficiary == recoverSignature(chequeHash(address(this), beneficiary, serial, amount), beneficarySig));
 
     _submitChequeInternal(beneficiary, serial, amount);
   }
@@ -253,7 +253,7 @@ contract Swap is SW3Utils {
 
     /* TODO: this breaks with note.beneficiary = 0 */
     require(note.beneficiary == recoverSignature(invoiceId, invoiceSig));
-    require(owner == recoverSignature(chequeHash(note.beneficiary, serial + 1, cumulativeTotal), chequeSig));
+    require(owner == recoverSignature(chequeHash(address(this), note.beneficiary, serial + 1, cumulativeTotal), chequeSig));
 
     /* TODO: this breaks with note.amount = 0 */
     require(note.amount == amount);

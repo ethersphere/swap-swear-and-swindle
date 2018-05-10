@@ -5,8 +5,8 @@ import "./abstracts/AbstractWitness.sol";
 
 contract SW3Utils {
 
-  function chequeHash(address beneficiary, uint serial, uint amount) public view returns (bytes32) {
-    return keccak256(abi.encodePacked(address(this), serial, beneficiary, amount));
+  function chequeHash(address swap, address beneficiary, uint serial, uint amount) public view returns (bytes32) {
+    return keccak256(abi.encodePacked(swap, serial, beneficiary, amount));
   }
 
   function noteHash(address swap, address beneficiary, uint index, uint amount, address witness, uint validFrom, uint validUntil, bytes32 remark) public view returns (bytes32) {
