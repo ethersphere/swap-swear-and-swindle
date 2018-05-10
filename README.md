@@ -2,7 +2,7 @@
 
 Contracts for Swap, Swear and Swindle.
 
-**Please note that all contracts within this repository are considered highly experimental, probably contain critical flaws and will cause loss of money if used in production. Also Swear / Swindle are pure experimentation at this time and will probably replaced completely.**
+**Please note that all contracts within this repository are considered highly experimental, contain critical flaws and will cause loss of money if used in production. Also Swear / Swindle are pure experimentation at this time and will probably replaced completely.**
 
 ## Tests
 
@@ -21,8 +21,9 @@ Then run the tests with `truffle test`.
 
 #### Swear
 
-* does not use SWAP at the moment
-* heavy on-chain footprint
+* can work on-chain
+* can work with Swap (but contains ugly hacks)
+* many other deviations
 
 #### Swindle
 
