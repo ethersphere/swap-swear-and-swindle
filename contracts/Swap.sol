@@ -1,9 +1,10 @@
 pragma solidity ^0.4.19;
 import "zeppelin/math/SafeMath.sol";
 import "zeppelin/math/Math.sol";
+import "./SW3Utils.sol";
 import "./abstracts/AbstractWitness.sol";
 
-contract Swap {
+contract Swap is SW3Utils {
   using SafeMath for uint;
 
   event Deposit(address depositor, uint amount);
@@ -59,37 +60,6 @@ contract Swap {
 
   function liquidBalanceFor(address beneficiary) public view returns(uint) {
     return liquidBalance().add(hardDeposits[beneficiary].amount);
-  }
-
-  function chequeHash(address beneficiary, uint serial, uint amount) public view returns (bytes32) {
-    return keccak256(abi.encodePacked(address(this), serial, beneficiary, amount));
-  }
-
-  function noteHash(address beneficiary, uint index, uint amount, address witness, uint validFrom, uint validUntil, bytes32 remark) public view returns (bytes32) {
-    return keccak256(encodeNote(beneficiary, index, amount, witness, validFrom, validUntil, remark));
-  }
-
-  function invoiceHash(bytes32 noteId, uint swapBalance, uint serial) public pure returns (bytes32) {
-    return keccak256(abi.encodePacked(noteId, swapBalance, serial));
-  }
-
-  function encodeNote(address beneficiary, uint index, uint amount, address witness, uint validFrom, uint validUntil, bytes32 remark) public view returns (bytes) {
-    return abi.encodePacked(address(this), index, beneficiary, amount, witness, validFrom, validUntil, remark);
-  }
-
-  function decodeSignature(bytes sig) internal pure returns (bytes32 r, bytes32 s, uint8 v) {
-    assembly {
-      r := mload(add(sig, 32))
-      s := mload(add(sig, 64))
-      v := and(mload(add(sig, 65)), 0xff)
-    }
-
-    v += 27; /* TODO: mainnet? */
-  }
-
-  function recoverSignature(bytes32 hash, bytes sig) internal pure returns (address) {
-    var (r, s, v) = decodeSignature(sig);
-    return ecrecover(keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", hash)), v, r, s);
   }
 
   function _submitChequeInternal(address beneficiary, uint serial, uint amount) internal {

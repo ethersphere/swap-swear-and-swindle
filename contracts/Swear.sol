@@ -2,9 +2,10 @@ pragma solidity ^0.4.19;
 import "./abstracts/AbstractRules.sol";
 import "./abstracts/AbstractWitness.sol";
 import "./Swindle.sol";
+import "./SW3Utils.sol";
 import "zeppelin/math/SafeMath.sol";
 
-contract Swear is AbstractWitness {
+contract Swear is SW3Utils, AbstractWitness {
   using SafeMath for uint;
 
   event CommitmentAdded(bytes32 commitmentHash, address indexed provider, address rules);
@@ -109,17 +110,14 @@ contract Swear is AbstractWitness {
     return guiltyNotes[owner][noteId] ? AbstractWitness.TestimonyStatus.VALID : AbstractWitness.TestimonyStatus.INVALID;
   }
 
-  function startTrialFromNote(address provider, bytes note, address trial, bytes32 payload) public returns(bytes32) {
+  function startTrialFromNote(address provider, bytes note, address trial, bytes32 payload) public returns(address) {
     bytes32 noteId = keccak256(note);
     bytes32 commitmentHash = keccak256(provider, trial, noteId);
 
     address beneficiary;
     bytes32 remark;
 
-    assembly {
-      beneficiary := div(mload(add(note, 84)), exp(2,96))
-      remark := mload(add(note, 220))
-    }
+    (,beneficiary,,,,,,remark) = decodeNote(note);
 
     require(keccak256(abi.encodePacked(trial, payload)) == remark);
 
