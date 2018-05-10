@@ -117,7 +117,7 @@ contract Swear is AbstractWitness {
     bytes32 remark;
 
     assembly {
-      beneficiary := div(mload(add(note, 32)), exp(2,96))
+      beneficiary := div(mload(add(note, 84)), exp(2,96))
       remark := mload(add(note, 220))
     }
 
