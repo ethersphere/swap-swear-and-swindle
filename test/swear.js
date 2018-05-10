@@ -70,7 +70,7 @@ contract('swear', function(accounts) {
 
     await increaseTime(3 * 30 * 24 * 3600)
 
-    var { logs } = await swear.startTrial(commitmentHash)
+    var { logs } = await swear.startTrial(commitmentHash, { from: alice })
 
     let { caseId } = logs[0].args
 
@@ -95,9 +95,12 @@ contract('swear', function(accounts) {
       event: 'StateTransition', args: { caseId, from: WITNESS_2, to: GUILTY }
     }])
 
+    const expectedBalanceAlice = (await getBalance(alice)).plus(100)
+
     await swindle.endTrial(caseId);
 
-    (await getBalance(swear.address)).should.bignumber.equal(0)
+    (await getBalance(swear.address)).should.bignumber.equal(0);
+    (await getBalance(alice)).should.bignumber.equal(expectedBalanceAlice);
   })
 
 })
