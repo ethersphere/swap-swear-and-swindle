@@ -51,7 +51,7 @@ contract('Storage (slashed)', (accounts) => {
 
     let encoded = await swap.encodeNote(swap.address, dataOwner, 1, amount, witness, 0, expires, remark);
 
-    var { logs } = await swear.startTrialFromNote(dataInsurer, encoded, trial.address, swarmHash)
+    var { logs } = await swear.startTrialFromNote(encoded, trial.address, swarmHash, note.sig)
     let { caseId, commitmentHash } = logs[0].args
 
     await increaseTime(3600 * 24 * 31)
@@ -96,7 +96,7 @@ contract('Storage (proof)', (accounts) => {
 
     let encoded = await swap.encodeNote(swap.address, dataOwner, 1, amount, witness, 0, expires, remark);
 
-    var { logs } = await swear.startTrialFromNote(dataInsurer, encoded, trial.address, swarmHash)
+    var { logs } = await swear.startTrialFromNote(encoded, trial.address, swarmHash, note.sig)
     let { caseId, commitmentHash } = logs[0].args
 
     await hashWitness.testify(swap.address, dataOwner, 1, amount, witness, 0, expires, trial.address, swarmHash, data)

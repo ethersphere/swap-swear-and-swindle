@@ -110,9 +110,11 @@ contract Swear is SW3Utils, AbstractWitness {
     return guiltyNotes[owner][noteId] ? AbstractWitness.TestimonyStatus.VALID : AbstractWitness.TestimonyStatus.INVALID;
   }
 
-  function startTrialFromNote(address provider, bytes note, address trial, bytes32 payload) public returns(address) {
+  function startTrialFromNote(bytes note, address trial, bytes32 payload, bytes sig) public returns(address) {
     bytes32 noteId = keccak256(note);
     bytes32 commitmentHash = keccak256(provider, trial, noteId);
+
+    address provider = recoverSignature(noteId, sig);
 
     address beneficiary;
     bytes32 remark;
