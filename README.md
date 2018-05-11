@@ -2,7 +2,7 @@
 
 Contracts for Swap, Swear and Swindle.
 
-**Please note that all contracts within this repository are considered highly experimental, contain critical flaws and will cause loss of money if used in production. Also Swear / Swindle are pure experimentation at this time and will probably replaced completely.**
+**Please note that all contracts within this repository are considered highly experimental, contain critical flaws (missing checks, badly chosen timeouts, etc.) and will cause loss of money if used in production. Also Swear / Swindle are pure experimentation at this time and will probably replaced completely.**
 
 ## Tests
 
@@ -71,7 +71,7 @@ For `Swap` owner is the contract owner, in `Swindle` it would be the service pro
 
 #### Trial Rules
 
-Trials are implemented as a finite state machine with state identified as `uint8`s. The initial state is determined by the `getInitialStatus` function from the `rules` contract. The next state is determined by the state and witness outcome alone using `nextStatus` (which should be `pure`). For every state the rules provide an associated `Witness` (`getWitness`) and a maximum wait time for the witness.
+Trials are implemented as a finite state machine with state identified as `uint8`s (with values smaller than 3 being reserved for `NOT_STARTED`, `GUILTY`, `NOT_GUILTY`). The initial state is determined by the `getInitialStatus` function from the `rules` contract. The next state is determined by the state and witness outcome alone using `nextStatus` (which should be `pure`). For every state the rules provide an associated `Witness` (`getWitness`) and a maximum wait time for the witness.
 The rules contract itself should ideally be stateless.
 
 The rules also contain `getEpoch` and `getDeposit` to determine the required deposit and service duration. Both of those are ignored in case of offchain deposits (here it is the plaintiffs responsibility to check the `Swap` note before accepting the service to be guaranteed).
@@ -104,17 +104,23 @@ If the `client` is not satisfied with the service a trial can be started using `
 
 If `Swindle` calls compensate no payout takes place, instead `Swear` records that it should return `VALID` if being called as a `Witness` by the `Swap` with the corresponding `noteId`.
 
-Starting multiple trials for the same note is currently broken.
+Starting multiple trials for the same note is currently broken. As hard deposits can currently be decreased to 0 within 2 days all offchain service provisions have de-facto no solvency guarantees.
 
 ## Tests
 
+There are two test trials in this repository: `OracleTrial` and `SimpleTrial` (with `HashWitness`).
+
 #### OracleTrial
 
-
+In the `OracleTrial` there a two `OracleWitness`es. An `OracleWitness` is a `Witness` meant for testing whose testimony for some `noteId` can be set in advance. For the `OracleTrial` to reach a `GUILTY` verdict both of the witnesses need to return a `VALID` testimony. In all other cases the trial ends with `NOT_GUILTY`.
 
 #### SimpleTrial with HashWitness
 
+A `SimpleTrial` only has a single stage. The `witness` is passed in as a constructor argument.
 
+In the `storage test` the witness is a `HashWitness`. A `HashWitness` expects `noteId` to be in the format used by offchain deposits. The `HashWitness` returns a `VALID` testimony if `data` was provided to the contract (where `keccak256(data) == payload`) otherwise it returns `PENDING`.
+
+It can be seen as very primitive form of chunk insurance (and is compatible with Swarm POC-2 chunks).
 
 ## Deviations from the (unreleased) sw3 paper
 
