@@ -4,6 +4,7 @@ import "zeppelin/math/Math.sol";
 import "./SW3Utils.sol";
 import "./abstracts/AbstractWitness.sol";
 
+/// @title Swap Channel Contract
 contract Swap is SW3Utils {
   using SafeMath for uint;
 
