@@ -2,6 +2,7 @@ pragma solidity ^0.4.19;
 import "../abstracts/AbstractRules.sol";
 import "../witnesses/OracleWitness.sol";
 
+/// @title OracleTrial - a simple test trial with 2 OracleWitnesses
 contract OracleTrial is AbstractRules {
   uint8 constant TRIAL_STATUS_WITNESS_1 = 3;
   uint8 constant TRIAL_STATUS_WITNESS_2 = 4;

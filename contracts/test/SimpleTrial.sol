@@ -2,6 +2,7 @@ pragma solidity ^0.4.19;
 import "../abstracts/AbstractRules.sol";
 import "../abstracts/AbstractWitness.sol";
 
+/// @title SimpleTrial - a simple test trial with a Witness as argument
 contract SimpleTrial is AbstractRules {
   uint8 constant TRIAL_STATUS_WITNESS = 3;
 

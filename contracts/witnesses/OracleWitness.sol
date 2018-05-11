@@ -1,6 +1,7 @@
 pragma solidity ^0.4.19;
 import "../abstracts/AbstractWitness.sol";
 
+/// @title OracleWitness - Witness for testing
 contract OracleWitness is AbstractWitness {
   mapping (bytes32 => TestimonyStatus) testimonies;
 

@@ -2,6 +2,7 @@ pragma solidity ^0.4.19;
 import "../abstracts/AbstractWitness.sol";
 
 /* low-quality implementation of a witness for BMT, TO BE REPLACED */
+/// @title ChunkWitness - Witness expects data for some Swarm POC3 hash
 contract ChunkWitness is AbstractWitness {
   uint constant span = 2048;
   uint constant section = 64;
@@ -15,6 +16,7 @@ contract ChunkWitness is AbstractWitness {
     return testimonies[noteId];
   }
 
+  /* remark is expected to be keccak256(trial, swarmHash(data)) */
   function testify(address swap, address beneficiary, uint index, uint amount, address witness, uint validFrom, uint validUntil, address trial, bytes32 hash, bytes data) public {
     bytes32 remark = keccak256(abi.encodePacked(trial, hash));
 
