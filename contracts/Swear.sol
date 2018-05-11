@@ -130,7 +130,7 @@ contract Swear is SW3Utils, AbstractWitness {
       rules: AbstractRules(trial),
       noteId: noteId,
       timeout: 0,
-      cases: 0,
+      cases: 1,
       note: true
     });
 
