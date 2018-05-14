@@ -1,9 +1,9 @@
-pragma solidity ^0.4.19;
+pragma solidity ^0.4.23;
 import "./abstracts/AbstractRules.sol";
 import "./abstracts/AbstractWitness.sol";
 import "./Swindle.sol";
 import "./SW3Utils.sol";
-import "zeppelin/math/SafeMath.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /// @title Swear Contract
 contract Swear is SW3Utils, AbstractWitness {
@@ -142,7 +142,7 @@ contract Swear is SW3Utils, AbstractWitness {
   mapping (address => mapping (bytes32 => bool)) public guiltyNotes;
 
   /// @notice witness implementation of swear
-  function testimonyFor(address owner, address beneficiary, bytes32 noteId) public view returns (TestimonyStatus) {
+  function testimonyFor(address owner, address , bytes32 noteId) public view returns (TestimonyStatus) {
     return guiltyNotes[owner][noteId] ? AbstractWitness.TestimonyStatus.VALID : AbstractWitness.TestimonyStatus.INVALID;
   }
 

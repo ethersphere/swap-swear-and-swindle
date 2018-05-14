@@ -1,4 +1,4 @@
-pragma solidity ^0.4.19;
+pragma solidity ^0.4.23;
 import "../abstracts/AbstractWitness.sol";
 
 /// @title OracleWitness - Witness for testing
