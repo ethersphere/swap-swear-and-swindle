@@ -1,4 +1,4 @@
-pragma solidity ^0.4.19;
+pragma solidity ^0.4.23;
 import "../abstracts/AbstractRules.sol";
 import "../abstracts/AbstractWitness.sol";
 
@@ -8,7 +8,7 @@ contract SimpleTrial is AbstractRules {
 
   AbstractWitness public witness;
 
-  constructor(AbstractWitness _witness) {
+  constructor(AbstractWitness _witness) public {
     witness = _witness;
   }
 

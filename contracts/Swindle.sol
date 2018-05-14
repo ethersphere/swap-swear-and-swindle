@@ -1,4 +1,4 @@
-pragma solidity ^0.4.19;
+pragma solidity ^0.4.23;
 import "./Swear.sol";
 import "./abstracts/AbstractRules.sol";
 import "./abstracts/AbstractWitness.sol";

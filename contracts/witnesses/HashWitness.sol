@@ -1,4 +1,4 @@
-pragma solidity ^0.4.19;
+pragma solidity ^0.4.23;
 import "../abstracts/AbstractWitness.sol";
 
 /// @title HashWitness - Witness expects data for some keccak256 hash to be submitted
@@ -20,7 +20,7 @@ contract HashWitness is AbstractWitness {
     bytes32 noteId = keccak256(abi.encodePacked(swap, index, beneficiary, amount, witness, validFrom, validUntil, remark));
 
     if(keccak256(data) == hash) {
-      Testified(noteId, hash);
+      emit Testified(noteId, hash);
       testimonies[noteId] = TestimonyStatus.VALID;
     }
   }

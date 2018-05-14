@@ -1,4 +1,4 @@
-pragma solidity ^0.4.19;
+pragma solidity ^0.4.23;
 import "../abstracts/AbstractWitness.sol";
 
 /* low-quality implementation of a witness for BMT, TO BE REPLACED */
@@ -23,7 +23,7 @@ contract ChunkWitness is AbstractWitness {
     bytes32 noteId = keccak256(abi.encodePacked(swap, index, beneficiary, amount, witness, validFrom, validUntil, remark));
 
     if(bmt(data) == hash) {
-      Testified(noteId, hash);
+      emit Testified(noteId, hash);
       testimonies[noteId] = TestimonyStatus.VALID;
     }
   }
@@ -33,7 +33,7 @@ contract ChunkWitness is AbstractWitness {
   }
 
   /* based on RefHasher from go-ethereum */
-  function h(bytes d, uint s) returns (bytes32) {
+  function h(bytes d, uint s) private returns (bytes32) {
     uint length = d.length;
 
     bytes memory left = d;
@@ -58,7 +58,7 @@ contract ChunkWitness is AbstractWitness {
     return result;
   }
 
-  function swap_uint64(uint64 val) returns (uint64)
+  function swap_uint64(uint64 val) private pure returns (uint64)
   {
     val = ((val << 8) & 0xFF00FF00FF00FF00 ) | ((val >> 8) & 0x00FF00FF00FF00FF );
     val = ((val << 16) & 0xFFFF0000FFFF0000 ) | ((val >> 16) & 0x0000FFFF0000FFFF );

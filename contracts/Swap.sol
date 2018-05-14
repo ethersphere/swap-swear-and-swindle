@@ -1,6 +1,6 @@
-pragma solidity ^0.4.19;
-import "zeppelin/math/SafeMath.sol";
-import "zeppelin/math/Math.sol";
+pragma solidity ^0.4.23;
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "openzeppelin-solidity/contracts/math/Math.sol";
 import "./SW3Utils.sol";
 import "./abstracts/AbstractWitness.sol";
 
