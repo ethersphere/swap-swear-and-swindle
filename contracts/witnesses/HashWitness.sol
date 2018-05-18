@@ -14,15 +14,8 @@ contract HashWitness is AbstractWitness {
   }
 
   /* remark is expected to be keccak256(trial, keccak256(data)) */
-  function testify(address swap, address beneficiary, uint index, uint amount, address witness, uint validFrom, uint validUntil, address trial, bytes32 hash, bytes data) public {
-    bytes32 remark = keccak256(abi.encodePacked(trial, hash));
-
-    bytes32 noteId = keccak256(abi.encodePacked(swap, index, beneficiary, amount, witness, validFrom, validUntil, remark));
-
-    if(keccak256(data) == hash) {
-      emit Testified(noteId, hash);
-      testimonies[noteId] = TestimonyStatus.VALID;
-    }
+  function testify(bytes data) public {
+    testimonies[keccak256(data)] = TestimonyStatus.VALID;    
   }
 
 }

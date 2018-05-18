@@ -29,9 +29,8 @@ contract Swear is SW3Utils, AbstractWitness {
     uint deposit; /* amount that was deposited into this contract or 0 for Swap based commitments */
     uint timeout; /* end of the service or 0 for Swap based commitments  */
     AbstractRules rules; /* rules of the game */
+    bytes32 payload;
     bytes32 noteId; /* noteId to be passed to the witness, arbitrary data in onchain case otherwise hash of the Swap note */
-
-    bool note; /* flag indicating that this was an offchain commitment */
 
     uint cases; /* number of open cases */
   }
@@ -42,15 +41,15 @@ contract Swear is SW3Utils, AbstractWitness {
   /// @notice add an onchain commitment (sent amount needs to be according to the rules)
   /// @param rules rules contract to use
   /// @param timeout end time for the service (needs to be according to the rules)
-  /// @param noteId metadata for the witnesses (arbitrary 32 bytes)
-  function addCommitment(address rules, uint timeout, bytes32 noteId) public payable {
+  /// @param payload metadata for the witnesses (arbitrary 32 bytes)
+  function addCommitment(address rules, uint timeout, bytes32 payload) public payable {
     /* check enough ether were sent */
     require(msg.value >= AbstractRules(rules).getDeposit());
     /* check the timeout satisfies the rules */
     require(timeout >= now + AbstractRules(rules).getEpoch());
 
     /* compute the commitmentHash identifying this commitment */
-    bytes32 commitmentHash = keccak256(msg.sender, rules, noteId);
+    bytes32 commitmentHash = keccak256(msg.sender, rules, payload);
 
     /* make sure the same commitment has not happened before */
     /* TODO: commitmentHash should probably include more things */
@@ -62,10 +61,10 @@ contract Swear is SW3Utils, AbstractWitness {
       provider: msg.sender,
       deposit: msg.value,
       rules: AbstractRules(rules),
-      noteId: noteId,
+      noteId: 0,
+      payload: payload,
       timeout: timeout,
-      cases: 0, /* there are no open cases in the beginning */
-      note: false /* this is an onchain commitment */
+      cases: 0 /* there are no open cases in the beginning */
     });
 
     emit CommitmentAdded(commitmentHash, msg.sender, rules);
@@ -79,7 +78,7 @@ contract Swear is SW3Utils, AbstractWitness {
   function compensate(bytes32 commitmentHash, address beneficiary, uint reward) public {
     require(msg.sender == address(swindle));
     Commitment storage commitment = commitments[commitmentHash];
-    if(!commitment.note) {
+    if(commitment.noteId == 0) {
       /* if this is an onchain commitment, reduce the deposit and transfer the compensation */
       commitment.deposit = commitment.deposit.sub(reward);
       beneficiary.transfer(reward);
@@ -124,9 +123,9 @@ contract Swear is SW3Utils, AbstractWitness {
     commitment.cases++;
 
     /* initiate the swindle trial, swindle will call back once its over */
-    bytes32 caseId = swindle.startTrial(provider, plaintiff, commitment.noteId, commitmentHash, commitment.rules);
+    bytes32 caseId = swindle.startTrial(provider, plaintiff, commitment.payload, commitmentHash, commitment.rules);
 
-    emit TrialStarted(commitmentHash, caseId, commitment.noteId);
+    emit TrialStarted(commitmentHash, caseId, commitment.payload);
   }
 
   /// @notice callback for swindle at the end of the trial
@@ -173,13 +172,13 @@ contract Swear is SW3Utils, AbstractWitness {
       deposit: 0, /* handled by Swap */
       rules: AbstractRules(trial),
       noteId: noteId,
+      payload: payload,
       timeout: 0, /* handled by Swap */
-      cases: 1, /* initialize with 1 open case, WARNING: breaks when this is called multiple times */
-      note: true /* mark as offchain commitment */
+      cases: 1 /* initialize with 1 open case, WARNING: breaks when this is called multiple times */
     });
 
     /* initiate the swindle trial, swindle will call back once its over */
-    bytes32 caseId = swindle.startTrial(provider, beneficiary, noteId, commitmentHash, AbstractRules(trial));
-    emit TrialStarted(commitmentHash, caseId, noteId);
+    bytes32 caseId = swindle.startTrial(provider, beneficiary, payload, commitmentHash, AbstractRules(trial));
+    emit TrialStarted(commitmentHash, caseId, payload);
   }
 }
