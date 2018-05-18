@@ -64,10 +64,8 @@ contract SW3Utils {
       remark := mload(add(note, 220))
     }
 
-    bytes32 id = noteHash(swap, beneficiary, index, amount, witness, validFrom, validUntil, remark);
-
     return Note({
-      id: id,
+      id: keccak256(note),
       swap: swap,
       index: index,
       beneficiary: beneficiary,
