@@ -1,6 +1,6 @@
 const HashWitness = artifacts.require('./HashWitness.sol')
 const ChunkWitness = artifacts.require('./ChunkWitness.sol')
-const Swear = artifacts.require('./Swear.sol')
+const Swear = artifacts.require('./SwearSwap.sol')
 const Swindle = artifacts.require('./Swindle.sol')
 const Swap = artifacts.require('./Swap.sol')
 const SimpleTrial = artifacts.require('./SimpleTrial.sol')
