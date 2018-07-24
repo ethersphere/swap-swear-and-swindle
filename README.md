@@ -35,7 +35,7 @@ Notes have the following fields:
 | ------------ | ------------- |
 | index        | used as a nonce, must be non-zero |
 | amount       | amount to be paid (or 0 if blank cheque) |
-| beneficiary  | beneficiary of the note (or 0 if bounty) |
+| beneficiary  | beneficiary of the note |
 | witness      | witness used as an escrow condition (or 0 , see `Swindle` below) |
 | validFrom    | earliest date the note can be cashed (or 0) |
 | validUntil   | latest date the note can be cashed (or 0) |
@@ -47,7 +47,6 @@ The note needs to be valid both at submission and cashing. This means:
 * `validFrom` < now < `validUntil`
 * `witness` (if not 0) testimony returns `VALID`
 
-If the `beneficiary` is 0, it is set to the submitter.
 Part of the note might bounce, just as with cheques (`_payout`).
 
 #### Invoices
@@ -62,12 +61,12 @@ Fulfilled notes can be subsumed in the cheque mechanism. Instead of cashing the 
 
 A `witness` is any contract supporting the following function:
 
-`function testimonyFor(address owner, address beneficiary, bytes32 noteId) public view returns (TestimonyStatus)` where `TestimonyStatus` can be
+`function testimonyFor(address owner, address beneficiary, bytes32 payload) public view returns (TestimonyStatus)` where `TestimonyStatus` can be
 * `VALID`: the submitted evidence was found to be valid
 * `INVALID`: the submitted evidence was found to be invalid
 * `PENDING`: no evidence has been submitted so far
 
-For `Swap` owner is the contract owner, in `Swindle` it would be the service provider (who is also the `Swap` owner if the deposit is handled offchain). What needs to checked can be determined from the `noteId` which could be arbitrary data in case of onchain deposits or the hash of a `Swap` note (information can then be encoded in the `remark` field, see the `HashWitness` example).
+For `Swap` owner is the contract owner, in `Swindle` it would be the service provider (who is also the `Swap` owner if the deposit is handled offchain). What needs to checked can be determined from the `payload` which could be arbitrary data.
 
 #### Trial Rules
 
@@ -80,17 +79,17 @@ The rules also contain `getEpoch` and `getDeposit` to determine the required dep
 
 Anyone can start a trial by providing a service provider, a plaintiff, a `rules` (also called trial) contract, a `noteId` (case data for the witnesses) and a `commitmentHash` identifying the commitment with the caller (which is treated as a `Swear` contract). The trial is then identified by a `caseId`.
 
-The trial can be advanced one state at a time using the `continueTrial` function. `Swindle` calls the next witness with the `noteId` and moves to the next state according to the `rules`. If the testimony is still `PENDING` nothing happens unless the witness has timed out in which case it is interpreted as `INVALID`.
+The trial can be advanced one state at a time using the `continueTrial` function. `Swindle` calls the next witness with the `payload` and moves to the next state according to the `rules`. If the testimony is still `PENDING` nothing happens unless the witness has timed out in which case it is interpreted as `INVALID`.
 
 Once a terminal state (`GUILTY` or `NOT_GUILTY`) is reached, the trial can be ended using `endTrial`, which informs the `Swear` contract about the outcome. In case of a `GUILTY` verdict Swindle will also notify `Swear` about the necessary compensation (which at the moment is always the entire deposit to the `plaintiff` or the note `beneficiary` in case of a `Swap` note).
 
 ## Swear
 
-`Swear` can handle on-chain deposits for and initiate `Swindle` trials. It can also process `Swap` notes to initiate a trial.
+`Swear` can handle on-chain deposits for and initiate `Swindle` trials. `SwearSwap` can process `Swap` notes to initiate a trial.
 
 #### Onchain service provisions
 
-In the onchain case, the service provider puts a deposit into the `Swear` contract using `addCommitment` specifying the `noteId` (can be arbitrary 32-byte data), the `timeout` and the `rules`. The deposit size and the timeout need to conform with the `rules` for this to be accepted. The deposit can be withdraw again (`withdraw`) after the timeout if there are no open cases (and no trial was lost).
+In the onchain case, the service provider puts a deposit into the `Swear` contract using `addCommitment` specifying the `payload` (can be arbitrary 32-byte data), the `timeout` and the `rules`. The deposit size and the timeout need to conform with the `rules` for this to be accepted. The deposit can be withdraw again (`withdraw`) after the timeout if there are no open cases (and no trial was lost).
 
 Trials can be started using `startTrial` which records the ongoing trial ( thus preventing withdraws) and instructs `Swindle` to start the trial.
 
@@ -98,11 +97,11 @@ At the end of the trial `notifyTrialEnd` will be called from `Swindle` which dec
 
 #### Offchain service provisions
 
-In the offchain case, the service provider signs a `Swap` note with the `client` being the `beneficiary`, the `amount` as the security deposit, `Swear` as the `witness` and the service timeout as `validUntil`. If there is no dispute over the service the note will eventually expire and the provider is no longer at risk of losing the deposit. No onchain activity is required in this case (except potentially making sure everything is covered by hard deposits).
+In the offchain case, the service provider signs a `Swap` note with the `client` being the `beneficiary`, the `amount` as the security deposit, `SwearSwap` as the `witness` and the service timeout as `validUntil`. If there is no dispute over the service the note will eventually expire and the provider is no longer at risk of losing the deposit. No onchain activity is required in this case (except potentially making sure everything is covered by hard deposits).
 
 If the `client` is not satisfied with the service a trial can be started using `startTrialFromNote`. In this case `Swear` expects the `remark` field to equal `keccak256(rules, payload)` where `rules` is the address of the trial rules and payload can be arbitrary 32 bytes. `Swear` then records the commitment (with a special `note` flag) and instructs `Swindle` to start the trial (which proceeds in the same way as in the onchain case).
 
-If `Swindle` calls compensate no payout takes place, instead `Swear` records that it should return `VALID` if being called as a `Witness` by the `Swap` with the corresponding `noteId`.
+If `Swindle` calls compensate no payout takes place, instead `Swear` records that it should return `VALID` if being called as a `Witness` by the `Swap` with the corresponding `noteId` as `payload`.
 
 Starting multiple trials for the same note is currently broken. As hard deposits can currently be decreased to 0 within 2 days all offchain service provisions have de-facto no solvency guarantees.
 
