@@ -1,12 +1,13 @@
 pragma solidity ^0.4.23;
 import "./abstracts/AbstractRules.sol";
 import "./abstracts/AbstractWitness.sol";
+import "./abstracts/AbstractSwear.sol";
 import "./Swindle.sol";
 import "./SW3Utils.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /// @title Swear Contract
-contract Swear is SW3Utils {
+contract Swear is AbstractSwear, SW3Utils {
   using SafeMath for uint;
 
   /* fired when an onchain commitment is added */

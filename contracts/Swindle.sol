@@ -1,5 +1,5 @@
 pragma solidity ^0.4.23;
-import "./Swear.sol";
+import "./abstracts/AbstractSwear.sol";
 import "./abstracts/AbstractRules.sol";
 import "./abstracts/AbstractWitness.sol";
 import "./abstracts/AbstractConstants.sol";
@@ -9,7 +9,7 @@ contract Swindle is AbstractConstants {
 
   /* structure to keep track of trial */
   struct Trial {
-    Swear swear; /* address that initiated this trial, should implement the Swear interface */
+    AbstractSwear swear; /* address that initiated this trial, should implement the Swear interface */
     AbstractRules rules; /* rules contract */
     address plaintiff;
     address provider;
@@ -37,7 +37,7 @@ contract Swindle is AbstractConstants {
     bytes32 caseId = keccak256(abi.encodePacked(provider, plaintiff, noteId));
 
     trials[caseId] = Trial({
-      swear: Swear(msg.sender),
+      swear: AbstractSwear(msg.sender),
       rules: rules,
       plaintiff: plaintiff,
       provider: provider,

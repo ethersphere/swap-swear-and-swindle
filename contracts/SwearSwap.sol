@@ -1,12 +1,13 @@
 pragma solidity ^0.4.23;
 import "./abstracts/AbstractRules.sol";
 import "./abstracts/AbstractWitness.sol";
+import "./abstracts/AbstractSwear.sol";
 import "./Swindle.sol";
 import "./SW3Utils.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /// @title Swear Contract
-contract SwearSwap is SW3Utils, AbstractWitness {
+contract SwearSwap is SW3Utils, AbstractWitness, AbstractSwear {
   using SafeMath for uint;
 
   /* fired when a trial with swindle is started */
@@ -35,9 +36,7 @@ contract SwearSwap is SW3Utils, AbstractWitness {
   /// @notice callback for swindle when compensation should take place
   /// @dev either reduces the deposit if onchain or mark note as valid if offchain
   /// @param commitmentHash commitment to compensate from
-  /// @param beneficiary beneficiary to compensate
-  /// @param reward amount to be compensated
-  function compensate(bytes32 commitmentHash, address beneficiary, uint reward) public {
+  function compensate(bytes32 commitmentHash, address, uint) public {
     require(msg.sender == address(swindle));
     Commitment storage commitment = commitments[commitmentHash];
     guiltyNotes[commitment.provider][commitment.noteId] = true;
