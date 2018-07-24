@@ -34,7 +34,7 @@ contract Swindle is AbstractConstants {
   /// @return the caseId of the new trial
   function startTrial(address provider, address plaintiff, bytes32 noteId, bytes32 commitmentHash, AbstractRules rules) public returns (bytes32) {
     /* derive a caseId, WARNING: horribly broken and insecure */
-    bytes32 caseId = keccak256(provider, plaintiff, noteId);
+    bytes32 caseId = keccak256(abi.encodePacked(provider, plaintiff, noteId));
 
     trials[caseId] = Trial({
       swear: Swear(msg.sender),
@@ -60,10 +60,8 @@ contract Swindle is AbstractConstants {
     /* outcome will be written to this variable */
     AbstractWitness.TestimonyStatus outcome;
 
-    address witness;
-    uint expiry;
     /* get the next step from the rules */
-    (witness, expiry) = trial.rules.getWitness(trial.status);
+    (address witness, uint expiry) = trial.rules.getWitness(trial.status);
 
     if(now - trial.lastAction > expiry) {
       /* if too much time has passed assume the testimony to be INVALID */

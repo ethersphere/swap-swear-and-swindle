@@ -47,7 +47,7 @@ contract Swear is SW3Utils {
     require(timeout >= now + AbstractRules(rules).getEpoch());
 
     /* compute the commitmentHash identifying this commitment */
-    bytes32 commitmentHash = keccak256(msg.sender, rules, payload);
+    bytes32 commitmentHash = keccak256(abi.encodePacked(msg.sender, rules, payload));
 
     /* make sure the same commitment has not happened before */
     /* TODO: commitmentHash should probably include more things */

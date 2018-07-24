@@ -163,11 +163,8 @@ contract Swap is SW3Utils {
     uint value = info.amount.sub(info.paidOut); /* throws if paidOut > amount */
     require(value > 0);
 
-    uint payout;
-    uint bounced;
-
     /* do the actual payout */
-    (payout, bounced) = _payout(beneficiary, value);
+    (uint payout, uint bounced) = _payout(beneficiary, value);
 
     /* emit the correct event depending on wether it bounced or not */
     if(bounced != 0) emit ChequeBounced(beneficiary, info.serial, payout, bounced);
@@ -297,10 +294,8 @@ contract Swap is SW3Utils {
       require(noteInfo.paidOut.add(amount) <= note.amount);
     }
 
-    uint payout;
-    uint bounced;
     /* actual payout */
-    (payout, bounced) = _payout(note.beneficiary, amount);
+    (uint payout,) = _payout(note.beneficiary, amount);
     /* increase the stored paidOut amount to avoid double payout */
     noteInfo.paidOut += payout;
   }
