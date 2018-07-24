@@ -37,15 +37,8 @@ contract Swap is SW3Utils {
   /* structure to keep track of a note */
   /* most of this probably does not need to be stored, could be resubmitted on payout to save gas */
   struct NoteInfo {
-    uint index; /* only used as a nonce for now, 0 is invalid */
-    uint amount; /* amount of the note */
     uint paidOut; /* total amount paid out */
     uint timeout; /* timeout after which payout can happen */
-    address beneficiary; /* total amount paid out */
-    address witness; /* witness used as escrow */
-    uint validFrom; /* earliest timestamp for submission and payout */
-    uint validUntil; /* latest timestamp for submission and payout */
-    bytes32 remark ;/* arbitrary 32-bytes, can be used to encode information for Swear and witnesses */
   }
 
   /* associates every noteId with a NoteInfo */
@@ -252,10 +245,7 @@ contract Swap is SW3Utils {
   }
 
   /// @dev verify the conditions of a note
-  /// @param noteId hash of the note to check
-  function verifyNote(bytes32 noteId) internal view {
-    NoteInfo storage note = notes[noteId];
-
+  function verifyNote(Note memory note) internal view {
     /* if there is validFrom make sure it's in the past */
     if(note.validFrom != 0) require(now >= note.validFrom);
     /* if there is validUntil make sure it's in the future */
@@ -264,56 +254,47 @@ contract Swap is SW3Utils {
     /* if there is a witness check the escrow condition */
     if(note.witness != address(0x0)) {
       /* TODO: should be STATIC_CALL, will be so automatically in Solidity 0.5 */
-      require(AbstractWitness(note.witness).testimonyFor(owner, note.beneficiary, noteId) == AbstractWitness.TestimonyStatus.VALID);
+      require(AbstractWitness(note.witness).testimonyFor(owner, note.beneficiary, note.id) == AbstractWitness.TestimonyStatus.VALID);
     }
   }
 
   /// @notice submit a note
   /// @param sig signature of the note
-  function submitNote(uint index, uint amount, address beneficiary, address witness, uint validFrom, uint validUntil, bytes32 remark, bytes sig) public {
-    bytes32 noteId = noteHash(address(this), beneficiary, index, amount, witness, validFrom, validUntil, remark);
+  function submitNote(bytes encoded, bytes sig) public {
+    Note memory note = decodeNote(encoded);
+
     /* verify the signature of the owner */
-    require(owner == recoverSignature(noteId, sig));
+    require(owner == recoverSignature(note.id, sig));
     /* make sure the note has not been submitted before */
-    require(notes[noteId].index == 0);
+    require(notes[note.id].timeout == 0);
 
-    /* if there is no beneficiary, it is the sender, needed for bounties, probably broken */
-    if(beneficiary == address(0x0)) beneficiary = msg.sender;
-
-    notes[noteId] = NoteInfo({
-      index: index,
-      amount: amount,
-      beneficiary: beneficiary,
+    notes[note.id] = NoteInfo({
       paidOut: 0,
-      witness: witness,
-      validFrom: validFrom,
-      validUntil: validUntil,
-      remark: remark,
       timeout: now + timeout
     });
 
     /* verify that the note conditions hold, else revert everything */
-    verifyNote(noteId);
+    verifyNote(note);
   }
 
   /// @notice cash a note
-  /// @param noteId hash of the note
   /// @param amount amount to be paid out
-  function cashNote(bytes32 noteId, uint amount) public {
-    NoteInfo storage note = notes[noteId];
+  function cashNote(bytes encoded, uint amount) public {
+    Note memory note = decodeNote(encoded);
+    NoteInfo storage noteInfo = notes[note.id];
 
     /* check the note has been submitted */
-    require(note.index != 0);
+    require(noteInfo.timeout != 0);
     /* check that the security delay is over */
-    require(now >= note.timeout);
+    require(now >= noteInfo.timeout);
     /* only the beneficiary of the note may call this */
     require(msg.sender == note.beneficiary);
     /* verify that the note conditions hold, WARNING: re-entrance possible until Solidity 0.5 */
-    verifyNote(noteId);
+    verifyNote(note);
 
     /* if there is a limit make sure we don't exceed it */
     if(note.amount != 0) {
-      require(note.paidOut.add(amount) <= note.amount);
+      require(noteInfo.paidOut.add(amount) <= note.amount);
     }
 
     uint payout;
@@ -321,26 +302,26 @@ contract Swap is SW3Utils {
     /* actual payout */
     (payout, bounced) = _payout(note.beneficiary, amount);
     /* increase the stored paidOut amount to avoid double payout */
-    note.paidOut += payout;
+    noteInfo.paidOut += payout;
   }
 
   /// @notice demonstrate that an invoice was paid
-  /// @param noteId hash of the note
   /// @param swapBalance swapBalance in the invoice
   /// @param serial serial in the invoice
   /// @param invoiceSig beneficiary signature of the invoice
   /// @param amount of the cheque / note
   /// @param chequeSig owner signature of the cheque
-  function submitPaidInvoice(bytes32 noteId, uint swapBalance, uint serial, bytes invoiceSig, uint amount, bytes chequeSig) public {
+  function submitPaidInvoice(bytes encoded, uint swapBalance, uint serial, bytes invoiceSig, uint amount, bytes chequeSig) public {
     /* only the owner may do this */
     require(msg.sender == owner);
-    bytes32 invoiceId = invoiceHash(noteId, swapBalance, serial);
+    Note memory note = decodeNote(encoded);
+    bytes32 invoiceId = invoiceHash(note.id, swapBalance, serial);
 
-    NoteInfo storage note = notes[noteId];
+    NoteInfo storage noteInfo = notes[note.id];
     /* ensure the note has been submitted */
-    require(note.index != 0);
+    require(noteInfo.timeout != 0);
     /* ensure the security delay is not yet over */
-    require(note.timeout != 0 && note.timeout > now);
+    require(noteInfo.timeout > now);
 
     /* the expected amount in the cheque is the old swapBalance plus the note amount  */
     uint cumulativeTotal = swapBalance.add(amount);
@@ -355,7 +336,7 @@ contract Swap is SW3Utils {
     require(note.amount == amount);
     /* TODO: this breaks with note.amount = 0 */
     /* set paidOut to amount to prevent further payout */
-    note.paidOut = amount;
+    noteInfo.paidOut = amount;
 
     /* process the cheque if it is newer than the previous one */
     if(serial > cheques[note.beneficiary].serial)

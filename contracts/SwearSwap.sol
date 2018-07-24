@@ -64,34 +64,28 @@ contract SwearSwap is SW3Utils, AbstractWitness {
   /// @param trial trial rules for the note (needs to match the remark)
   /// @param payload payload (needs to match the remark)
   /// @param sig signature of the note
-  function startTrialFromNote(bytes note, address trial, bytes32 payload, bytes sig) public returns(address) {
-    bytes32 noteId = keccak256(note);
-    bytes32 commitmentHash = keccak256(provider, trial, noteId);
+  function startTrialFromNote(bytes encoded, address trial, bytes32 payload, bytes sig) public returns(address) {
+    Note memory note = decodeNote(encoded);
+    bytes32 commitmentHash = keccak256(provider, trial, note.id);
 
     /* get the provider from the signature */
-    address provider = recoverSignature(noteId, sig);
-
-    address beneficiary;
-    bytes32 remark;
-
-    /* get beneficiary and remark from the note */
-    (,beneficiary,,,,,,remark) = decodeNote(note);
+    address provider = recoverSignature(note.id, sig);
 
     /* ensure that trial and payload match the remark */
-    require(keccak256(abi.encodePacked(trial, payload)) == remark);
+    require(keccak256(abi.encodePacked(trial, payload)) == note.remark);
 
     /* store the commitment */
     commitments[commitmentHash] = Commitment({
       valid: true,
       provider: provider,
       rules: AbstractRules(trial),
-      noteId: noteId,
+      noteId: note.id,
       payload: payload,
       cases: 1 /* initialize with 1 open case, WARNING: breaks when this is called multiple times */
     });
 
     /* initiate the swindle trial, swindle will call back once its over */
-    bytes32 caseId = swindle.startTrial(provider, beneficiary, payload, commitmentHash, AbstractRules(trial));
-    emit TrialStarted(commitmentHash, caseId, payload);
+    bytes32 caseId = swindle.startTrial(provider, note.beneficiary, payload, commitmentHash, AbstractRules(trial));
+    emit TrialStarted(commitmentHash, caseId, note.id);
   }
 }

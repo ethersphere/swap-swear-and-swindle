@@ -51,9 +51,9 @@ contract('Storage', (accounts) => {
 
     let note = await signNote(dataInsurer, dataOwner, 1, amount, witness, 0, expires, remark)
 
-    await expectFail(swap.submitNote(1, amount, dataOwner, witness, 0, expires, remark, note.sig, { from: dataOwner }));
-
     let encoded = await swap.encodeNote(swap.address, dataOwner, 1, amount, witness, 0, expires, remark);
+
+    await expectFail(swap.submitNote(encoded, note.sig, { from: dataOwner }));
 
     var { logs } = await swear.startTrialFromNote(encoded, trial.address, swarmHash, note.sig)
     let { caseId, commitmentHash } = logs[0].args
@@ -64,11 +64,11 @@ contract('Storage', (accounts) => {
 
     await swindle.endTrial(caseId)
 
-    await swap.submitNote(1, amount, dataOwner, witness, 0, expires, remark, note.sig, { from: dataOwner });
+    await swap.submitNote(encoded, note.sig, { from: dataOwner });
 
     await increaseTime(3600 * 24 * 2)
 
-    await swap.cashNote(note.hash, 1, { from: dataOwner })
+    await swap.cashNote(encoded, 1, { from: dataOwner })
   })
 
   it('should accept valid POC2 chunk', async () => {
@@ -90,9 +90,9 @@ contract('Storage', (accounts) => {
 
     let note = await signNote(dataInsurer, dataOwner, 1, amount, witness, 0, expires, remark)
 
-    await expectFail(swap.submitNote(1, amount, dataOwner, witness, 0, expires, remark, note.sig, { from: dataOwner }));
-
     let encoded = await swap.encodeNote(swap.address, dataOwner, 1, amount, witness, 0, expires, remark);
+
+    await expectFail(swap.submitNote(encoded, note.sig, { from: dataOwner }));
 
     var { logs } = await swear.startTrialFromNote(encoded, trial.address, swarmHash, note.sig)
     let { caseId, commitmentHash } = logs[0].args
@@ -103,7 +103,7 @@ contract('Storage', (accounts) => {
 
     await swindle.endTrial(caseId)
 
-    await expectFail(swap.submitNote(1, amount, dataOwner, witness, 0, expires, remark, note.sig, { from: dataOwner }));
+    await expectFail(swap.submitNote(encoded, note.sig, { from: dataOwner }));
   })
 
   it('should accept valid POC3 chunk', async () => {
@@ -126,9 +126,9 @@ contract('Storage', (accounts) => {
 
     let note = await signNote(dataInsurer, dataOwner, 1, amount, witness, 0, expires, remark)
 
-    await expectFail(swap.submitNote(1, amount, dataOwner, witness, 0, expires, remark, note.sig, { from: dataOwner }));
-
     let encoded = await swap.encodeNote(swap.address, dataOwner, 1, amount, witness, 0, expires, remark);
+
+    await expectFail(swap.submitNote(encoded, note.sig, { from: dataOwner }));
 
     var { logs } = await swear.startTrialFromNote(encoded, trial.address, poc3Hash, note.sig)
     let { caseId, commitmentHash } = logs[0].args
@@ -139,7 +139,7 @@ contract('Storage', (accounts) => {
 
     await swindle.endTrial(caseId)
 
-    await expectFail(swap.submitNote(1, amount, dataOwner, witness, 0, expires, remark, note.sig, { from: dataOwner }));
+    await expectFail(swap.submitNote(encoded, note.sig, { from: dataOwner }));
   })
 
 })
