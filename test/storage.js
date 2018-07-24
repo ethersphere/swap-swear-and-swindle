@@ -1,6 +1,6 @@
 const HashWitness = artifacts.require('./HashWitness.sol')
 const ChunkWitness = artifacts.require('./ChunkWitness.sol')
-const Swear = artifacts.require('./Swear.sol')
+const Swear = artifacts.require('./SwearSwap.sol')
 const Swindle = artifacts.require('./Swindle.sol')
 const Swap = artifacts.require('./Swap.sol')
 const SimpleTrial = artifacts.require('./SimpleTrial.sol')
@@ -97,7 +97,7 @@ contract('Storage', (accounts) => {
     var { logs } = await swear.startTrialFromNote(encoded, trial.address, swarmHash, note.sig)
     let { caseId, commitmentHash } = logs[0].args
 
-    await hashWitness.testify(swap.address, dataOwner, 1, amount, witness, 0, expires, trial.address, swarmHash, '0x' + length + data)
+    await hashWitness.testify('0x' + length + data)
 
     await swindle.continueTrial(caseId)
 
@@ -133,7 +133,7 @@ contract('Storage', (accounts) => {
     var { logs } = await swear.startTrialFromNote(encoded, trial.address, poc3Hash, note.sig)
     let { caseId, commitmentHash } = logs[0].args
 
-    await chunkWitness.testify(swap.address, dataOwner, 1, amount, witness, 0, expires, trial.address, poc3Hash, '0x' + data, { gas: 1000000 })
+    await chunkWitness.testify('0x' + data, { gas: 1000000 })
 
     await swindle.continueTrial(caseId)
 
