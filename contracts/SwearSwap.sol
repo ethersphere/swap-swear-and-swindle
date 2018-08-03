@@ -65,23 +65,27 @@ contract SwearSwap is SW3Utils, AbstractWitness, AbstractSwear {
   /// @param sig signature of the note
   function startTrialFromNote(bytes encoded, address trial, bytes32 payload, bytes sig) public returns(address) {
     Note memory note = decodeNote(encoded);
-    bytes32 commitmentHash = keccak256(abi.encodePacked(provider, trial, note.id));
 
     /* get the provider from the signature */
     address provider = recoverSignature(note.id, sig);
+    bytes32 commitmentHash = keccak256(abi.encodePacked(provider, trial, note.id));
 
     /* ensure that trial and payload match the remark */
     require(keccak256(abi.encodePacked(trial, payload)) == note.remark);
 
-    /* store the commitment */
-    commitments[commitmentHash] = Commitment({
-      valid: true,
-      provider: provider,
-      rules: AbstractRules(trial),
-      noteId: note.id,
-      payload: payload,
-      cases: 1 /* initialize with 1 open case, WARNING: breaks when this is called multiple times */
-    });
+    if(!commitments[commitmentHash].valid) {
+      /* store the commitment */
+      commitments[commitmentHash] = Commitment({
+        valid: true,
+        provider: provider,
+        rules: AbstractRules(trial),
+        noteId: note.id,
+        payload: payload,
+        cases: 1 /* initialize with 1 open case */
+      });
+    } else {
+      commitments[commitmentHash].cases++;
+    }
 
     /* initiate the swindle trial, swindle will call back once its over */
     bytes32 caseId = swindle.startTrial(provider, note.beneficiary, payload, commitmentHash, AbstractRules(trial));
