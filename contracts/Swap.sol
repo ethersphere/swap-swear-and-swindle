@@ -17,6 +17,8 @@ contract Swap is SimpleSwap {
   /* associates every noteId with a NoteInfo */
   mapping (bytes32 => NoteInfo) public notes;
 
+  constructor(address _owner) SimpleSwap(_owner) public { }
+
   /// @dev verify the conditions of a note
   function verifyNote(Note memory note) internal view {
     /* if there is validFrom make sure it's in the past */

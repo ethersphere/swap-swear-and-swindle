@@ -45,8 +45,8 @@ contract SimpleSwap is SW3Utils {
   address public owner;
 
   /// @notice constructor, allows setting the owner (needed for "setup wallet as payment")
-  constructor() public {
-    owner = msg.sender;
+  constructor(address _owner) public {
+    owner = _owner;
   }
 
   /// @return the part of the balance that is not covered by hard deposits
