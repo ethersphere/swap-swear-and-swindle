@@ -96,12 +96,10 @@ contract Swindle is AbstractConstants {
       /* if GUILTY instruct Swear to compensate the plaintiff with the entire deposit */
       trial.swear.compensate(trial.commitmentHash, trial.plaintiff, trial.rules.getDeposit());
     } else revert(); /* revert if we are not at a verdict or the trial is invalid */
-
-    /* notify Swear of trial end regardless of verdict */
-    trial.swear.notifyTrialEnd(trial.commitmentHash);
-
     /* invalidate the trial */
     trial.status = 0;
+    /* notify Swear of trial end regardless of verdict */
+    trial.swear.notifyTrialEnd(trial.commitmentHash);
   }
 
 }
