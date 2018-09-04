@@ -1,25 +1,21 @@
 const promisify = (inner) => new Promise((resolve, reject) => inner((err, res) => err ? reject(err) : resolve(res)));
-const getBalance = (addr) => promisify((cb) => web3.eth.getBalance(addr, cb))
-const getTransaction = (txHash) => promisify((cb) => web3.eth.getTransaction(txHash, cb))
+const getBalance = async (addr) => web3.utils.toBN(await web3.eth.getBalance(addr))
 
 async function computeCost(receipt) {
-  let { gasPrice } = await getTransaction(receipt.transactionHash)
-  return gasPrice.times(receipt.gasUsed);
+  let { gasPrice } = await web3.eth.getTransaction(receipt.transactionHash)
+  return web3.utils.toBN(gasPrice * receipt.gasUsed);
 }
 
-let timeshift = web3.eth.getBlock(web3.eth.blockNumber).timestamp - Math.floor(Date.now() / 1000);
-
-function getTime() {
-  return Math.floor(Date.now() / 1000) + timeshift
+async function getTime() {
+  return (await web3.eth.getBlock(await web3.eth.getBlockNumber())).timestamp
 }
 
-const isTestRPC = () => web3.version.node.includes("TestRPC/v2")
+const isTestRPC = async () => (await web3.eth.getNodeInfo()).includes("TestRPC/v2")
 
 const expectFail = async (promise) => {
-  if(isTestRPC()) {
+  if(await isTestRPC()) {
     await promise.should.be.rejectedWith('revert');
   } else {
-    /* handle everything else */
     throw 'figure out the current client behaviour'
   }
 }
@@ -30,19 +26,25 @@ function matchLogs (logs, template) {
     let log = logs[i]
     let temp = template[i]
 
+    log.event.should.equal(temp.event)
+
     for(let arg in temp.args) {
-      if(typeof temp.args[arg] === 'number') {
-        temp.args[arg] = web3.toBigNumber(temp.args[arg])
+      let v = temp.args[arg]
+      if(typeof v === 'number') {
+        v = web3.utils.toBN(v)
+      }
+
+      if(web3.utils.BN.isBN(v)) {
+        log.args[arg].should.eq.BN(v)
+      } else {
+        log.args[arg].should.deep.equal(v)
       }
     }
-
-    log.args.should.deep.equal(temp.args)
-    log.event.should.equal(temp.event)
   }
 }
 
-function sign(signer, hash) {
-  const sig = web3.eth.sign(signer, hash);
+async function sign(signer, hash) {
+  const sig = await web3.eth.sign(hash, signer);
 
   let r = sig.substr(0,66);
   let s = "0x" + sig.substr(66, 64);
@@ -52,9 +54,8 @@ function sign(signer, hash) {
 }
 
 const increaseTime = (sec) => {
-  timeshift += sec;
   return promisify((cb) => {
-    web3.currentProvider.sendAsync(
+    web3.currentProvider.send(
       {
         jsonrpc: "2.0",
         method: "evm_increaseTime",
@@ -72,6 +73,5 @@ module.exports = {
   getTime,
   computeCost,
   getBalance,
-  getTransaction,
   nulladdress: '0x0000000000000000000000000000000000000000'
 }

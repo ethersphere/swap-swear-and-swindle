@@ -5,10 +5,11 @@ const Swindle = artifacts.require('./Swindle.sol')
 
 require('chai')
     .use(require('chai-as-promised'))
-    .use(require('chai-bignumber')(web3.BigNumber))
+    .use(require('bn-chai')(web3.utils.BN))
     .should();
 
-const { getBalance, getTime, increaseTime, expectFail, matchLogs, sign, nulladdress, computeCost } = require('./testutils')
+const { getBalance, getTime, increaseTime, expectFail, matchLogs, matchStruct, sign, nulladdress, computeCost } = require('./testutils')
+const { signCheque, signNote, signInvoice } = require('./swutils')
 
 const VALID = 1
 const INVALID = 2
@@ -23,11 +24,11 @@ contract('OracleTrial', function(accounts) {
   it('should have the right transitions', async() => {
     const oracleTrial = await OracleTrial.deployed();
 
-    (await oracleTrial.nextStatus(VALID, WITNESS_1)).should.bignumber.equal(WITNESS_2);
-    (await oracleTrial.nextStatus(INVALID, WITNESS_1)).should.bignumber.equal(NOT_GUILTY);
+    (await oracleTrial.nextStatus(VALID, WITNESS_1)).should.eq.BN(WITNESS_2);
+    (await oracleTrial.nextStatus(INVALID, WITNESS_1)).should.eq.BN(NOT_GUILTY);
 
-    (await oracleTrial.nextStatus(VALID, WITNESS_2)).should.bignumber.equal(GUILTY);
-    (await oracleTrial.nextStatus(INVALID, WITNESS_2)).should.bignumber.equal(NOT_GUILTY);
+    (await oracleTrial.nextStatus(VALID, WITNESS_2)).should.eq.BN(GUILTY);
+    (await oracleTrial.nextStatus(INVALID, WITNESS_2)).should.eq.BN(NOT_GUILTY);
   })
 
   it('should have the right witnesses', async() => {
@@ -35,16 +36,14 @@ contract('OracleTrial', function(accounts) {
 
     const witness1 = await oracleTrial.witness1();
     const witness2 = await oracleTrial.witness2();
+    const w1 = await oracleTrial.getWitness(WITNESS_1)
+    const w2 = await oracleTrial.getWitness(WITNESS_2)
 
-    (await oracleTrial.getWitness(WITNESS_1)).should.deep.equal([
-      witness1,
-      web3.toBigNumber(2 * 24 * 3600)
-    ]);
+    w1[0].should.be.equal(witness1)
+    w1[1].should.eq.BN(2 * 24 * 3600)
 
-    (await oracleTrial.getWitness(WITNESS_2)).should.deep.equal([
-      witness2,
-      web3.toBigNumber(2 * 24 * 3600)
-    ]);
+    w2[0].should.be.equal(witness2)
+    w2[1].should.eq.BN(2 * 24 * 3600)
   })
 
 })
@@ -62,7 +61,7 @@ contract('swear', function(accounts) {
     const swindle = await Swindle.deployed();
     const oracleTrial = await OracleTrial.deployed();
 
-    var { logs } = await swear.addCommitment(oracleTrial.address, getTime() + 2 * 30 * 24 * 3600, 316, {
+    var { logs } = await swear.addCommitment(oracleTrial.address, await getTime() + 2 * 30 * 24 * 3600, "0xff", {
       value: 100
     });
 
@@ -77,7 +76,7 @@ contract('swear', function(accounts) {
     await expectFail(swear.withdraw(commitmentHash));
     await expectFail(swindle.endTrial(caseId));
 
-    await OracleWitness.at(await oracleTrial.witness1()).testify(316, VALID)
+    await (await OracleWitness.at(await oracleTrial.witness1())).testify("0xff", VALID)
 
     var { logs } = await swindle.continueTrial(caseId)
 
@@ -87,7 +86,7 @@ contract('swear', function(accounts) {
 
     await expectFail(swindle.endTrial(caseId));
 
-    await OracleWitness.at(await oracleTrial.witness2()).testify(316, VALID)
+    await (await OracleWitness.at(await oracleTrial.witness2())).testify("0xff", VALID)
 
     var { logs } = await swindle.continueTrial(caseId)
 
@@ -95,12 +94,12 @@ contract('swear', function(accounts) {
       event: 'StateTransition', args: { caseId, from: WITNESS_2, to: GUILTY }
     }])
 
-    const expectedBalanceAlice = (await getBalance(alice)).plus(100)
+    const expectedBalanceAlice = (await getBalance(alice)).addn(100)
 
     await swindle.endTrial(caseId);
 
-    (await getBalance(swear.address)).should.bignumber.equal(0);
-    (await getBalance(alice)).should.bignumber.equal(expectedBalanceAlice);
+    (await getBalance(swear.address)).should.eq.BN(0);
+    (await getBalance(alice)).should.eq.BN(expectedBalanceAlice);
   })
 
 })
