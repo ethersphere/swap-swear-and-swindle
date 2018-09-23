@@ -24,8 +24,6 @@ contract SwearSwap is SW3Utils, AbstractWitness, AbstractSwear {
   struct Commitment {
     bool valid; /* indicates wether this structure is valid */
     address provider; /* provider of the service */
-    AbstractRules rules; /* rules of the game */
-    bytes32 payload;
     bytes32 noteId;
     uint cases; /* number of open cases */
   }
@@ -78,9 +76,7 @@ contract SwearSwap is SW3Utils, AbstractWitness, AbstractSwear {
       commitments[commitmentHash] = Commitment({
         valid: true,
         provider: provider,
-        rules: AbstractRules(trial),
         noteId: note.id,
-        payload: payload,
         cases: 1 /* initialize with 1 open case */
       });
     } else {
