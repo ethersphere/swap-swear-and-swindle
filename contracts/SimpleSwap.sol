@@ -118,7 +118,7 @@ contract SimpleSwap is SW3Utils {
   /// @return payout amount that bounced
   function _payout(address beneficiary, uint value) internal returns (uint payout, uint bounced) {
     /* part of hard deposit used */
-    payout = Math.min256(value, hardDeposits[beneficiary].amount);
+    payout = Math.min(value, hardDeposits[beneficiary].amount);
     /* if there some of the hard deposit is used update the structure */
     if(payout != 0) {
       hardDeposits[beneficiary].amount -= payout;
