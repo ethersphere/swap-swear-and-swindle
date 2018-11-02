@@ -39,7 +39,7 @@ contract Swap is SimpleSwap {
     Note memory note = decodeNote(encoded);
 
     /* verify the signature of the owner */
-    require(owner == recoverSignature(note.id, sig));
+    require(owner == recover(note.id, sig));
     /* make sure the note has not been submitted before */
     require(notes[note.id].timeout == 0);
 
@@ -101,9 +101,9 @@ contract Swap is SimpleSwap {
 
     /* TODO: this breaks with note.beneficiary = 0 */
     /* check signature of the invoice */
-    require(note.beneficiary == recoverSignature(invoiceId, invoiceSig));
+    require(note.beneficiary == recover(invoiceId, invoiceSig));
     /* check signature of the cheque */
-    require(owner == recoverSignature(chequeHash(address(this), note.beneficiary, serial + 1, cumulativeTotal), chequeSig));
+    require(owner == recover(chequeHash(address(this), note.beneficiary, serial + 1, cumulativeTotal), chequeSig));
 
     /* cheque needs to be an exact match */
     require(note.amount == amount);

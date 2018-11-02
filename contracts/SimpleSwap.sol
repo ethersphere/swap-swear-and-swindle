@@ -88,7 +88,7 @@ contract SimpleSwap is SW3Utils {
     /* unfortunately this breaks watchtowers, so the timeout mechanism should be changed */
     require(msg.sender == beneficiary);
     /* verify signature of the owner */
-    require(owner ==  recoverSignature(chequeHash(address(this), beneficiary, serial, amount), sig));
+    require(owner ==  recover(chequeHash(address(this), beneficiary, serial, amount), sig));
     /*  amount needs to be larger. since this can only be called by the beneficiary this is probably not necessary */
     require(amount > cheques[beneficiary].amount);
     /* update the cheque data */
@@ -104,9 +104,9 @@ contract SimpleSwap is SW3Utils {
   /// @param beneficarySig signature of the beneficiary
   function submitChequeLower(address beneficiary, uint serial, uint amount, bytes ownerSig, bytes beneficarySig) public {
     /* verify signature of the owner */
-    require(owner == recoverSignature(chequeHash(address(this), beneficiary, serial, amount), ownerSig));
+    require(owner ==  recover(chequeHash(address(this), beneficiary, serial, amount), ownerSig));
     /* verify signature of the beneficiary */
-    require(beneficiary == recoverSignature(chequeHash(address(this), beneficiary, serial, amount), beneficarySig));
+    require(beneficiary ==  recover(chequeHash(address(this), beneficiary, serial, amount), beneficarySig));
     /* update the cheque data */
     _submitChequeInternal(beneficiary, serial, amount);
   }

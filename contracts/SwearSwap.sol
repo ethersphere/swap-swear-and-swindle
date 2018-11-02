@@ -65,7 +65,7 @@ contract SwearSwap is SW3Utils, AbstractWitness, AbstractSwear {
     Note memory note = decodeNote(encoded);
 
     /* get the provider from the signature */
-    address provider = recoverSignature(note.id, sig);
+    address provider = recover(note.id, sig);
     bytes32 commitmentHash = keccak256(abi.encodePacked(provider, trial, note.id));
 
     /* ensure that trial and payload match the remark */

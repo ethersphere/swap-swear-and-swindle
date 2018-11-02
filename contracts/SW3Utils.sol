@@ -1,6 +1,7 @@
 pragma solidity ^0.4.23;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/math/Math.sol";
+import "openzeppelin-solidity/contracts/cryptography/ECDSA.sol";
 import "./abstracts/AbstractWitness.sol";
 
 /// @title Common functions, ideally Swap or Swear libraries would inherit this
@@ -77,24 +78,8 @@ contract SW3Utils {
     });
   }
 
-  /// @dev decode a signature
-  function decodeSignature(bytes sig) internal pure returns (bytes32 r, bytes32 s, uint8 v) {
-    assembly {
-      r := mload(add(sig, 32))
-      s := mload(add(sig, 64))
-      v := and(mload(add(sig, 65)), 0xff)
-    }
-
-    v += 27; /* TODO: ganache and real clients might not be compatible here */
-  }
-
-  /// @dev recover signature from a web3.eth.sign() message
-  function recoverSignature(bytes32 hash, bytes sig) internal pure returns (address) {
-    bytes32 r;
-    bytes32 s;
-    uint8 v;
-    (r, s, v) = decodeSignature(sig);
-    return ecrecover(keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", hash)), v, r, s);
+  function recover(bytes32 hash, bytes sig) public pure returns (address) {
+    return ECDSA.recover(ECDSA.toEthSignedMessageHash(hash), sig);
   }
 
 }
