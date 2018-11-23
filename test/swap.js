@@ -356,10 +356,10 @@ contract('swap', function(accounts) {
 
     let validity = await getTime() + carolBondValidTimeout
 
-    let { sig, hash } = await signNote(owner, carol, 1, carolBond, 0, validity, 0, "0x")
+    let { sig, hash } = await signNote(owner, carol, 1, carolBond, nulladdress, validity, 0, "0x")
 
     await increaseTime(4 * epoch)
-    let encoded = await swap.encodeNote(swap.address, carol, 1, carolBond, 0, validity, 0, "0x")
+    let encoded = await swap.encodeNote(swap.address, carol, 1, carolBond, nulladdress, validity, 0, "0x")
     await swap.submitNote(encoded, sig, { from: carol });
 
     const { paidOut, timeout } = await swap.notes(hash)
@@ -441,7 +441,7 @@ contract('swap', function(accounts) {
     /* completely offchain cheque of 100 */
 
     /* owner issues note */
-    let note = await signNote(owner, carol, 1, carolBond, 0, 0, 0, "0x")
+    let note = await signNote(owner, carol, 1, carolBond, nulladdress, 0, 0, "0x")
 
     /* carol issues invoice */
     let invoice = await signInvoice(carol, note.hash, 200, 2)
@@ -449,7 +449,7 @@ contract('swap', function(accounts) {
     /* owner issues cheque for invoice */
     let cheque = await signCheque(owner, carol, 3, carolBond + 200)
 
-    let encoded = await swap.encodeNote(swap.address, carol, 1, carolBond, 0, 0, 0, "0x")
+    let encoded = await swap.encodeNote(swap.address, carol, 1, carolBond, nulladdress, 0, 0, "0x")
     /* carol submits note anyway */
     await swap.submitNote(encoded, note.sig, { from: carol });
 
@@ -466,4 +466,5 @@ contract('swap', function(accounts) {
       { event: 'ChequeCashed', args: { beneficiary: carol, serial: 3, amount: 1200 } }
     ])
   })
+
 })

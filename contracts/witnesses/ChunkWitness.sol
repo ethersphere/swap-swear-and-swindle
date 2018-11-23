@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 import "../abstracts/AbstractWitness.sol";
 
 /* low-quality implementation of a witness for BMT, TO BE REPLACED */
@@ -17,16 +17,16 @@ contract ChunkWitness is AbstractWitness {
   }
 
   /* remark is expected to be keccak256(trial, swarmHash(data)) */
-  function testify(bytes data) public {
+  function testify(bytes memory data) public {
     testimonies[bmt(data)] = TestimonyStatus.VALID;
   }
 
-  function bmt(bytes d) public returns(bytes32) {
+  function bmt(bytes memory d) public returns(bytes32) {
     return keccak256(abi.encodePacked(swap_uint64(uint64(d.length)), h(d, span)));
   }
 
   /* based on RefHasher from go-ethereum */
-  function h(bytes d, uint s) private returns (bytes32) {
+  function h(bytes memory d, uint s) private returns (bytes32) {
     uint length = d.length;
 
     bytes memory left = d;
@@ -43,7 +43,7 @@ contract ChunkWitness is AbstractWitness {
     return keccak256(abi.encodePacked(left, right));
   }
 
-  function bytes32ToBytes(bytes32 data) internal pure returns (bytes) {
+  function bytes32ToBytes(bytes32 data) internal pure returns (bytes memory) {
     bytes memory result = new bytes(32);
     for (uint i = 0; i < 32; i++) {
         result[i] = data[i];
@@ -59,7 +59,7 @@ contract ChunkWitness is AbstractWitness {
   }
 
   /* copied from BytesLibrary */
-  function slice(bytes _bytes, uint _start, uint _length) internal  pure returns (bytes) {
+  function slice(bytes memory _bytes, uint _start, uint _length) internal  pure returns (bytes memory) {
     require(_bytes.length >= (_start + _length));
 
     bytes memory tempBytes;

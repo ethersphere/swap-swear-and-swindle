@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/math/Math.sol";
 import "openzeppelin-solidity/contracts/cryptography/ECDSA.sol";
@@ -12,7 +12,7 @@ contract SW3Utils {
     address swap;
     uint index; /* only used as a nonce for now, 0 is invalid */
     uint amount; /* amount of the note */
-    address beneficiary; /* total amount paid out */
+    address payable beneficiary; /* total amount paid out */
     address witness; /* witness used as escrow */
     uint validFrom; /* earliest timestamp for submission and payout */
     uint validUntil; /* latest timestamp for submission and payout */
@@ -38,15 +38,15 @@ contract SW3Utils {
 
   /// @dev encode a note to bytes, this form can be useful to avoid StackTooDeep issues
   function encodeNote(address swap, address beneficiary, uint index, uint amount, address witness, uint validFrom, uint validUntil, bytes32 remark)
-  public pure returns (bytes) {
+  public pure returns (bytes memory) {
     return abi.encodePacked(swap, index, beneficiary, amount, witness, validFrom, validUntil, remark);
   }
 
-  function decodeNote(bytes note)
+  function decodeNote(bytes memory note)
   internal pure returns (Note memory n) {
     address swap;
     uint index;
-    address beneficiary;
+    address payable beneficiary;
     uint amount;
     address witness;
     uint validFrom;
@@ -78,7 +78,7 @@ contract SW3Utils {
     });
   }
 
-  function recover(bytes32 hash, bytes sig) public pure returns (address) {
+  function recover(bytes32 hash, bytes memory sig) public pure returns (address) {
     return ECDSA.recover(ECDSA.toEthSignedMessageHash(hash), sig);
   }
 

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/math/Math.sol";
 import "./SW3Utils.sol";
@@ -42,10 +42,10 @@ contract SimpleSwap is SW3Utils {
   uint public totalDeposit;
 
   /* owner of the contract, set at construction */
-  address public owner;
+  address payable public owner;
 
   /// @notice constructor, allows setting the owner (needed for "setup wallet as payment")
-  constructor(address _owner) public {
+  constructor(address payable _owner) public {
     owner = _owner;
   }
 
@@ -83,7 +83,7 @@ contract SimpleSwap is SW3Utils {
   /// @param serial the serial number of the cheque
   /// @param amount the (cumulative) amount of the cheque
   /// @param sig signature of the owner
-  function submitCheque(address beneficiary, uint serial, uint amount, bytes sig) public {
+  function submitCheque(address beneficiary, uint serial, uint amount, bytes memory sig) public {
     /* only allow beneficiary to submit this, otherwise the owner could block cash out by regulary sending 1 wei cheques and resetting the timeout */
     /* unfortunately this breaks watchtowers, so the timeout mechanism should be changed */
     require(msg.sender == beneficiary);
@@ -102,7 +102,7 @@ contract SimpleSwap is SW3Utils {
   /// @param amount the (cumulative) amount of the cheque
   /// @param ownerSig signature of the owner
   /// @param beneficarySig signature of the beneficiary
-  function submitChequeLower(address beneficiary, uint serial, uint amount, bytes ownerSig, bytes beneficarySig) public {
+  function submitChequeLower(address beneficiary, uint serial, uint amount, bytes memory ownerSig, bytes memory beneficarySig) public {
     /* verify signature of the owner */
     require(owner ==  recover(chequeHash(address(this), beneficiary, serial, amount), ownerSig));
     /* verify signature of the beneficiary */
@@ -116,7 +116,7 @@ contract SimpleSwap is SW3Utils {
   /// @param value maximum amount to send
   /// @return payout amount that was actually paid out
   /// @return payout amount that bounced
-  function _payout(address beneficiary, uint value) internal returns (uint payout, uint bounced) {
+  function _payout(address payable beneficiary, uint value) internal returns (uint payout, uint bounced) {
     /* part of hard deposit used */
     payout = Math.min(value, hardDeposits[beneficiary].amount);
     /* if there some of the hard deposit is used update the structure */
@@ -144,7 +144,7 @@ contract SimpleSwap is SW3Utils {
 
   /// @notice attempt to cash latest cheque
   /// @param beneficiary beneficiary for whose cheque should be paid out
-  function cashCheque(address beneficiary) public {
+  function cashCheque(address payable beneficiary) public {
     ChequeInfo storage info = cheques[beneficiary];
 
     /* grace period must have ended */
@@ -228,7 +228,7 @@ contract SimpleSwap is SW3Utils {
   }
 
   /// @notice deposit ether
-  function() payable public {
+  function() payable external {
     emit Deposit(msg.sender, msg.value);
   }
 }

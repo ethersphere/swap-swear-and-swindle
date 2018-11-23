@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/math/Math.sol";
 import "./SW3Utils.sol";
@@ -17,7 +17,7 @@ contract Swap is SimpleSwap {
   /* associates every noteId with a NoteInfo */
   mapping (bytes32 => NoteInfo) public notes;
 
-  constructor(address _owner) SimpleSwap(_owner) public { }
+  constructor(address payable _owner) SimpleSwap(_owner) public { }
 
   /// @dev verify the conditions of a note
   function verifyNote(Note memory note) internal view {
@@ -35,7 +35,7 @@ contract Swap is SimpleSwap {
 
   /// @notice submit a note
   /// @param sig signature of the note
-  function submitNote(bytes encoded, bytes sig) public {
+  function submitNote(bytes memory encoded, bytes memory sig) public {
     Note memory note = decodeNote(encoded);
 
     /* verify the signature of the owner */
@@ -54,7 +54,7 @@ contract Swap is SimpleSwap {
 
   /// @notice cash a note
   /// @param amount amount to be paid out
-  function cashNote(bytes encoded, uint amount) public {
+  function cashNote(bytes memory encoded, uint amount) public {
     Note memory note = decodeNote(encoded);
     NoteInfo storage noteInfo = notes[note.id];
 
@@ -84,7 +84,7 @@ contract Swap is SimpleSwap {
   /// @param invoiceSig beneficiary signature of the invoice
   /// @param amount of the cheque / note
   /// @param chequeSig owner signature of the cheque
-  function submitPaidInvoice(bytes encoded, uint swapBalance, uint serial, bytes invoiceSig, uint amount, bytes chequeSig) public {
+  function submitPaidInvoice(bytes memory encoded, uint swapBalance, uint serial, bytes memory invoiceSig, uint amount, bytes memory chequeSig) public {
     /* only the owner may do this */
     require(msg.sender == owner);
     Note memory note = decodeNote(encoded);

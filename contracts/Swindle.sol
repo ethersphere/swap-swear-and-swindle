@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 import "./abstracts/AbstractSwear.sol";
 import "./abstracts/AbstractRules.sol";
 import "./abstracts/AbstractWitness.sol";
@@ -11,7 +11,7 @@ contract Swindle is AbstractConstants {
   struct Trial {
     AbstractSwear swear; /* address that initiated this trial, should implement the Swear interface */
     AbstractRules rules; /* rules contract */
-    address plaintiff;
+    address payable plaintiff;
     address provider;
     bytes32 noteId;
     bytes32 commitmentHash; /* commitmentHash from Swear */
@@ -32,7 +32,7 @@ contract Swindle is AbstractConstants {
   /// @param commitmentHash hash to identify the commitment with Swear
   /// @param rules to use
   /// @return the caseId of the new trial
-  function startTrial(address provider, address plaintiff, bytes32 noteId, bytes32 commitmentHash, AbstractRules rules) public returns (bytes32) {
+  function startTrial(address provider, address payable plaintiff, bytes32 noteId, bytes32 commitmentHash, AbstractRules rules) public returns (bytes32) {
     /* derive a caseId, WARNING: horribly broken and insecure */
     bytes32 caseId = keccak256(abi.encodePacked(provider, plaintiff, noteId));
 

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 import "./abstracts/AbstractRules.sol";
 import "./abstracts/AbstractWitness.sol";
 import "./abstracts/AbstractSwear.sol";
@@ -34,7 +34,7 @@ contract SwearSwap is SW3Utils, AbstractWitness, AbstractSwear {
   /// @notice callback for swindle when compensation should take place
   /// @dev either reduces the deposit if onchain or mark note as valid if offchain
   /// @param commitmentHash commitment to compensate from
-  function compensate(bytes32 commitmentHash, address, uint) public {
+  function compensate(bytes32 commitmentHash, address payable, uint) public {
     require(msg.sender == address(swindle));
     Commitment storage commitment = commitments[commitmentHash];
     guiltyNotes[commitment.provider][commitment.noteId] = true;
@@ -61,7 +61,7 @@ contract SwearSwap is SW3Utils, AbstractWitness, AbstractSwear {
   /// @param trial trial rules for the note (needs to match the remark)
   /// @param payload payload (needs to match the remark)
   /// @param sig signature of the note
-  function startTrialFromNote(bytes encoded, address trial, bytes32 payload, bytes sig) public returns(address) {
+  function startTrialFromNote(bytes memory encoded, address trial, bytes32 payload, bytes memory sig) public returns(address) {
     Note memory note = decodeNote(encoded);
 
     /* get the provider from the signature */

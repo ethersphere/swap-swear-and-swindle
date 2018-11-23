@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 import "./abstracts/AbstractRules.sol";
 import "./abstracts/AbstractWitness.sol";
 import "./abstracts/AbstractSwear.sol";
@@ -73,7 +73,7 @@ contract Swear is AbstractSwear, SW3Utils {
   /// @param commitmentHash commitment to compensate from
   /// @param beneficiary beneficiary to compensate
   /// @param reward amount to be compensated
-  function compensate(bytes32 commitmentHash, address beneficiary, uint reward) public {
+  function compensate(bytes32 commitmentHash, address payable beneficiary, uint reward) public {
     require(msg.sender == address(swindle));
     Commitment storage commitment = commitments[commitmentHash];
     commitment.deposit = commitment.deposit.sub(reward);
@@ -108,7 +108,7 @@ contract Swear is AbstractSwear, SW3Utils {
     require(commitment.valid);
 
     /* plaintiff is the sender, WARNING: plaintiff gets the reward, there should probably be a beneficiary associated with the commitment */
-    address plaintiff = msg.sender;
+    address payable plaintiff = msg.sender;
     address provider = commitment.provider;
 
     /* increase number of cases */

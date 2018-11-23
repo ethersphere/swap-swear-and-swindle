@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 import "../abstracts/AbstractRules.sol";
 import "../witnesses/OracleWitness.sol";
 
@@ -7,8 +7,8 @@ contract OracleTrial is AbstractRules {
   uint8 constant TRIAL_STATUS_WITNESS_1 = 3;
   uint8 constant TRIAL_STATUS_WITNESS_2 = 4;
 
-  address public witness1 = new OracleWitness();
-  address public witness2 = new OracleWitness();
+  address public witness1 = address(new OracleWitness());
+  address public witness2 = address(new OracleWitness());
 
   function nextStatus(AbstractWitness.TestimonyStatus witnessStatus, uint8 trialStatus)
   public view returns (uint8 status) {
