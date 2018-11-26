@@ -39,31 +39,13 @@ contract SW3Utils {
   /// @dev encode a note to bytes, this form can be useful to avoid StackTooDeep issues
   function encodeNote(address swap, address beneficiary, uint index, uint amount, address witness, uint validFrom, uint validUntil, bytes32 remark)
   public pure returns (bytes memory) {
-    return abi.encodePacked(swap, index, beneficiary, amount, witness, validFrom, validUntil, remark);
+    return abi.encode(swap, index, beneficiary, amount, witness, validFrom, validUntil, remark);
   }
 
   function decodeNote(bytes memory note)
   internal pure returns (Note memory n) {
-    address swap;
-    uint index;
-    address payable beneficiary;
-    uint amount;
-    address witness;
-    uint validFrom;
-    uint validUntil;
-    bytes32 remark;
-
-    uint divisor = 2**96;
-    assembly {
-      swap := div(mload(add(note, 32)), divisor)
-      index := mload(add(note, 52))
-      beneficiary := div(mload(add(note, 84)), divisor)
-      amount := mload(add(note, 104))
-      witness := div(mload(add(note, 136)), divisor)
-      validFrom := mload(add(note, 156))
-      validUntil := mload(add(note, 188))
-      remark := mload(add(note, 220))
-    }
+    (address swap, uint index, address payable beneficiary, uint amount, address witness, uint validFrom, uint validUntil, bytes32 remark)
+      = abi.decode(note, (address, uint, address, uint, address, uint, uint, bytes32));
 
     return Note({
       id: keccak256(note),
