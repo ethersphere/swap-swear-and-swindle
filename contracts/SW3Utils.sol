@@ -60,7 +60,7 @@ contract SW3Utils {
     });
   }
 
-  function recover(bytes32 hash, bytes memory sig) public pure returns (address) {
+  function recover(bytes32 hash, bytes memory sig) internal pure returns (address) {
     return ECDSA.recover(ECDSA.toEthSignedMessageHash(hash), sig);
   }
 
