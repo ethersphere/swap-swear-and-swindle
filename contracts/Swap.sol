@@ -72,10 +72,16 @@ contract Swap is SimpleSwap {
       require(noteInfo.paidOut.add(amount) <= note.amount);
     }
 
-    /* actual payout */
-    (uint payout,) = _payout(note.beneficiary, amount);
+    /* compute the actual payout */
+    (uint payout, uint bounced) = _computePayout(note.beneficiary, amount);
+
+    /* TODO: event */
+
     /* increase the stored paidOut amount to avoid double payout */
     noteInfo.paidOut += payout;
+
+    /* do the payout */
+    note.beneficiary.transfer(amount);
   }
 
   /// @notice demonstrate that an invoice was paid

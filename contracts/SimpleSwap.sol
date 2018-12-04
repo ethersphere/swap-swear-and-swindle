@@ -111,12 +111,12 @@ contract SimpleSwap is SW3Utils {
     _submitChequeInternal(beneficiary, serial, amount);
   }
 
-  /// @dev helper function to payout value while respecting hard deposits
+  /// @dev helper function to calculate payout value while respecting hard deposits
   /// @param beneficiary the address to send to
   /// @param value maximum amount to send
   /// @return payout amount that was actually paid out
   /// @return payout amount that bounced
-  function _payout(address payable beneficiary, uint value) internal returns (uint payout, uint bounced) {
+  function _computePayout(address payable beneficiary, uint value) internal returns (uint payout, uint bounced) {
     /* part of hard deposit used */
     payout = Math.min(value, hardDeposits[beneficiary].amount);
     /* if there some of the hard deposit is used update the structure */
@@ -137,9 +137,6 @@ contract SimpleSwap is SW3Utils {
       payout += liquid;
       bounced = rest - liquid;
     }
-
-    /* transfer the payout */
-    beneficiary.transfer(payout);
   }
 
   /// @notice attempt to cash latest cheque
@@ -154,8 +151,8 @@ contract SimpleSwap is SW3Utils {
     uint value = info.amount.sub(info.paidOut); /* throws if paidOut > amount */
     require(value > 0);
 
-    /* do the actual payout */
-    (uint payout, uint bounced) = _payout(beneficiary, value);
+    /* compute the actual payout */
+    (uint payout, uint bounced) = _computePayout(beneficiary, value);
 
     /* emit the correct event depending on wether it bounced or not */
     if(bounced != 0) emit ChequeBounced(beneficiary, info.serial, payout, bounced);
@@ -163,6 +160,9 @@ contract SimpleSwap is SW3Utils {
 
     /* increase the stored paidOut amount to avoid double payout */
     info.paidOut = info.paidOut.add(payout);
+
+    /* do the actual payment */
+    beneficiary.transfer(payout);
   }
 
   /// @notice prepare to decrease the hard deposit
