@@ -27,9 +27,9 @@ contract('Storage', (accounts) => {
   const [dataInsurer, dataOwner, carol] = accounts
 
   it('should take deposit if nothing is provided', async () => {
-    const swap = await Swap.deployed()
-    const swear = await Swear.deployed()
-    const swindle = await Swindle.deployed()
+    const swap = await Swap.new(dataInsurer)
+    const swindle = await Swindle.new()
+    const swear = await Swear.new(swindle.address)
     const hashWitness = await HashWitness.new()
     const trial = await SimpleTrial.new(hashWitness.address)
 
@@ -43,7 +43,7 @@ contract('Storage', (accounts) => {
 
     let remark = '0x' + util.sha3(Buffer.concat([Buffer.from(trial.address.substring(2), 'hex'), Buffer.from(swarmHash.substring(2), 'hex')])).toString('hex')
 
-    let note = await signNote(dataInsurer, dataOwner, 1, amount, witness, 0, expires, remark)
+    let note = await signNote(swap, dataInsurer, dataOwner, 1, amount, witness, 0, expires, remark)
 
     let encoded = await swap.encodeNote(swap.address, dataOwner, 1, amount, witness, 0, expires, remark);
 
@@ -66,9 +66,9 @@ contract('Storage', (accounts) => {
   })
 
   it('should accept valid POC2 chunk', async () => {
-    const swap = await Swap.deployed()
-    const swear = await Swear.deployed()
-    const swindle = await Swindle.deployed()
+    const swap = await Swap.new(dataInsurer)
+    const swindle = await Swindle.new()
+    const swear = await Swear.new(swindle.address)
     const hashWitness = await HashWitness.new()
     const trial = await SimpleTrial.new(hashWitness.address)
 
@@ -82,7 +82,7 @@ contract('Storage', (accounts) => {
 
     let remark = '0x' + util.sha3(Buffer.concat([Buffer.from(trial.address.substring(2), 'hex'), Buffer.from(swarmHash.substring(2), 'hex')])).toString('hex')
 
-    let note = await signNote(dataInsurer, dataOwner, 1, amount, witness, 0, expires, remark)
+    let note = await signNote(swap, dataInsurer, dataOwner, 1, amount, witness, 0, expires, remark)
 
     let encoded = await swap.encodeNote(swap.address, dataOwner, 1, amount, witness, 0, expires, remark);
 
@@ -101,10 +101,10 @@ contract('Storage', (accounts) => {
   })
 
   it('should accept valid POC3 chunk', async () => {
-    const swap = await Swap.deployed()
-    const swear = await Swear.deployed()
-    const swindle = await Swindle.deployed()
-
+    const swap = await Swap.new(dataInsurer)
+    const swindle = await Swindle.new()
+    const swear = await Swear.new(swindle.address)
+    
     const chunkWitness = await ChunkWitness.new()
     const trial = await SimpleTrial.new(chunkWitness.address)
 
@@ -118,7 +118,7 @@ contract('Storage', (accounts) => {
 
     let remark = '0x' + util.sha3(Buffer.concat([Buffer.from(trial.address.substring(2), 'hex'), Buffer.from(poc3Hash.substring(2), 'hex')])).toString('hex')
 
-    let note = await signNote(dataInsurer, dataOwner, 1, amount, witness, 0, expires, remark)
+    let note = await signNote(swap, dataInsurer, dataOwner, 1, amount, witness, 0, expires, remark)
 
     let encoded = await swap.encodeNote(swap.address, dataOwner, 1, amount, witness, 0, expires, remark);
 

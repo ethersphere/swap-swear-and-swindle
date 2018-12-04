@@ -15,15 +15,18 @@ contract('swap', function(accounts) {
   const [owner, bob, alice, carol] = accounts
 
   async function submitCheque(signer, beneficiary, serial, amount) {
-    const swap = await Swap.deployed();
-    const { sig } = await signCheque(signer, beneficiary, serial, amount);
+    const { sig } = await signCheque(swap, signer, beneficiary, serial, amount);
     return swap.submitCheque(beneficiary, serial, amount, sig, { from: beneficiary });
   }
 
   const firstDeposit = 1000;
+  let swap
+
+  before(async() => {
+    swap = await Swap.new(owner)
+  })
 
   it('should accept deposits', async() => {
-    const swap = await Swap.deployed();
     const value = firstDeposit;
 
     const { logs } = await swap.send(value, { from: owner });
@@ -38,13 +41,10 @@ contract('swap', function(accounts) {
   const firstCheque = 600;
 
   it('should not accept a cheque with serial 0', async() => {
-    const swap = await Swap.deployed();
     await expectFail(submitCheque(owner, bob, 0, firstCheque));
   })
 
   it('should accept valid cheque (increasing value)', async() => {
-    const swap = await Swap.deployed();
-
     const serial = 1;
     const amount = firstCheque;
 
@@ -62,14 +62,10 @@ contract('swap', function(accounts) {
   })
 
   it('should not allow cheque payout before timeout', async() => {
-    const swap = await Swap.deployed();
-
     await expectFail(swap.cashCheque(bob));
   })
 
   it('should allow cheque payout after timeout (no hard deposit)', async() => {
-    const swap = await Swap.deployed();
-
     await increaseTime(1 * epoch);
 
     let beneficiaryExpectedBalance = (await getBalance(bob)).addn(firstCheque);
@@ -88,20 +84,16 @@ contract('swap', function(accounts) {
   })
 
   it('should not allow cheque payout if there is nothing to pay out', async() => {
-    const swap = await Swap.deployed();
     await expectFail(swap.cashCheque(bob));
   })
 
   it('should not allow valid cheque if signed by owner and amount is not higher', async() => {
-    const swap = await Swap.deployed();
     await expectFail(submitCheque(owner, bob, 2, firstCheque));
   })
 
   const secondCheque = firstCheque + 200;
 
   it('should accept valid cheque with higher amount', async() => {
-    const swap = await Swap.deployed();
-
     const serial = 2;
     const amount = secondCheque;
 
@@ -119,12 +111,10 @@ contract('swap', function(accounts) {
   })
 
   it('should not allow cheque payout before increased timeout', async() => {
-    const swap = await Swap.deployed();
     await expectFail(swap.cashCheque(bob));
   })
 
   it('should allow cheque payout after timeout (with difference, no hard deposit)', async() => {
-    const swap = await Swap.deployed();
     await increaseTime(1 * epoch);
 
     let beneficiaryExpectedBalance = (await getBalance(bob)).addn(secondCheque).subn(firstCheque);
@@ -143,13 +133,11 @@ contract('swap', function(accounts) {
   })
 
   it('should accept a valid check with lower value if signed by beneficiary', async () => {
-    const swap = await Swap.deployed();
-
     const serial = 3;
     const amount = firstCheque;
 
-    const { sig: sigOwner } = await signCheque(owner, bob, serial, amount);
-    const { sig: sigBob } = await signCheque(bob, bob, serial, amount);
+    const { sig: sigOwner } = await signCheque(swap, owner, bob, serial, amount);
+    const { sig: sigBob } = await signCheque(swap, bob, bob, serial, amount);
 
     const { logs } = await swap.submitChequeLower(bob, serial, amount, sigOwner, sigBob);
 
@@ -166,8 +154,6 @@ contract('swap', function(accounts) {
   const thirdCheque = secondCheque + 300;
 
   it('should allow parital payment for a bouncing check', async () => {
-    const swap = await Swap.deployed();
-
     const serial = 4;
     const amount = thirdCheque;
 
@@ -191,8 +177,6 @@ contract('swap', function(accounts) {
   const refill = 500;
 
   it('should allow cheque to clear fully after refill', async () => {
-    const swap = await Swap.deployed();
-
     await swap.send(refill);
     const bounced = thirdCheque - firstDeposit;
 
@@ -210,8 +194,6 @@ contract('swap', function(accounts) {
   const hardDepositBob1 = 200;
 
   it('should allow hard deposits if they do not exceed the global deposit', async() => {
-    const swap = await Swap.deployed();
-
     const { logs } = await swap.increaseHardDeposit(bob, hardDepositBob1);
 
     matchLogs(logs, [
@@ -224,14 +206,12 @@ contract('swap', function(accounts) {
   })
 
   it('should not allow hard deposits if they exceed the global deposit', async() => {
-    const swap = await Swap.deployed();
     await expectFail(swap.increaseHardDeposit(bob, (await getBalance(swap.address)).subn(hardDepositBob1).addn(1)));
   })
 
   const fourthCheque = thirdCheque + 100;
 
   it('should use the hard deposit on valid cheque', async() => {
-    const swap = await Swap.deployed();
     const serial = 5;
 
     const amount = fourthCheque;
@@ -258,8 +238,6 @@ contract('swap', function(accounts) {
 
   /* NOTE: at this point there are 300 wei in the contract with 100 wei locked for bob */
   it('should not spend ether locked away by hard deposit of another address', async() => {
-    const swap = await Swap.deployed();
-
     await submitCheque(owner, alice, 1, aliceCheque);
     await increaseTime(1 * epoch);
 
@@ -283,15 +261,12 @@ contract('swap', function(accounts) {
   })
 
   it('should not allow an instant decrease for hard deposits', async() => {
-    const swap = await Swap.deployed();
     await expectFail(swap.decreaseHardDeposit(bob));
   })
 
   const hardDepositBobDecrease = 75;
 
   it('should allow to prepare a decrease for hard deposits', async() => {
-    const swap = await Swap.deployed();
-
     const { logs } = await swap.prepareDecreaseHardDeposit(bob, hardDepositBobDecrease);
 
     matchLogs(logs, [
@@ -305,13 +280,10 @@ contract('swap', function(accounts) {
   })
 
   it('should not allow to decrease hard deposit before the timeout', async() => {
-    const swap = await Swap.deployed();
     await expectFail(swap.decreaseHardDeposit(bob));
   })
 
   it('should allow to decrease hard deposit after the timeout', async() => {
-    const swap = await Swap.deployed();
-
     let expectedHardDeposit = (await swap.hardDeposits(bob)).amount.subn(hardDepositBobDecrease);
 
     await increaseTime(2 * epoch);
@@ -326,13 +298,10 @@ contract('swap', function(accounts) {
   })
 
   it('should not allow to do the same decrease twice', async() => {
-    const swap = await Swap.deployed();
     await expectFail(swap.decreaseHardDeposit(bob));
   })
 
   it('should have enough liquid balance for the rest of the other accounts cheque now', async() => {
-    const swap = await Swap.deployed();
-
     const amount = web3.utils.toBN(aliceCheque).sub((await swap.cheques(alice)).paidOut)
 
     const expectedBalanceAlice = (await getBalance(alice)).add(amount);
@@ -350,13 +319,11 @@ contract('swap', function(accounts) {
   let carolBondValidTimeout = 3 * epoch
 
   it('should accept a valid note (bond)', async() => {
-    const swap = await Swap.deployed();
-
     await swap.send(carolBond);
 
     let validity = await getTime() + carolBondValidTimeout
 
-    let { sig, hash } = await signNote(owner, carol, 1, carolBond, nulladdress, validity, 0, "0x")
+    let { sig, hash } = await signNote(swap, owner, carol, 1, carolBond, nulladdress, validity, 0, "0x")
 
     await increaseTime(4 * epoch)
     let encoded = await swap.encodeNote(swap.address, carol, 1, carolBond, nulladdress, validity, 0, "0x")
@@ -382,14 +349,13 @@ contract('swap', function(accounts) {
   })
 
   it('should accept a valid note (conditional bond)', async() => {
-    const swap = await Swap.deployed();
-    const oracle = await OracleWitness.deployed();
+    const oracle = await OracleWitness.new();
 
     await swap.send(carolBond);
 
     let bondTimeout = await getTime() + carolBondValidTimeout
 
-    let { sig, hash } = await signNote(owner, carol, 1, carolBond, oracle.address, 0, bondTimeout, "0x")
+    let { sig, hash } = await signNote(swap, owner, carol, 1, carolBond, oracle.address, 0, bondTimeout, "0x")
 
     await oracle.testify(hash, 1)
 
@@ -432,8 +398,6 @@ contract('swap', function(accounts) {
   })
 
   it('should allow to submit paid invoices', async() => {
-    const swap = await Swap.deployed();
-
     await swap.send(carolBond + 200);
 
     await submitCheque(owner, carol, 1, 100)
@@ -441,13 +405,13 @@ contract('swap', function(accounts) {
     /* completely offchain cheque of 100 */
 
     /* owner issues note */
-    let note = await signNote(owner, carol, 1, carolBond, nulladdress, 0, 0, "0x")
+    let note = await signNote(swap, owner, carol, 1, carolBond, nulladdress, 0, 0, "0x")
 
     /* carol issues invoice */
-    let invoice = await signInvoice(carol, note.hash, 200, 2)
+    let invoice = await signInvoice(swap, carol, note.hash, 200, 2)
 
     /* owner issues cheque for invoice */
-    let cheque = await signCheque(owner, carol, 3, carolBond + 200)
+    let cheque = await signCheque(swap, owner, carol, 3, carolBond + 200)
 
     let encoded = await swap.encodeNote(swap.address, carol, 1, carolBond, nulladdress, 0, 0, "0x")
     /* carol submits note anyway */

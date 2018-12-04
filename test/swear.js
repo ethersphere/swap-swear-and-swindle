@@ -22,7 +22,7 @@ const WITNESS_2 = 4
 contract('OracleTrial', function(accounts) {
 
   it('should have the right transitions', async() => {
-    const oracleTrial = await OracleTrial.deployed();
+    const oracleTrial = await OracleTrial.new();
 
     (await oracleTrial.nextStatus(VALID, WITNESS_1)).should.eq.BN(WITNESS_2);
     (await oracleTrial.nextStatus(INVALID, WITNESS_1)).should.eq.BN(NOT_GUILTY);
@@ -32,7 +32,7 @@ contract('OracleTrial', function(accounts) {
   })
 
   it('should have the right witnesses', async() => {
-    const oracleTrial = await OracleTrial.deployed();
+    const oracleTrial = await OracleTrial.new();
 
     const witness1 = await oracleTrial.witness1();
     const witness2 = await oracleTrial.witness2();
@@ -57,9 +57,9 @@ contract('swear', function(accounts) {
   ] = accounts
 
   it('should accept an on-chain commitment', async() => {
-    const swear = await Swear.deployed();
-    const swindle = await Swindle.deployed();
-    const oracleTrial = await OracleTrial.deployed();
+    const swindle = await Swindle.new();
+    const swear = await Swear.new(swindle.address);
+    const oracleTrial = await OracleTrial.new();
 
     var { logs } = await swear.addCommitment(oracleTrial.address, await getTime() + 2 * 30 * 24 * 3600, "0xff", {
       value: 100
