@@ -13,7 +13,7 @@ contract Swindle is AbstractConstants {
     AbstractRules rules; /* rules contract */
     address payable plaintiff;
     address provider;
-    bytes32 noteId;
+    bytes32 payload;
     bytes32 commitmentHash; /* commitmentHash from Swear */
     uint lastAction; /* timestamp of the last status change */
     uint8 status; /* current status */
@@ -28,22 +28,22 @@ contract Swindle is AbstractConstants {
   /// @dev start a trial, should be called from a Swear contract
   /// @param provider service provider
   /// @param plaintiff plaintiff, could be trial initiator or beneficiary in a Swap note
-  /// @param noteId data for the witnesses
+  /// @param payload data for the witnesses
   /// @param commitmentHash hash to identify the commitment with Swear
   /// @param rules to use
   /// @return the caseId of the new trial
-  function startTrial(address provider, address payable plaintiff, bytes32 noteId, bytes32 commitmentHash, AbstractRules rules) public returns (bytes32) {
+  function startTrial(address provider, address payable plaintiff, bytes32 payload, bytes32 commitmentHash, AbstractRules rules) public returns (bytes32) {
     /* derive a caseId, WARNING: horribly broken and insecure */
-    bytes32 caseId = keccak256(abi.encodePacked(provider, plaintiff, noteId));
+    bytes32 caseId = keccak256(abi.encodePacked(provider, plaintiff, payload, commitmentHash));
 
     trials[caseId] = Trial({
       swear: AbstractSwear(msg.sender),
       rules: rules,
       plaintiff: plaintiff,
       provider: provider,
-      noteId: noteId,
+      payload: payload,
       commitmentHash: commitmentHash,
-      status: rules.getInitialStatus() /* TODO: should be STATIC_CALL, Solidity 0.5 */,
+      status: rules.getInitialStatus() /* static call */,
       lastAction: now
     });
 
@@ -68,7 +68,7 @@ contract Swindle is AbstractConstants {
       outcome = AbstractWitness.TestimonyStatus.INVALID;
     } else {
       /* static call */
-      outcome = AbstractWitness(witness).testimonyFor(trial.provider, trial.plaintiff, trial.noteId);
+      outcome = AbstractWitness(witness).testimonyFor(trial.provider, trial.plaintiff, trial.payload);
     }
 
     /* if the outcode is still PENDING abort */
@@ -92,7 +92,7 @@ contract Swindle is AbstractConstants {
 
     if(trial.status == TRIAL_STATUS_NOT_GUILTY) {
       /* invalidate the trial */
-      trial.status = 0;      
+      trial.status = 0;
       /* no special code for a not guilty verdict for now */
     } else if(trial.status == TRIAL_STATUS_GUILTY) {
       /* invalidate the trial */
