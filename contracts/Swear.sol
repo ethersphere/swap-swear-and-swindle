@@ -93,11 +93,11 @@ contract Swear is AbstractSwear, SW3Utils {
     /* make sure there are no open cases */
     require(commitment.cases == 0);
 
-    /* send out commitment */
-    msg.sender.transfer(commitment.deposit);
-
     /* mark commitment as invalid */
     commitment.valid = false;
+
+    /* send out commitment */
+    msg.sender.transfer(commitment.deposit);
   }
 
   /// @notice start trial for an onchain commitment

@@ -67,7 +67,7 @@ contract Swindle is AbstractConstants {
       /* if too much time has passed assume the testimony to be INVALID */
       outcome = AbstractWitness.TestimonyStatus.INVALID;
     } else {
-      /* TODO: STATIC_CALL, Solidity 0.5 */
+      /* static call */
       outcome = AbstractWitness(witness).testimonyFor(trial.provider, trial.plaintiff, trial.noteId);
     }
 
@@ -91,13 +91,15 @@ contract Swindle is AbstractConstants {
     Trial storage trial = trials[caseId];
 
     if(trial.status == TRIAL_STATUS_NOT_GUILTY) {
+      /* invalidate the trial */
+      trial.status = 0;      
       /* no special code for a not guilty verdict for now */
     } else if(trial.status == TRIAL_STATUS_GUILTY) {
+      /* invalidate the trial */
+      trial.status = 0;
       /* if GUILTY instruct Swear to compensate the plaintiff with the entire deposit */
       trial.swear.compensate(trial.commitmentHash, trial.plaintiff, trial.rules.getDeposit());
     } else revert(); /* revert if we are not at a verdict or the trial is invalid */
-    /* invalidate the trial */
-    trial.status = 0;
     /* notify Swear of trial end regardless of verdict */
     trial.swear.notifyTrialEnd(trial.commitmentHash);
   }
