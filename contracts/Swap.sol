@@ -28,7 +28,7 @@ contract Swap is SimpleSwap {
 
     /* if there is a witness check the escrow condition */
     if(note.witness != address(0x0)) {
-      /* TODO: should be STATIC_CALL, will be so automatically in Solidity 0.5 */
+      /* static call */
       require(AbstractWitness(note.witness).testimonyFor(owner, note.beneficiary, note.id) == AbstractWitness.TestimonyStatus.VALID);
     }
   }
@@ -64,7 +64,7 @@ contract Swap is SimpleSwap {
     require(now >= noteInfo.timeout);
     /* only the beneficiary of the note may call this */
     require(msg.sender == note.beneficiary);
-    /* verify that the note conditions hold, WARNING: re-entrance possible until Solidity 0.5 */
+    /* verify that the note conditions hold, static call */
     verifyNote(note);
 
     /* if there is a limit make sure we don't exceed it */
