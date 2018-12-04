@@ -81,7 +81,7 @@ contract Swap is SimpleSwap {
     noteInfo.paidOut += payout;
 
     /* do the payout */
-    note.beneficiary.transfer(amount);
+    note.beneficiary.transfer(payout); // TODO: test
   }
 
   /// @notice demonstrate that an invoice was paid
