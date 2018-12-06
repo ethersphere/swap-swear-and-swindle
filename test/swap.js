@@ -14,283 +14,285 @@ const epoch = 24 * 3600
 contract('swap', function(accounts) {
   const [owner, bob, alice, carol] = accounts
 
-  async function submitCheque(signer, beneficiary, serial, amount) {
+  async function submitCheque(swap, signer, beneficiary, serial, amount) {
     const { sig } = await signCheque(swap, signer, beneficiary, serial, amount);
     return swap.submitCheque(beneficiary, serial, amount, sig, { from: beneficiary });
   }
 
-  const firstDeposit = 1000;
-  let swap
-
-  before(async() => {
-    swap = await Swap.new(owner)
-  })
+  async function prepareSwap(amount = 1000) {
+    const swap = await Swap.new(owner);
+    await swap.send(amount, { from: owner });
+    return { swap, amount }
+  }
 
   it('should accept deposits', async() => {
-    const value = firstDeposit;
-
-    const { logs } = await swap.send(value, { from: owner });
+    const { swap } = await prepareSwap(0)
+    const amount = 1000
+    const { logs } = await swap.send(amount, { from: owner });
 
     matchLogs(logs, [
-      { event: 'Deposit', args: { depositor: owner, amount: value }}
+      { event: 'Deposit', args: { depositor: owner, amount }}
     ]);
 
-    (await getBalance(swap.address)).should.eq.BN(value);
+    (await getBalance(swap.address)).should.eq.BN(amount);
   })
-
-  const firstCheque = 600;
 
   it('should not accept a cheque with serial 0', async() => {
-    await expectFail(submitCheque(owner, bob, 0, firstCheque));
+    const { swap, amount } = await prepareSwap()
+    await expectFail(submitCheque(swap, owner, bob, 0, amount));
   })
 
-  it('should accept valid cheque (increasing value)', async() => {
+  it('should accept valid cheque (increasing value, no hard deposit)', async() => {
+    const { swap, amount } = await prepareSwap()
     const serial = 1;
-    const amount = firstCheque;
 
-    const { logs } = await submitCheque(owner, bob, serial, amount);
+    var { logs } = await submitCheque(swap, owner, bob, serial, amount);
 
     matchLogs(logs, [
       { event: 'ChequeSubmitted', args: { amount, beneficiary: bob, serial } }
     ])
 
-    const chequeInfo = await swap.cheques(bob);
+    var chequeInfo = await swap.cheques(bob);
 
     chequeInfo.serial.should.eq.BN(serial)
     chequeInfo.amount.should.eq.BN(amount)
     chequeInfo.timeout.should.gte.BN(await getTime() + 1 * epoch - 1)
-  })
 
-  it('should not allow cheque payout before timeout', async() => {
-    await expectFail(swap.cashCheque(bob));
-  })
-
-  it('should allow cheque payout after timeout (no hard deposit)', async() => {
     await increaseTime(1 * epoch);
+    let beneficiaryExpectedBalance = (await getBalance(bob)).addn(amount);
 
-    let beneficiaryExpectedBalance = (await getBalance(bob)).addn(firstCheque);
-
-    let { logs } = await swap.cashCheque(bob);
+    var { logs } = await swap.cashCheque(bob);
 
     matchLogs(logs, [
-      { event: 'ChequeCashed', args: { beneficiary: bob, serial: 1, amount: firstCheque }}
+      { event: 'ChequeCashed', args: { beneficiary: bob, serial: 1, amount }}
     ]);
 
     (await getBalance(bob)).should.eq.BN(beneficiaryExpectedBalance);
 
-    const chequeInfo = await swap.cheques(bob);
+    var chequeInfo = await swap.cheques(bob);
 
-    chequeInfo.paidOut.should.eq.BN(firstCheque);
+    chequeInfo.paidOut.should.eq.BN(amount);
+  })
+
+  it('should not allow cheque payout before timeout', async() => {
+    const { swap, amount } = await prepareSwap()
+    await submitCheque(swap, owner, bob, 1, amount);
+    await expectFail(swap.cashCheque(bob));
   })
 
   it('should not allow cheque payout if there is nothing to pay out', async() => {
+    const { swap, amount } = await prepareSwap()
+    await submitCheque(swap, owner, bob, 1, amount);
+    await increaseTime(1 * epoch);
+    await swap.cashCheque(bob);
     await expectFail(swap.cashCheque(bob));
   })
 
   it('should not allow valid cheque if signed by owner and amount is not higher', async() => {
-    await expectFail(submitCheque(owner, bob, 2, firstCheque));
+    const { swap, amount } = await prepareSwap()
+    await submitCheque(swap, owner, bob, 1, amount);
+    await expectFail(submitCheque(swap, owner, bob, 2, amount));
   })
 
-  const secondCheque = firstCheque + 200;
-
   it('should accept valid cheque with higher amount', async() => {
-    const serial = 2;
-    const amount = secondCheque;
+    const { swap, amount } = await prepareSwap(1000)
 
-    const { logs } = await submitCheque(owner, bob, serial, amount);
+    await submitCheque(swap, owner, bob, 1, 500)
+    await increaseTime(1 * epoch);
+    await swap.cashCheque(bob);
+
+    var { logs } = await submitCheque(swap, owner, bob, 2, amount)
 
     matchLogs(logs, [
-      { event: 'ChequeSubmitted', args: { amount, beneficiary: bob, serial } }
+      { event: 'ChequeSubmitted', args: { amount, beneficiary: bob, serial: 2 } }
     ])
 
-    const chequeInfo = await swap.cheques(bob);
+    var chequeInfo = await swap.cheques(bob);
 
-    chequeInfo.serial.should.eq.BN(serial)
+    chequeInfo.serial.should.eq.BN(2)
     chequeInfo.amount.should.eq.BN(amount)
-    chequeInfo.timeout.should.gte.BN(getTime() + 1 * epoch - 1)
+    chequeInfo.timeout.should.gte.BN(await getTime() + 1 * epoch - 1)
+
+    await increaseTime(1 * epoch);
+
+    const beneficiaryExpectedBalance = (await getBalance(bob)).addn(500)
+
+    var { logs } = await swap.cashCheque(bob);
+
+    matchLogs(logs, [
+      { event: 'ChequeCashed', args: { beneficiary: bob, serial: 2, amount: 500 }}
+    ]);
+
+    (await getBalance(bob)).should.eq.BN(beneficiaryExpectedBalance);
+
+    var chequeInfo = await swap.cheques(bob);
+
+    chequeInfo.paidOut.should.eq.BN(amount);
   })
 
   it('should not allow cheque payout before increased timeout', async() => {
+    const { swap, amount } = await prepareSwap(1000)
+
+    await submitCheque(swap, owner, bob, 1, 500)
+    await increaseTime(1 * epoch);
+    await swap.cashCheque(bob);
+
     await expectFail(swap.cashCheque(bob));
   })
 
-  it('should allow cheque payout after timeout (with difference, no hard deposit)', async() => {
-    await increaseTime(1 * epoch);
-
-    let beneficiaryExpectedBalance = (await getBalance(bob)).addn(secondCheque).subn(firstCheque);
-
-    let { logs } = await swap.cashCheque(bob);
-
-    matchLogs(logs, [
-      { event: 'ChequeCashed', args: { beneficiary: bob, serial: 2, amount: secondCheque - firstCheque }}
-    ]);
-
-    (await getBalance(bob)).should.eq.BN(beneficiaryExpectedBalance);
-
-    const chequeInfo = await swap.cheques(bob);
-
-    chequeInfo.paidOut.should.eq.BN(secondCheque);
-  })
-
   it('should accept a valid check with lower value if signed by beneficiary', async () => {
-    const serial = 3;
-    const amount = firstCheque;
+    const { swap } = await prepareSwap(1000)
 
-    const { sig: sigOwner } = await signCheque(swap, owner, bob, serial, amount);
-    const { sig: sigBob } = await signCheque(swap, bob, bob, serial, amount);
+    await submitCheque(swap, owner, bob, 1, 500)
 
-    const { logs } = await swap.submitChequeLower(bob, serial, amount, sigOwner, sigBob);
+    const { sig: sigOwner } = await signCheque(swap, owner, bob, 2, 400);
+    const { sig: sigBob } = await signCheque(swap, bob, bob, 2, 400);
+
+    const { logs } = await swap.submitChequeLower(bob, 2, 400, sigOwner, sigBob);
 
     matchLogs(logs, [
-      { event: 'ChequeSubmitted', args: { beneficiary: bob, serial, amount }}
+      { event: 'ChequeSubmitted', args: { beneficiary: bob, serial: 2, amount: 400 }}
     ]);
 
     const chequeInfo = await swap.cheques(bob);
 
-    chequeInfo.serial.should.eq.BN(serial)
-    chequeInfo.amount.should.eq.BN(firstCheque)
+    chequeInfo.serial.should.eq.BN(2)
+    chequeInfo.amount.should.eq.BN(400)
   })
 
-  const thirdCheque = secondCheque + 300;
+  it('should allow partial payments for a bouncing check', async () => {
+    const { swap } = await prepareSwap(1000)
 
-  it('should allow parital payment for a bouncing check', async () => {
-    const serial = 4;
-    const amount = thirdCheque;
+    await submitCheque(swap, owner, bob, 1, 1500)
+    await increaseTime(1 * epoch)
 
-    await submitCheque(owner, bob, serial, amount);
-    await increaseTime(1 * epoch);
-
-    const paid = firstDeposit - secondCheque;
-    const bounced = thirdCheque - firstDeposit;
-
-    let beneficiaryExpectedBalance = (await getBalance(bob)).addn(paid);
-
-    const { logs } = await swap.cashCheque(bob);
+    var beneficiaryExpectedBalance = (await getBalance(bob)).addn(1000);
+    var { logs } = await swap.cashCheque(bob)
 
     matchLogs(logs, [
-      { event: 'ChequeBounced', args: { paid, bounced, serial, beneficiary: bob } }
+      { event: 'ChequeBounced', args: { paid: 1000, bounced: 500, serial: 1, beneficiary: bob } }
     ]);
 
     (await getBalance(bob)).should.eq.BN(beneficiaryExpectedBalance);
-  })
 
-  const refill = 500;
+    await swap.send(500)
 
-  it('should allow cheque to clear fully after refill', async () => {
-    await swap.send(refill);
-    const bounced = thirdCheque - firstDeposit;
+    var beneficiaryExpectedBalance = (await getBalance(bob)).addn(500);
 
-    let beneficiaryExpectedBalance = (await getBalance(bob)).addn(bounced);
-
-    const { logs } = await swap.cashCheque(bob);
+    var { logs } = await swap.cashCheque(bob)
 
     matchLogs(logs, [
-      { event: 'ChequeCashed', args: { amount: bounced, serial: 4, beneficiary: bob } }
+      { event: 'ChequeCashed', args: { amount: 500, serial: 1, beneficiary: bob } }
     ]);
-
-    (await getBalance(bob)).should.eq.BN(beneficiaryExpectedBalance);
   })
-
-  const hardDepositBob1 = 200;
 
   it('should allow hard deposits if they do not exceed the global deposit', async() => {
-    const { logs } = await swap.increaseHardDeposit(bob, hardDepositBob1);
+    const { swap } = await prepareSwap(1000)
+    var { logs } = await swap.increaseHardDeposit(bob, 500);
 
     matchLogs(logs, [
-      { event: 'HardDepositChanged', args: { beneficiary: bob, amount: hardDepositBob1 } }
-    ])
-
-    const hardDeposit = await swap.hardDeposits(bob);
-    hardDeposit.amount.should.eq.BN(hardDepositBob1);
-    (await swap.totalDeposit()).should.eq.BN(hardDepositBob1);
-  })
-
-  it('should not allow hard deposits if they exceed the global deposit', async() => {
-    await expectFail(swap.increaseHardDeposit(bob, (await getBalance(swap.address)).subn(hardDepositBob1).addn(1)));
-  })
-
-  const fourthCheque = thirdCheque + 100;
-
-  it('should use the hard deposit on valid cheque', async() => {
-    const serial = 5;
-
-    const amount = fourthCheque;
-    const diff = fourthCheque - thirdCheque;
-
-    await submitCheque(owner, bob, serial, amount);
-    await increaseTime(1 * epoch);
-
-    let beneficiaryExpectedBalance = (await getBalance(bob)).addn(diff);
-
-    const expectedHardDeposit = (await swap.hardDeposits(bob)).amount.subn(diff);
-
-    const { logs } = await swap.cashCheque(bob);
-
-    matchLogs(logs, [
-      { event: 'ChequeCashed', args: { amount: diff, serial, beneficiary: bob } }
+      { event: 'HardDepositChanged', args: { beneficiary: bob, amount: 500 } }
     ]);
 
-    (await swap.hardDeposits(bob)).amount.should.eq.BN(expectedHardDeposit);
+    var { logs } = await swap.increaseHardDeposit(alice, 500);
+
+    matchLogs(logs, [
+      { event: 'HardDepositChanged', args: { beneficiary: alice, amount: 500 } }
+    ]);
+
+    (await swap.hardDeposits(bob)).amount.should.eq.BN(500);
+    (await swap.hardDeposits(alice)).amount.should.eq.BN(500);
+    (await swap.totalDeposit()).should.eq.BN(1000);
+  })
+
+
+  it('should not allow hard deposits if they exceed the global deposit', async() => {
+    const { swap } = await prepareSwap(1000)
+    await expectFail(swap.increaseHardDeposit(bob, 1001));
+  })
+
+  it('should use the hard deposit on valid cheque', async() => {
+    const { swap } = await prepareSwap(1000)
+    await swap.increaseHardDeposit(bob, 500)
+
+    await submitCheque(swap, owner, bob, 1, 400)
+    await increaseTime(1 * epoch);
+
+    let beneficiaryExpectedBalance = (await getBalance(bob)).addn(400);
+
+    var { logs } = await swap.cashCheque(bob);
+
+    matchLogs(logs, [
+      { event: 'ChequeCashed', args: { amount: 400, serial: 1, beneficiary: bob } }
+    ]);
+
+    (await swap.hardDeposits(bob)).amount.should.eq.BN(100);
     (await getBalance(bob)).should.eq.BN(beneficiaryExpectedBalance);
   })
 
-  const aliceCheque = 250;
+  // TODO: only part covered by HD, but enough
+  // TODO: only part covered by HD, but not enough
+  // TODO: many cheques test
 
-  /* NOTE: at this point there are 300 wei in the contract with 100 wei locked for bob */
   it('should not spend ether locked away by hard deposit of another address', async() => {
-    await submitCheque(owner, alice, 1, aliceCheque);
-    await increaseTime(1 * epoch);
+    const { swap } = await prepareSwap(1000)
+    await swap.increaseHardDeposit(bob, 500)
 
-    let swapBalance = await getBalance(swap.address)
+    await submitCheque(swap, owner, alice, 1, 600)
+    await increaseTime(1 * epoch)
 
-    /* sanity check - make sure there is actually enough left so we know we're testing the right thing */
-    swapBalance.should.gte.BN(aliceCheque);
-    let paid = swapBalance.sub((await swap.hardDeposits(bob)).amount)
-    let bounced = web3.utils.toBN(aliceCheque).sub(paid)
+    const expectedBalanceAlice = (await getBalance(alice)).addn(500);
 
-
-    const expectedBalanceAlice = (await getBalance(alice)).add(paid);
-
-    const { logs } = await swap.cashCheque(alice);
+    var { logs } = await swap.cashCheque(alice)
 
     matchLogs(logs, [
-      { event: 'ChequeBounced', args: { beneficiary: alice, paid, bounced, serial: 1 } }
+      { event: 'ChequeBounced', args: { paid: 500, bounced:100, serial: 1, beneficiary: alice } }
     ]);
 
     (await getBalance(alice)).should.eq.BN(expectedBalanceAlice);
   })
 
   it('should not allow an instant decrease for hard deposits', async() => {
+    const { swap } = await prepareSwap(1000)
+    await swap.increaseHardDeposit(bob, 500)
     await expectFail(swap.decreaseHardDeposit(bob));
   })
 
-  const hardDepositBobDecrease = 75;
-
   it('should allow to prepare a decrease for hard deposits', async() => {
-    const { logs } = await swap.prepareDecreaseHardDeposit(bob, hardDepositBobDecrease);
+    const { swap } = await prepareSwap(1000)
+    await swap.increaseHardDeposit(bob, 500)
+
+    const { logs } = await swap.prepareDecreaseHardDeposit(bob, 200);
 
     matchLogs(logs, [
-      { event: 'HardDepositDecreasePrepared', args: { beneficiary: bob, diff: hardDepositBobDecrease } }
+      { event: 'HardDepositDecreasePrepared', args: { beneficiary: bob, diff: 200 } }
     ]);
 
     const hardDeposit = await swap.hardDeposits(bob);
 
-    hardDeposit.diff.should.eq.BN(hardDepositBobDecrease);
+    hardDeposit.diff.should.eq.BN(200);
     hardDeposit.timeout.should.gte.BN(await getTime() + 2 * epoch - 1);
   })
 
   it('should not allow to decrease hard deposit before the timeout', async() => {
+    const { swap } = await prepareSwap(1000)
+    await swap.increaseHardDeposit(bob, 500)
+    await swap.prepareDecreaseHardDeposit(bob, 200);
     await expectFail(swap.decreaseHardDeposit(bob));
   })
 
   it('should allow to decrease hard deposit after the timeout', async() => {
-    let expectedHardDeposit = (await swap.hardDeposits(bob)).amount.subn(hardDepositBobDecrease);
+    const { swap } = await prepareSwap(1000)
+    await swap.increaseHardDeposit(bob, 500)
+    await swap.prepareDecreaseHardDeposit(bob, 200);
+
+    let expectedHardDeposit = (await swap.hardDeposits(bob)).amount.subn(200);
 
     await increaseTime(2 * epoch);
     const { logs } = await swap.decreaseHardDeposit(bob);
 
     matchLogs(logs, [
-      { event: 'HardDepositChanged', args: { beneficiary: bob, amount: expectedHardDeposit } }
+      { event: 'HardDepositChanged', args: { beneficiary: bob, amount: 300 } }
     ]);
 
     (await swap.hardDeposits(bob)).amount.should.eq.BN(expectedHardDeposit);
@@ -298,35 +300,29 @@ contract('swap', function(accounts) {
   })
 
   it('should not allow to do the same decrease twice', async() => {
+    const { swap } = await prepareSwap(1000)
+    await swap.increaseHardDeposit(bob, 500)
+    await swap.prepareDecreaseHardDeposit(bob, 200);
+    await increaseTime(2 * epoch);
+    await swap.decreaseHardDeposit(bob);
     await expectFail(swap.decreaseHardDeposit(bob));
   })
 
-  it('should have enough liquid balance for the rest of the other accounts cheque now', async() => {
-    const amount = web3.utils.toBN(aliceCheque).sub((await swap.cheques(alice)).paidOut)
-
-    const expectedBalanceAlice = (await getBalance(alice)).add(amount);
-
-    const { logs } = await swap.cashCheque(alice);
-
-    matchLogs(logs, [
-      { event: 'ChequeCashed', args: { beneficiary: alice, serial: 1, amount } }
-    ]);
-
-    (await getBalance(alice)).should.be.eq.BN(expectedBalanceAlice);
-  })
-
-  let carolBond = 1000
-  let carolBondValidTimeout = 3 * epoch
-
+  // TODO: split
   it('should accept a valid note (bond)', async() => {
-    await swap.send(carolBond);
+    const { swap } = await prepareSwap(1000)
 
-    let validity = await getTime() + carolBondValidTimeout
+    const noteTimeout = 5000;
+    const noteAmount = 500
 
-    let { sig, hash } = await signNote(swap, owner, carol, 1, carolBond, nulladdress, validity, 0, "0x")
+    let validity = await getTime() + noteTimeout
+
+    let { sig, hash } = await signNote(swap, owner, carol, 1, noteAmount, nulladdress, validity, 0, "0x")
 
     await increaseTime(4 * epoch)
-    let encoded = await swap.encodeNote(swap.address, carol, 1, carolBond, nulladdress, validity, 0, "0x")
+
+    let encoded = await swap.encodeNote(swap.address, carol, 1, noteAmount, nulladdress, validity, 0, "0x")
+
     await swap.submitNote(encoded, sig, { from: carol });
 
     const { paidOut, timeout } = await swap.notes(hash)
@@ -336,30 +332,33 @@ contract('swap', function(accounts) {
 
     await increaseTime(1 * epoch)
 
-    let expectedBalanceCarol = (await getBalance(carol)).addn(carolBond)
+    let expectedBalanceCarol = (await getBalance(carol)).addn(noteAmount)
 
-    let { receipt } = await swap.cashNote(encoded, carolBond, { from: carol });
+    let { receipt } = await swap.cashNote(encoded, noteAmount, { from: carol });
 
     expectedBalanceCarol = expectedBalanceCarol.sub(await computeCost(receipt));
 
     (await getBalance(carol)).should.eq.BN(expectedBalanceCarol)
 
-    /* already fully cashed out */
-    await expectFail(swap.cashNote(encoded, carolBond, { from: carol }));
+    // already fully cashed out
+    await expectFail(swap.cashNote(encoded, noteAmount, { from: carol }));
   })
 
+  // TODO: split
   it('should accept a valid note (conditional bond)', async() => {
+    const { swap } = await prepareSwap(1000)
     const oracle = await OracleWitness.new();
 
-    await swap.send(carolBond);
+    const noteAmount = 500
+    const noteTimeout = 2 * epoch
 
-    let bondTimeout = await getTime() + carolBondValidTimeout
+    let bondTimeout = await getTime() + noteTimeout
 
-    let { sig, hash } = await signNote(swap, owner, carol, 1, carolBond, oracle.address, 0, bondTimeout, "0x")
+    let { sig, hash } = await signNote(swap, owner, carol, 1, noteAmount, oracle.address, 0, bondTimeout, "0x")
 
     await oracle.testify(hash, 1)
 
-    let encoded = await swap.encodeNote(swap.address, carol, 1, carolBond, oracle.address, 0, bondTimeout, "0x")
+    let encoded = await swap.encodeNote(swap.address, carol, 1, noteAmount, oracle.address, 0, bondTimeout, "0x")
     await swap.submitNote(encoded, sig, { from: carol });
 
     const { paidOut, timeout } = await swap.notes(hash)
@@ -367,67 +366,69 @@ contract('swap', function(accounts) {
     paidOut.should.eq.BN(0)
     timeout.should.gte.BN(await getTime() + 1 * epoch - 1)
 
-    /* cashout too soon */
-    await expectFail(swap.cashNote(encoded, carolBond, { from: carol }))
+    // cashout too soon
+    await expectFail(swap.cashNote(encoded, noteAmount, { from: carol }))
 
     await increaseTime(1 * epoch)
 
     await oracle.testify(hash, 0)
 
-    /* oracle says no */
-    await expectFail(swap.cashNote(encoded, carolBond, { from: carol }))
+    // oracle says no
+    await expectFail(swap.cashNote(encoded, noteAmount, { from: carol }))
 
     await oracle.testify(hash, 1)
 
-    /* partial payment */
-    let expectedBalanceCarol = (await getBalance(carol)).addn(carolBond / 4)
-    var { receipt } = await swap.cashNote(encoded, carolBond / 4, { from: carol });
+    // partial payment
+    let expectedBalanceCarol = (await getBalance(carol)).addn(noteAmount / 4)
+    var { receipt } = await swap.cashNote(encoded, noteAmount / 4, { from: carol });
     expectedBalanceCarol = expectedBalanceCarol.sub(await computeCost(receipt));
     (await getBalance(carol)).should.eq.BN(expectedBalanceCarol)
 
-    /* partial payment */
-    expectedBalanceCarol = (await getBalance(carol)).addn(carolBond / 4)
-    var { receipt } = await swap.cashNote(encoded, carolBond / 4, { from: carol });
+    // partial payment
+    expectedBalanceCarol = (await getBalance(carol)).addn(noteAmount / 4)
+    var { receipt } = await swap.cashNote(encoded, noteAmount / 4, { from: carol });
     expectedBalanceCarol = expectedBalanceCarol.sub(await computeCost(receipt));
     (await getBalance(carol)).should.eq.BN(expectedBalanceCarol)
-
-    await increaseTime(carolBondValidTimeout)
-
-    /* too late for the rest */
-    await expectFail(swap.cashNote(encoded, carolBond / 4, { from: carol }))
-  })
-
-  it('should allow to submit paid invoices', async() => {
-    await swap.send(carolBond + 200);
-
-    await submitCheque(owner, carol, 1, 100)
-
-    /* completely offchain cheque of 100 */
-
-    /* owner issues note */
-    let note = await signNote(swap, owner, carol, 1, carolBond, nulladdress, 0, 0, "0x")
-
-    /* carol issues invoice */
-    let invoice = await signInvoice(swap, carol, note.hash, 200, 2)
-
-    /* owner issues cheque for invoice */
-    let cheque = await signCheque(swap, owner, carol, 3, carolBond + 200)
-
-    let encoded = await swap.encodeNote(swap.address, carol, 1, carolBond, nulladdress, 0, 0, "0x")
-    /* carol submits note anyway */
-    await swap.submitNote(encoded, note.sig, { from: carol });
-
-    /* owner presents paid invoice */
-    await swap.submitPaidInvoice(encoded, 200, 2, invoice.sig, carolBond, cheque.sig)
 
     await increaseTime(2 * epoch)
 
-    await expectFail(swap.cashNote(encoded, carolBond))
+    // too late for the rest
+    await expectFail(swap.cashNote(encoded, noteAmount / 4, { from: carol }))
+  })
+
+  // TODO: split
+  it('should allow to submit paid invoices', async() => {
+    const { swap } = await prepareSwap(1000)
+    const noteAmount = 500
+
+    await submitCheque(swap, owner, carol, 1, 100)
+
+    // completely offchain cheque of 100
+
+    // owner issues note
+    let note = await signNote(swap, owner, carol, 1, noteAmount, nulladdress, 0, 0, "0x")
+
+    // carol issues invoice
+    let invoice = await signInvoice(swap, carol, note.hash, 200, 2)
+
+    // owner issues cheque for invoice
+    let cheque = await signCheque(swap, owner, carol, 3, noteAmount + 200)
+
+    let encoded = await swap.encodeNote(swap.address, carol, 1, noteAmount, nulladdress, 0, 0, "0x")
+    // carol submits note anyway
+    await swap.submitNote(encoded, note.sig, { from: carol });
+
+    // owner presents paid invoice
+    await swap.submitPaidInvoice(encoded, 200, 2, invoice.sig, noteAmount, cheque.sig)
+
+    await increaseTime(2 * epoch)
+
+    await expectFail(swap.cashNote(encoded, noteAmount))
 
     let { logs } = await swap.cashCheque(carol)
 
     matchLogs(logs, [
-      { event: 'ChequeCashed', args: { beneficiary: carol, serial: 3, amount: 1200 } }
+      { event: 'ChequeCashed', args: { beneficiary: carol, serial: 3, amount: 700 } }
     ])
   })
 
