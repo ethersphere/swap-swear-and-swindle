@@ -7,6 +7,10 @@ import "./SimpleSwap.sol";
 
 /// @title Swap Channel Contract
 contract Swap is SimpleSwap {
+  event NoteSubmitted(bytes32 indexed noteId);
+  event NoteCashed(bytes32 indexed noteId, uint amount);
+  event NoteBounced(bytes32 indexed noteId, uint paid, uint bounced);
+
   /* structure to keep track of a note */
   /* most of this probably does not need to be stored, could be resubmitted on payout to save gas */
   struct NoteInfo {
@@ -50,6 +54,8 @@ contract Swap is SimpleSwap {
 
     /* verify that the note conditions hold, else revert everything */
     verifyNote(note);
+
+    emit NoteSubmitted(note.id);
   }
 
   /// @notice cash a note
@@ -63,7 +69,7 @@ contract Swap is SimpleSwap {
     /* check that the security delay is over */
     require(now >= noteInfo.timeout);
     /* only the beneficiary of the note may call this */
-    require(msg.sender == note.beneficiary);
+    require(msg.sender == note.beneficiary); // necessary because of blank cheques
     /* verify that the note conditions hold, static call */
     verifyNote(note);
 
@@ -79,6 +85,9 @@ contract Swap is SimpleSwap {
 
     /* increase the stored paidOut amount to avoid double payout */
     noteInfo.paidOut += payout;
+
+    if(bounced != 0) emit NoteBounced(note.id, payout, bounced);
+    else emit NoteCashed(note.id, payout);
 
     /* do the payout */
     note.beneficiary.transfer(payout); // TODO: test
