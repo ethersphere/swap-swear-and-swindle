@@ -14,9 +14,9 @@ const epoch = 24 * 3600
 contract('swap', function(accounts) {
   const [owner, bob, alice, carol] = accounts
 
-  async function submitCheque(swap, signer, beneficiary, serial, amount) {
-    const { sig } = await signCheque(swap, signer, beneficiary, serial, amount);
-    return swap.submitCheque(beneficiary, serial, amount, sig, { from: beneficiary });
+  async function submitCheque(swap, signer, beneficiary, serial, amount, timeout = epoch) {
+    const { sig } = await signCheque(swap, signer, beneficiary, serial, amount, timeout);
+    return swap.submitCheque(beneficiary, serial, amount, timeout, sig, { from: beneficiary });
   }
 
   async function prepareSwap(amount = 1000) {
@@ -145,10 +145,10 @@ contract('swap', function(accounts) {
 
     await submitCheque(swap, owner, bob, 1, 500)
 
-    const { sig: sigOwner } = await signCheque(swap, owner, bob, 2, 400);
-    const { sig: sigBob } = await signCheque(swap, bob, bob, 2, 400);
+    const { sig: sigOwner } = await signCheque(swap, owner, bob, 2, 400, epoch);
+    const { sig: sigBob } = await signCheque(swap, bob, bob, 2, 400, epoch);
 
-    const { logs } = await swap.submitChequeLower(bob, 2, 400, sigOwner, sigBob);
+    const { logs } = await swap.submitChequeLower(bob, 2, 400, epoch, sigOwner, sigBob);
 
     matchLogs(logs, [
       { event: 'ChequeSubmitted', args: { beneficiary: bob, serial: 2, amount: 400 }}
@@ -412,14 +412,14 @@ contract('swap', function(accounts) {
     let invoice = await signInvoice(swap, carol, note.hash, 200, 2)
 
     // owner issues cheque for invoice
-    let cheque = await signCheque(swap, owner, carol, 3, noteAmount + 200)
+    let cheque = await signCheque(swap, owner, carol, 3, noteAmount + 200, epoch)
 
     let encoded = await swap.encodeNote(swap.address, carol, 1, noteAmount, nulladdress, 0, 0, "0x")
     // carol submits note anyway
     await swap.submitNote(encoded, note.sig, { from: carol });
 
     // owner presents paid invoice
-    await swap.submitPaidInvoice(encoded, 200, 2, invoice.sig, noteAmount, cheque.sig)
+    await swap.submitPaidInvoice(encoded, 200, 2, invoice.sig, noteAmount, epoch, cheque.sig)
 
     await increaseTime(2 * epoch)
 

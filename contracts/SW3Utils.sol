@@ -20,9 +20,9 @@ contract SW3Utils {
   }
 
   /// @dev compute hash for a cheque
-  function chequeHash(address swap, address beneficiary, uint serial, uint amount)
+  function chequeHash(address swap, address beneficiary, uint serial, uint amount, uint timeout)
   public pure returns (bytes32) {
-    return keccak256(abi.encodePacked(swap, serial, beneficiary, amount));
+    return keccak256(abi.encodePacked(swap, serial, beneficiary, amount, timeout));
   }
 
   /// @dev compute hash for a note

@@ -2,8 +2,8 @@ const Swap = artifacts.require("./Swap.sol");
 
 const { sign } = require('./testutils')
 
-async function signCheque(swap, signer, beneficiary, serial, amount) {
-  const hash = await swap.chequeHash(swap.address, beneficiary, serial, amount);
+async function signCheque(swap, signer, beneficiary, serial, amount, timeout) {
+  const hash = await swap.chequeHash(swap.address, beneficiary, serial, amount, timeout);
   return (await sign(signer, hash));
 }
 

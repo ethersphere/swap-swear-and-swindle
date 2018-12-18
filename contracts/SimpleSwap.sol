@@ -83,12 +83,12 @@ contract SimpleSwap is SW3Utils {
   /// @param serial the serial number of the cheque
   /// @param amount the (cumulative) amount of the cheque
   /// @param sig signature of the owner
-  function submitCheque(address beneficiary, uint serial, uint amount, bytes memory sig) public {
+  function submitCheque(address beneficiary, uint serial, uint amount, uint timeout, bytes memory sig) public {
     /* only allow beneficiary to submit this, otherwise the owner could block cash out by regulary sending 1 wei cheques and resetting the timeout */
     /* unfortunately this breaks watchtowers, so the timeout mechanism should be changed */
     require(msg.sender == beneficiary);
     /* verify signature of the owner */
-    require(owner ==  recover(chequeHash(address(this), beneficiary, serial, amount), sig));
+    require(owner ==  recover(chequeHash(address(this), beneficiary, serial, amount, timeout), sig));
     /*  amount needs to be larger. since this can only be called by the beneficiary this is probably not necessary */
     require(amount > cheques[beneficiary].amount);
     /* update the cheque data */
@@ -102,11 +102,11 @@ contract SimpleSwap is SW3Utils {
   /// @param amount the (cumulative) amount of the cheque
   /// @param ownerSig signature of the owner
   /// @param beneficarySig signature of the beneficiary
-  function submitChequeLower(address beneficiary, uint serial, uint amount, bytes memory ownerSig, bytes memory beneficarySig) public {
+  function submitChequeLower(address beneficiary, uint serial, uint amount, uint timeout, bytes memory ownerSig, bytes memory beneficarySig) public {
     /* verify signature of the owner */
-    require(owner ==  recover(chequeHash(address(this), beneficiary, serial, amount), ownerSig));
+    require(owner ==  recover(chequeHash(address(this), beneficiary, serial, amount, timeout), ownerSig));
     /* verify signature of the beneficiary */
-    require(beneficiary ==  recover(chequeHash(address(this), beneficiary, serial, amount), beneficarySig));
+    require(beneficiary ==  recover(chequeHash(address(this), beneficiary, serial, amount, timeout), beneficarySig));
     /* update the cheque data */
     _submitChequeInternal(beneficiary, serial, amount);
   }

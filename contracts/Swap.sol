@@ -99,7 +99,7 @@ contract Swap is SimpleSwap {
   /// @param invoiceSig beneficiary signature of the invoice
   /// @param amount of the cheque / note
   /// @param chequeSig owner signature of the cheque
-  function submitPaidInvoice(bytes memory encoded, uint swapBalance, uint serial, bytes memory invoiceSig, uint amount, bytes memory chequeSig) public {
+  function submitPaidInvoice(bytes memory encoded, uint swapBalance, uint serial, bytes memory invoiceSig, uint amount, uint timeout, bytes memory chequeSig) public {
     /* only the owner may do this */
     require(msg.sender == owner);
     Note memory note = decodeNote(encoded);
@@ -118,7 +118,7 @@ contract Swap is SimpleSwap {
     /* check signature of the invoice */
     require(note.beneficiary == recover(invoiceId, invoiceSig));
     /* check signature of the cheque */
-    require(owner == recover(chequeHash(address(this), note.beneficiary, serial + 1, cumulativeTotal), chequeSig));
+    require(owner == recover(chequeHash(address(this), note.beneficiary, serial + 1, cumulativeTotal, timeout), chequeSig));
 
     /* cheque needs to be an exact match */
     require(note.amount == amount);
