@@ -1,8 +1,6 @@
 pragma solidity ^0.4.23;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "openzeppelin-solidity/contracts/math/Math.sol";
 import "./SW3Utils.sol";
-import "./abstracts/AbstractWitness.sol";
 
 /// @title Swap Channel Contract
 contract SimpleSwap is SW3Utils {
@@ -11,7 +9,7 @@ contract SimpleSwap is SW3Utils {
   event Deposit(address depositor, uint amount);
   event ChequeCashed(address indexed beneficiary, uint indexed serial, uint amount);
   event ChequeSubmitted(address indexed beneficiary, uint indexed serial, uint amount);
-  event ChequeBounced(address indexed beneficiary, uint indexed serial, uint paid, uint bounced);
+  event ChequeBounced(address indexed beneficiary, uint indexed serial);
 
   event HardDepositChanged(address indexed beneficiary, uint amount);
   event HardDepositDecreasePrepared(address indexed beneficiary, uint diff);
@@ -78,23 +76,6 @@ contract SimpleSwap is SW3Utils {
     emit ChequeSubmitted(beneficiary, serial, amount);
   }
 
-  /// @notice submit a cheque
-  /// @param beneficiary the beneficiary of the cheque
-  /// @param serial the serial number of the cheque
-  /// @param amount the (cumulative) amount of the cheque
-  /// @param sig signature of the owner
-  function submitCheque(address beneficiary, uint serial, uint amount, bytes sig) public {
-    /* only allow beneficiary to submit this, otherwise the owner could block cash out by regulary sending 1 wei cheques and resetting the timeout */
-    /* unfortunately this breaks watchtowers, so the timeout mechanism should be changed */
-    require(msg.sender == beneficiary);
-    /* verify signature of the owner */
-    require(owner ==  recoverSignature(chequeHash(address(this), beneficiary, serial, amount), sig));
-    /*  amount needs to be larger. since this can only be called by the beneficiary this is probably not necessary */
-    require(amount > cheques[beneficiary].amount);
-    /* update the cheque data */
-    _submitChequeInternal(beneficiary, serial, amount);
-  }
-
   /* TODO: security implications of anyone being able to call this and the resulting timeout delay */
   /// @notice submit a cheque even if its lower
   /// @param beneficiary the beneficiary of the cheque
@@ -116,53 +97,39 @@ contract SimpleSwap is SW3Utils {
   /// @param value maximum amount to send
   /// @return payout amount that was actually paid out
   /// @return payout amount that bounced
-  function _payout(address beneficiary, uint value) internal returns (uint payout, uint bounced) {
-    /* part of hard deposit used */
-    payout = Math.min256(value, hardDeposits[beneficiary].amount);
-    /* if there some of the hard deposit is used update the structure */
-    if(payout != 0) {
-      hardDeposits[beneficiary].amount -= payout;
-      totalDeposit -= payout;
+  function _payout(address beneficiary, uint amount) internal returns (bool) {
+    /* SWAP contract should be allowed to process the payout */
+    if(amount >= liquidBalance()) {
+      return false; // returning false signals a bounced cheque. TODO: consider reverting
     }
 
-    /* amount of the cash not backed by a hard deposit */
-    uint rest = value - payout;
-    uint liquid = liquidBalance();
-
-    if(liquid >= rest) {
-      /* swap channel is solvent */
-      payout = value;
-    } else {
-      /* part of the cheque bounces */
-      payout += liquid;
-      bounced = rest - liquid;
-    }
+    /* Update internal accounting */
+    hardDeposits[beneficiary].amount = hardDeposits[beneficiary].amount.sub(amount);
+    totalDeposit = totalDeposit.sub(amount);
 
     /* transfer the payout */
-    beneficiary.transfer(payout);
+    beneficiary.transfer(amount);
+    return true;
   }
 
   /// @notice attempt to cash latest cheque
   /// @param beneficiary beneficiary for whose cheque should be paid out
-  function cashCheque(address beneficiary) public {
+  function cashCheque(address beneficiary, uint256 amount) public {
     ChequeInfo storage info = cheques[beneficiary];
 
     /* grace period must have ended */
     require(now >= info.timeout);
 
     /* ensure there is actually ether to be paid out */
-    uint value = info.amount.sub(info.paidOut); /* throws if paidOut > amount */
-    require(value > 0);
+    require(info.amount.sub(info.paidOut) >= amount);
+    info.paidOut = info.paidOut.add(amount);
 
-    /* do the actual payout */
-    (uint payout, uint bounced) = _payout(beneficiary, value);
-
-    /* emit the correct event depending on wether it bounced or not */
-    if(bounced != 0) emit ChequeBounced(beneficiary, info.serial, payout, bounced);
-    else emit ChequeCashed(beneficiary, info.serial, payout);
-
-    /* increase the stored paidOut amount to avoid double payout */
-    info.paidOut = info.paidOut.add(payout);
+    /* Attempt the actual payout and emit events based on the result */
+    if(!_payout(beneficiary, amount)) {
+        emit ChequeBounced(beneficiary, info.serial);
+    } else {
+        emit ChequeCashed(beneficiary, info.serial, amount);
+    }
   }
 
   /// @notice prepare to decrease the hard deposit
@@ -172,7 +139,7 @@ contract SimpleSwap is SW3Utils {
     require(msg.sender == owner);
     HardDeposit storage deposit = hardDeposits[beneficiary];
     /* cannot decrease it by more than the deposit */
-    require(diff < deposit.amount);
+    require(diff <= deposit.amount);
 
     /* timeout is twice the normal timeout to ensure users can submit and cash in time */
     deposit.timeout = now + timeout * 2;
@@ -191,8 +158,8 @@ contract SimpleSwap is SW3Utils {
     require(now >= deposit.timeout);
 
     /* decrease the amount */
-    /* this throws if diff > amount */
-    deposit.amount = deposit.amount.sub(deposit.diff);
+    /* diff can never be more than amount (require statement in prepareDecreaseHardDeposit) */
+    deposit.amount = deposit.amount - deposit.diff;
     /* reset the timeout to avoid a double decrease */
     deposit.timeout = 0;
     /* keep totalDeposit in sync */
