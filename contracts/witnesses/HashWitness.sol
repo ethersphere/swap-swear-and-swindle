@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 import "../abstracts/AbstractWitness.sol";
 
 /// @title HashWitness - Witness expects data for some keccak256 hash to be submitted
@@ -14,8 +14,8 @@ contract HashWitness is AbstractWitness {
   }
 
   /* remark is expected to be keccak256(trial, keccak256(data)) */
-  function testify(bytes data) public {
-    testimonies[keccak256(data)] = TestimonyStatus.VALID;    
+  function testify(bytes memory data) public {
+    testimonies[keccak256(data)] = TestimonyStatus.VALID;
   }
 
 }

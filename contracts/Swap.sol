@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/math/Math.sol";
 import "./SW3Utils.sol";
@@ -7,6 +7,10 @@ import "./SimpleSwap.sol";
 
 /// @title Swap Channel Contract
 contract Swap is SimpleSwap {
+  event NoteSubmitted(bytes32 indexed noteId);
+  event NoteCashed(bytes32 indexed noteId, uint amount);
+  event NoteBounced(bytes32 indexed noteId, uint paid, uint bounced);
+
   /* structure to keep track of a note */
   /* most of this probably does not need to be stored, could be resubmitted on payout to save gas */
   struct NoteInfo {
@@ -17,7 +21,7 @@ contract Swap is SimpleSwap {
   /* associates every noteId with a NoteInfo */
   mapping (bytes32 => NoteInfo) public notes;
 
-  constructor(address _owner) SimpleSwap(_owner) public { }
+  constructor(address payable _owner) SimpleSwap(_owner) public { }
 
   /// @dev verify the conditions of a note
   function verifyNote(Note memory note) internal view {
@@ -28,18 +32,18 @@ contract Swap is SimpleSwap {
 
     /* if there is a witness check the escrow condition */
     if(note.witness != address(0x0)) {
-      /* TODO: should be STATIC_CALL, will be so automatically in Solidity 0.5 */
+      /* static call */
       require(AbstractWitness(note.witness).testimonyFor(owner, note.beneficiary, note.id) == AbstractWitness.TestimonyStatus.VALID);
     }
   }
 
   /// @notice submit a note
   /// @param sig signature of the note
-  function submitNote(bytes encoded, bytes sig) public {
+  function submitNote(bytes memory encoded, bytes memory sig) public {
     Note memory note = decodeNote(encoded);
 
     /* verify the signature of the owner */
-    require(owner == recoverSignature(note.id, sig));
+    require(owner == recover(note.id, sig));
     /* make sure the note has not been submitted before */
     require(notes[note.id].timeout == 0);
 
@@ -50,11 +54,13 @@ contract Swap is SimpleSwap {
 
     /* verify that the note conditions hold, else revert everything */
     verifyNote(note);
+
+    emit NoteSubmitted(note.id);
   }
 
   /// @notice cash a note
   /// @param amount amount to be paid out
-  function cashNote(bytes encoded, uint amount) public {
+  function cashNote(bytes memory encoded, uint amount) public {
     Note memory note = decodeNote(encoded);
     NoteInfo storage noteInfo = notes[note.id];
 
@@ -63,8 +69,8 @@ contract Swap is SimpleSwap {
     /* check that the security delay is over */
     require(now >= noteInfo.timeout);
     /* only the beneficiary of the note may call this */
-    require(msg.sender == note.beneficiary);
-    /* verify that the note conditions hold, WARNING: re-entrance possible until Solidity 0.5 */
+    require(msg.sender == note.beneficiary); // necessary because of blank cheques
+    /* verify that the note conditions hold, static call */
     verifyNote(note);
 
     /* if there is a limit make sure we don't exceed it */
@@ -72,10 +78,19 @@ contract Swap is SimpleSwap {
       require(noteInfo.paidOut.add(amount) <= note.amount);
     }
 
-    /* actual payout */
-    (uint payout,) = _payout(note.beneficiary, amount);
+    /* compute the actual payout */
+    (uint payout, uint bounced) = _computePayout(note.beneficiary, amount);
+
+    /* TODO: event */
+
     /* increase the stored paidOut amount to avoid double payout */
     noteInfo.paidOut += payout;
+
+    if(bounced != 0) emit NoteBounced(note.id, payout, bounced);
+    else emit NoteCashed(note.id, payout);
+
+    /* do the payout */
+    note.beneficiary.transfer(payout); // TODO: test
   }
 
   /// @notice demonstrate that an invoice was paid
@@ -84,7 +99,7 @@ contract Swap is SimpleSwap {
   /// @param invoiceSig beneficiary signature of the invoice
   /// @param amount of the cheque / note
   /// @param chequeSig owner signature of the cheque
-  function submitPaidInvoice(bytes encoded, uint swapBalance, uint serial, bytes invoiceSig, uint amount, bytes chequeSig) public {
+  function submitPaidInvoice(bytes memory encoded, uint swapBalance, uint serial, bytes memory invoiceSig, uint amount, uint timeout, bytes memory chequeSig) public {
     /* only the owner may do this */
     require(msg.sender == owner);
     Note memory note = decodeNote(encoded);
@@ -101,9 +116,9 @@ contract Swap is SimpleSwap {
 
     /* TODO: this breaks with note.beneficiary = 0 */
     /* check signature of the invoice */
-    require(note.beneficiary == recoverSignature(invoiceId, invoiceSig));
+    require(note.beneficiary == recover(invoiceId, invoiceSig));
     /* check signature of the cheque */
-    require(owner == recoverSignature(chequeHash(address(this), note.beneficiary, serial + 1, cumulativeTotal), chequeSig));
+    require(owner == recover(chequeHash(address(this), note.beneficiary, serial + 1, cumulativeTotal, timeout), chequeSig));
 
     /* cheque needs to be an exact match */
     require(note.amount == amount);

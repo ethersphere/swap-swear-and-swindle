@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 import "./abstracts/AbstractRules.sol";
 import "./abstracts/AbstractWitness.sol";
 import "./abstracts/AbstractSwear.sol";
@@ -24,8 +24,6 @@ contract SwearSwap is SW3Utils, AbstractWitness, AbstractSwear {
   struct Commitment {
     bool valid; /* indicates wether this structure is valid */
     address provider; /* provider of the service */
-    AbstractRules rules; /* rules of the game */
-    bytes32 payload;
     bytes32 noteId;
     uint cases; /* number of open cases */
   }
@@ -36,7 +34,7 @@ contract SwearSwap is SW3Utils, AbstractWitness, AbstractSwear {
   /// @notice callback for swindle when compensation should take place
   /// @dev either reduces the deposit if onchain or mark note as valid if offchain
   /// @param commitmentHash commitment to compensate from
-  function compensate(bytes32 commitmentHash, address, uint) public {
+  function compensate(bytes32 commitmentHash, address payable, uint) public {
     require(msg.sender == address(swindle));
     Commitment storage commitment = commitments[commitmentHash];
     guiltyNotes[commitment.provider][commitment.noteId] = true;
@@ -63,11 +61,11 @@ contract SwearSwap is SW3Utils, AbstractWitness, AbstractSwear {
   /// @param trial trial rules for the note (needs to match the remark)
   /// @param payload payload (needs to match the remark)
   /// @param sig signature of the note
-  function startTrialFromNote(bytes encoded, address trial, bytes32 payload, bytes sig) public returns(address) {
+  function startTrialFromNote(bytes memory encoded, address trial, bytes32 payload, bytes memory sig) public returns(address) {
     Note memory note = decodeNote(encoded);
 
     /* get the provider from the signature */
-    address provider = recoverSignature(note.id, sig);
+    address provider = recover(note.id, sig);
     bytes32 commitmentHash = keccak256(abi.encodePacked(provider, trial, note.id));
 
     /* ensure that trial and payload match the remark */
@@ -78,9 +76,7 @@ contract SwearSwap is SW3Utils, AbstractWitness, AbstractSwear {
       commitments[commitmentHash] = Commitment({
         valid: true,
         provider: provider,
-        rules: AbstractRules(trial),
         noteId: note.id,
-        payload: payload,
         cases: 1 /* initialize with 1 open case */
       });
     } else {

@@ -8,17 +8,11 @@ const util = require('ethereumjs-util')
 
 require('chai')
     .use(require('chai-as-promised'))
-    .use(require('chai-bignumber')(web3.BigNumber))
+    .use(require('bn-chai')(web3.utils.BN))
     .should();
 
-const { getBalance, getTime, increaseTime, expectFail, matchLogs, sign, nulladdress, computeCost } = require('./testutils')
+const { getTime, increaseTime, expectFail, matchLogs, sign, nulladdress, computeCost } = require('./testutils')
 const { signNote } = require('./swutils')
-
-const VALID = 1
-const INVALID = 2
-
-const GUILTY = 1
-const NOT_GUILTY = 2
 
 /* Dockerfile from swarm repo */
 const length = 'a701000000000000'
@@ -33,9 +27,9 @@ contract('Storage', (accounts) => {
   const [dataInsurer, dataOwner, carol] = accounts
 
   it('should take deposit if nothing is provided', async () => {
-    const swap = await Swap.deployed()
-    const swear = await Swear.deployed()
-    const swindle = await Swindle.deployed()
+    const swap = await Swap.new(dataInsurer)
+    const swindle = await Swindle.new()
+    const swear = await Swear.new(swindle.address)
     const hashWitness = await HashWitness.new()
     const trial = await SimpleTrial.new(hashWitness.address)
 
@@ -43,13 +37,13 @@ contract('Storage', (accounts) => {
 
     const witness = swear.address
 
-    await swap.send(web3.toWei(1))
+    await swap.send(web3.utils.toWei("1"))
 
-    let expires = getTime() + 3600 * 24 * 365
+    let expires = await getTime() + 3600 * 24 * 365
 
     let remark = '0x' + util.sha3(Buffer.concat([Buffer.from(trial.address.substring(2), 'hex'), Buffer.from(swarmHash.substring(2), 'hex')])).toString('hex')
 
-    let note = await signNote(dataInsurer, dataOwner, 1, amount, witness, 0, expires, remark)
+    let note = await signNote(swap, dataInsurer, dataOwner, 1, amount, witness, 0, expires, remark)
 
     let encoded = await swap.encodeNote(swap.address, dataOwner, 1, amount, witness, 0, expires, remark);
 
@@ -72,9 +66,9 @@ contract('Storage', (accounts) => {
   })
 
   it('should accept valid POC2 chunk', async () => {
-    const swap = await Swap.deployed()
-    const swear = await Swear.deployed()
-    const swindle = await Swindle.deployed()
+    const swap = await Swap.new(dataInsurer)
+    const swindle = await Swindle.new()
+    const swear = await Swear.new(swindle.address)
     const hashWitness = await HashWitness.new()
     const trial = await SimpleTrial.new(hashWitness.address)
 
@@ -82,13 +76,13 @@ contract('Storage', (accounts) => {
 
     const witness = swear.address
 
-    await swap.send(web3.toWei(1))
+    await swap.send(web3.utils.toWei("1"))
 
-    let expires = getTime() + 3600 * 24 * 365
+    let expires = await getTime() + 3600 * 24 * 365
 
     let remark = '0x' + util.sha3(Buffer.concat([Buffer.from(trial.address.substring(2), 'hex'), Buffer.from(swarmHash.substring(2), 'hex')])).toString('hex')
 
-    let note = await signNote(dataInsurer, dataOwner, 1, amount, witness, 0, expires, remark)
+    let note = await signNote(swap, dataInsurer, dataOwner, 1, amount, witness, 0, expires, remark)
 
     let encoded = await swap.encodeNote(swap.address, dataOwner, 1, amount, witness, 0, expires, remark);
 
@@ -107,9 +101,9 @@ contract('Storage', (accounts) => {
   })
 
   it('should accept valid POC3 chunk', async () => {
-    const swap = await Swap.deployed()
-    const swear = await Swear.deployed()
-    const swindle = await Swindle.deployed()
+    const swap = await Swap.new(dataInsurer)
+    const swindle = await Swindle.new()
+    const swear = await Swear.new(swindle.address)
 
     const chunkWitness = await ChunkWitness.new()
     const trial = await SimpleTrial.new(chunkWitness.address)
@@ -118,13 +112,13 @@ contract('Storage', (accounts) => {
 
     const witness = swear.address
 
-    await swap.send(web3.toWei(1))
+    await swap.send(web3.utils.toWei("1"))
 
-    let expires = getTime() + 3600 * 24 * 365
+    let expires = await getTime() + 3600 * 24 * 365
 
     let remark = '0x' + util.sha3(Buffer.concat([Buffer.from(trial.address.substring(2), 'hex'), Buffer.from(poc3Hash.substring(2), 'hex')])).toString('hex')
 
-    let note = await signNote(dataInsurer, dataOwner, 1, amount, witness, 0, expires, remark)
+    let note = await signNote(swap, dataInsurer, dataOwner, 1, amount, witness, 0, expires, remark)
 
     let encoded = await swap.encodeNote(swap.address, dataOwner, 1, amount, witness, 0, expires, remark);
 

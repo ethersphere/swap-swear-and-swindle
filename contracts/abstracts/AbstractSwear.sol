@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 
 /// @title AbstractSwear - the sw3 swear interface
 contract AbstractSwear {
@@ -7,7 +7,7 @@ contract AbstractSwear {
   /// @param commitmentHash commitment to compensate from
   /// @param beneficiary beneficiary to compensate
   /// @param reward amount to be compensated
-  function compensate(bytes32 commitmentHash, address beneficiary, uint reward) public;
+  function compensate(bytes32 commitmentHash, address payable beneficiary, uint reward) public;
 
   /// @notice callback for swindle at the end of the trial
   /// @param commitmentHash commitment

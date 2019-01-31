@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.5.0;
 import "../abstracts/AbstractRules.sol";
 import "../abstracts/AbstractWitness.sol";
 
@@ -25,7 +25,7 @@ contract SimpleTrial is AbstractRules {
 
   function getWitness(uint8 trialStatus)
   public view returns (address, uint) {
-    if(trialStatus == TRIAL_STATUS_WITNESS) return  (witness, 2 days);
+    if(trialStatus == TRIAL_STATUS_WITNESS) return  (address(witness), 2 days);
     revert();
   }
 
