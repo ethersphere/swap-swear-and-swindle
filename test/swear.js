@@ -8,9 +8,9 @@ require('chai')
     .use(require('bn-chai')(web3.utils.BN))
     .should();
 
-const { increaseTime, expectFail, matchLogs, matchStruct, sign, nulladdress, computeCost } = require('./testutils')
+const { increaseTime, matchLogs, matchStruct, sign, nulladdress, computeCost } = require('./testutils')
 const { signCheque, signNote, signInvoice } = require('./swutils')
-const { balance, time } = require('openzeppelin-test-helpers')
+const { balance, time, shouldFail } = require('openzeppelin-test-helpers')
 
 const VALID = 1
 const INVALID = 2
@@ -74,8 +74,8 @@ contract('swear', function(accounts) {
 
     let { caseId } = logs[0].args
 
-    await expectFail(swear.withdraw(commitmentHash));
-    await expectFail(swindle.endTrial(caseId));
+    await shouldFail.reverting(swear.withdraw(commitmentHash));
+    await shouldFail.reverting(swindle.endTrial(caseId));
 
     await (await OracleWitness.at(await oracleTrial.witness1())).testify("0xff", VALID)
 
@@ -85,7 +85,7 @@ contract('swear', function(accounts) {
       event: 'StateTransition', args: { caseId, from: WITNESS_1, to: WITNESS_2 }
     }])
 
-    await expectFail(swindle.endTrial(caseId));
+    await shouldFail.reverting(swindle.endTrial(caseId));
 
     await (await OracleWitness.at(await oracleTrial.witness2())).testify("0xff", VALID)
 

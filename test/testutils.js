@@ -6,16 +6,6 @@ async function computeCost(receipt) {
   return web3.utils.toBN(gasPrice * receipt.gasUsed);
 }
 
-const isTestRPC = async () => (await web3.eth.getNodeInfo()).includes("TestRPC/v2")
-
-const expectFail = async (promise) => {
-  if(await isTestRPC()) {
-    await promise.should.be.rejectedWith('revert');
-  } else {
-    throw 'figure out the current client behaviour'
-  }
-}
-
 function matchLogs (logs, template) {
   if(logs.length != template.length) throw new Error('length does not match')
   for(let i = 0; i < logs.length; i++) {
@@ -65,7 +55,6 @@ module.exports = {
   increaseTime,
   sign,
   matchLogs,
-  expectFail,  
   computeCost,
   nulladdress: '0x0000000000000000000000000000000000000000'
 }

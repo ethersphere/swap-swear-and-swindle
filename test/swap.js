@@ -6,9 +6,9 @@ require('chai')
     .use(require('bn-chai')(web3.utils.BN))
     .should();
 
-const { increaseTime, expectFail, matchLogs, matchStruct, sign, nulladdress, computeCost } = require('./testutils')
+const { increaseTime, matchLogs, matchStruct, sign, nulladdress, computeCost } = require('./testutils')
 const { signCheque, signNote, signInvoice } = require('./swutils')
-const { balance, time } = require('openzeppelin-test-helpers')
+const { balance, time, shouldFail } = require('openzeppelin-test-helpers')
 
 const epoch = 24 * 3600
 
@@ -40,7 +40,7 @@ contract('swap', function(accounts) {
 
   it('should not accept a cheque with serial 0', async() => {
     const { swap, amount } = await prepareSwap()
-    await expectFail(submitCheque(swap, owner, bob, 0, amount));
+    await shouldFail.reverting(submitCheque(swap, owner, bob, 0, amount));
   })
 
   it('should accept valid cheque (increasing value, no hard deposit)', async() => {
@@ -78,7 +78,7 @@ contract('swap', function(accounts) {
   it('should not allow cheque payout before timeout', async() => {
     const { swap, amount } = await prepareSwap()
     await submitCheque(swap, owner, bob, 1, amount);
-    await expectFail(swap.cashCheque(bob));
+    await shouldFail.reverting(swap.cashCheque(bob));
   })
 
   it('should not allow cheque payout if there is nothing to pay out', async() => {
@@ -86,13 +86,13 @@ contract('swap', function(accounts) {
     await submitCheque(swap, owner, bob, 1, amount);
     await increaseTime(1 * epoch);
     await swap.cashCheque(bob);
-    await expectFail(swap.cashCheque(bob));
+    await shouldFail.reverting(swap.cashCheque(bob));
   })
 
   it('should not allow valid cheque if signed by owner and amount is not higher', async() => {
     const { swap, amount } = await prepareSwap()
     await submitCheque(swap, owner, bob, 1, amount);
-    await expectFail(submitCheque(swap, owner, bob, 2, amount));
+    await shouldFail.reverting(submitCheque(swap, owner, bob, 2, amount));
   })
 
   it('should accept valid cheque with higher amount', async() => {
@@ -138,7 +138,7 @@ contract('swap', function(accounts) {
     await increaseTime(1 * epoch);
     await swap.cashCheque(bob);
 
-    await expectFail(swap.cashCheque(bob));
+    await shouldFail.reverting(swap.cashCheque(bob));
   })
 
   it('should accept a valid check with lower value if signed by beneficiary', async () => {
@@ -209,7 +209,7 @@ contract('swap', function(accounts) {
 
   it('should not allow hard deposits if they exceed the global deposit', async() => {
     const { swap } = await prepareSwap(1000)
-    await expectFail(swap.increaseHardDeposit(bob, 1001));
+    await shouldFail.reverting(swap.increaseHardDeposit(bob, 1001));
   })
 
   it('should use the hard deposit on valid cheque', async() => {
@@ -256,7 +256,7 @@ contract('swap', function(accounts) {
   it('should not allow an instant decrease for hard deposits', async() => {
     const { swap } = await prepareSwap(1000)
     await swap.increaseHardDeposit(bob, 500)
-    await expectFail(swap.decreaseHardDeposit(bob));
+    await shouldFail.reverting(swap.decreaseHardDeposit(bob));
   })
 
   it('should allow to prepare a decrease for hard deposits', async() => {
@@ -279,7 +279,7 @@ contract('swap', function(accounts) {
     const { swap } = await prepareSwap(1000)
     await swap.increaseHardDeposit(bob, 500)
     await swap.prepareDecreaseHardDeposit(bob, 200);
-    await expectFail(swap.decreaseHardDeposit(bob));
+    await shouldFail.reverting(swap.decreaseHardDeposit(bob));
   })
 
   it('should allow to decrease hard deposit after the timeout', async() => {
@@ -306,7 +306,7 @@ contract('swap', function(accounts) {
     await swap.prepareDecreaseHardDeposit(bob, 200);
     await increaseTime(2 * epoch);
     await swap.decreaseHardDeposit(bob);
-    await expectFail(swap.decreaseHardDeposit(bob));
+    await shouldFail.reverting(swap.decreaseHardDeposit(bob));
   })
 
   // TODO: split
@@ -342,7 +342,7 @@ contract('swap', function(accounts) {
     (await balance.current(carol)).should.eq.BN(expectedBalanceCarol)
 
     // already fully cashed out
-    await expectFail(swap.cashNote(encoded, noteAmount, { from: carol }));
+    await shouldFail.reverting(swap.cashNote(encoded, noteAmount, { from: carol }));
   })
 
   // TODO: split
@@ -368,14 +368,14 @@ contract('swap', function(accounts) {
     timeout.should.gte.BN((await time.latest()).addn(1 * epoch - 1))
 
     // cashout too soon
-    await expectFail(swap.cashNote(encoded, noteAmount, { from: carol }))
+    await shouldFail.reverting(swap.cashNote(encoded, noteAmount, { from: carol }))
 
     await increaseTime(1 * epoch)
 
     await oracle.testify(hash, 0)
 
     // oracle says no
-    await expectFail(swap.cashNote(encoded, noteAmount, { from: carol }))
+    await shouldFail.reverting(swap.cashNote(encoded, noteAmount, { from: carol }))
 
     await oracle.testify(hash, 1)
 
@@ -394,7 +394,7 @@ contract('swap', function(accounts) {
     await increaseTime(2 * epoch)
 
     // too late for the rest
-    await expectFail(swap.cashNote(encoded, noteAmount / 4, { from: carol }))
+    await shouldFail.reverting(swap.cashNote(encoded, noteAmount / 4, { from: carol }))
   })
 
   // TODO: split
@@ -424,7 +424,7 @@ contract('swap', function(accounts) {
 
     await increaseTime(2 * epoch)
 
-    await expectFail(swap.cashNote(encoded, noteAmount))
+    await shouldFail.reverting(swap.cashNote(encoded, noteAmount))
 
     let { logs } = await swap.cashCheque(carol)
 

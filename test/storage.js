@@ -11,9 +11,9 @@ require('chai')
     .use(require('bn-chai')(web3.utils.BN))
     .should();
 
-const { increaseTime, expectFail, matchLogs, sign, nulladdress, computeCost } = require('./testutils')
+const { increaseTime, matchLogs, sign, nulladdress, computeCost } = require('./testutils')
 const { signNote } = require('./swutils')
-const { balance, time } = require('openzeppelin-test-helpers')
+const { balance, time, shouldFail } = require('openzeppelin-test-helpers')
 
 /* Dockerfile from swarm repo */
 const length = 'a701000000000000'
@@ -48,7 +48,7 @@ contract('Storage', (accounts) => {
 
     let encoded = await swap.encodeNote(swap.address, dataOwner, 1, amount, witness, 0, expires, remark);
 
-    await expectFail(swap.submitNote(encoded, note.sig, { from: dataOwner }));
+    await shouldFail.reverting(swap.submitNote(encoded, note.sig, { from: dataOwner }));
 
     var { logs } = await swear.startTrialFromNote(encoded, trial.address, swarmHash, note.sig)
     let { caseId, commitmentHash } = logs[0].args
@@ -87,7 +87,7 @@ contract('Storage', (accounts) => {
 
     let encoded = await swap.encodeNote(swap.address, dataOwner, 1, amount, witness, 0, expires, remark);
 
-    await expectFail(swap.submitNote(encoded, note.sig, { from: dataOwner }));
+    await shouldFail.reverting(swap.submitNote(encoded, note.sig, { from: dataOwner }));
 
     var { logs } = await swear.startTrialFromNote(encoded, trial.address, swarmHash, note.sig)
     let { caseId, commitmentHash } = logs[0].args
@@ -98,7 +98,7 @@ contract('Storage', (accounts) => {
 
     await swindle.endTrial(caseId)
 
-    await expectFail(swap.submitNote(encoded, note.sig, { from: dataOwner }));
+    await shouldFail.reverting(swap.submitNote(encoded, note.sig, { from: dataOwner }));
   })
 
   it('should accept valid POC3 chunk', async () => {
@@ -123,7 +123,7 @@ contract('Storage', (accounts) => {
 
     let encoded = await swap.encodeNote(swap.address, dataOwner, 1, amount, witness, 0, expires, remark);
 
-    await expectFail(swap.submitNote(encoded, note.sig, { from: dataOwner }));
+    await shouldFail.reverting(swap.submitNote(encoded, note.sig, { from: dataOwner }));
 
     var { logs } = await swear.startTrialFromNote(encoded, trial.address, poc3Hash, note.sig)
     let { caseId, commitmentHash } = logs[0].args
@@ -134,7 +134,7 @@ contract('Storage', (accounts) => {
 
     await swindle.endTrial(caseId)
 
-    await expectFail(swap.submitNote(encoded, note.sig, { from: dataOwner }));
+    await shouldFail.reverting(swap.submitNote(encoded, note.sig, { from: dataOwner }));
   })
 
 })
