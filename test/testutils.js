@@ -1,5 +1,4 @@
 const promisify = (inner) => new Promise((resolve, reject) => inner((err, res) => err ? reject(err) : resolve(res)));
-const getBalance = async (addr) => web3.utils.toBN(await web3.eth.getBalance(addr))
 
 async function computeCost(receipt) {
   let { gasPrice } = await web3.eth.getTransaction(receipt.transactionHash)
@@ -72,6 +71,5 @@ module.exports = {
   expectFail,
   getTime,
   computeCost,
-  getBalance,
   nulladdress: '0x0000000000000000000000000000000000000000'
 }

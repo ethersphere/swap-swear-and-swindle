@@ -11,7 +11,7 @@ require('chai')
     .use(require('bn-chai')(web3.utils.BN))
     .should();
 
-const { getBalance, getTime, increaseTime, expectFail, matchLogs, sign, nulladdress, computeCost } = require('./testutils')
+const { getTime, increaseTime, expectFail, matchLogs, sign, nulladdress, computeCost } = require('./testutils')
 const { signNote } = require('./swutils')
 
 /* Dockerfile from swarm repo */
@@ -104,7 +104,7 @@ contract('Storage', (accounts) => {
     const swap = await Swap.new(dataInsurer)
     const swindle = await Swindle.new()
     const swear = await Swear.new(swindle.address)
-    
+
     const chunkWitness = await ChunkWitness.new()
     const trial = await SimpleTrial.new(chunkWitness.address)
 

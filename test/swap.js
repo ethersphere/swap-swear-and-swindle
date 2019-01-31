@@ -6,8 +6,9 @@ require('chai')
     .use(require('bn-chai')(web3.utils.BN))
     .should();
 
-const { getBalance, getTime, increaseTime, expectFail, matchLogs, matchStruct, sign, nulladdress, computeCost } = require('./testutils')
+const { getTime, increaseTime, expectFail, matchLogs, matchStruct, sign, nulladdress, computeCost } = require('./testutils')
 const { signCheque, signNote, signInvoice } = require('./swutils')
+const { balance } = require('openzeppelin-test-helpers')
 
 const epoch = 24 * 3600
 
@@ -34,7 +35,7 @@ contract('swap', function(accounts) {
       { event: 'Deposit', args: { depositor: owner, amount }}
     ]);
 
-    (await getBalance(swap.address)).should.eq.BN(amount);
+    (await balance.current(swap.address)).should.eq.BN(amount);
   })
 
   it('should not accept a cheque with serial 0', async() => {
@@ -59,7 +60,7 @@ contract('swap', function(accounts) {
     chequeInfo.timeout.should.gte.BN(await getTime() + 1 * epoch - 1)
 
     await increaseTime(1 * epoch);
-    let beneficiaryExpectedBalance = (await getBalance(bob)).addn(amount);
+    let beneficiaryExpectedBalance = (await balance.current(bob)).addn(amount);
 
     var { logs } = await swap.cashCheque(bob);
 
@@ -67,7 +68,7 @@ contract('swap', function(accounts) {
       { event: 'ChequeCashed', args: { beneficiary: bob, serial: 1, amount }}
     ]);
 
-    (await getBalance(bob)).should.eq.BN(beneficiaryExpectedBalance);
+    (await balance.current(bob)).should.eq.BN(beneficiaryExpectedBalance);
 
     var chequeInfo = await swap.cheques(bob);
 
@@ -115,7 +116,7 @@ contract('swap', function(accounts) {
 
     await increaseTime(1 * epoch);
 
-    const beneficiaryExpectedBalance = (await getBalance(bob)).addn(500)
+    const beneficiaryExpectedBalance = (await balance.current(bob)).addn(500)
 
     var { logs } = await swap.cashCheque(bob);
 
@@ -123,7 +124,7 @@ contract('swap', function(accounts) {
       { event: 'ChequeCashed', args: { beneficiary: bob, serial: 2, amount: 500 }}
     ]);
 
-    (await getBalance(bob)).should.eq.BN(beneficiaryExpectedBalance);
+    (await balance.current(bob)).should.eq.BN(beneficiaryExpectedBalance);
 
     var chequeInfo = await swap.cheques(bob);
 
@@ -166,18 +167,18 @@ contract('swap', function(accounts) {
     await submitCheque(swap, owner, bob, 1, 1500)
     await increaseTime(1 * epoch)
 
-    var beneficiaryExpectedBalance = (await getBalance(bob)).addn(1000);
+    var beneficiaryExpectedBalance = (await balance.current(bob)).addn(1000);
     var { logs } = await swap.cashCheque(bob)
 
     matchLogs(logs, [
       { event: 'ChequeBounced', args: { paid: 1000, bounced: 500, serial: 1, beneficiary: bob } }
     ]);
 
-    (await getBalance(bob)).should.eq.BN(beneficiaryExpectedBalance);
+    (await balance.current(bob)).should.eq.BN(beneficiaryExpectedBalance);
 
     await swap.send(500)
 
-    var beneficiaryExpectedBalance = (await getBalance(bob)).addn(500);
+    var beneficiaryExpectedBalance = (await balance.current(bob)).addn(500);
 
     var { logs } = await swap.cashCheque(bob)
 
@@ -218,7 +219,7 @@ contract('swap', function(accounts) {
     await submitCheque(swap, owner, bob, 1, 400)
     await increaseTime(1 * epoch);
 
-    let beneficiaryExpectedBalance = (await getBalance(bob)).addn(400);
+    let beneficiaryExpectedBalance = (await balance.current(bob)).addn(400);
 
     var { logs } = await swap.cashCheque(bob);
 
@@ -227,7 +228,7 @@ contract('swap', function(accounts) {
     ]);
 
     (await swap.hardDeposits(bob)).amount.should.eq.BN(100);
-    (await getBalance(bob)).should.eq.BN(beneficiaryExpectedBalance);
+    (await balance.current(bob)).should.eq.BN(beneficiaryExpectedBalance);
   })
 
   // TODO: only part covered by HD, but enough
@@ -241,7 +242,7 @@ contract('swap', function(accounts) {
     await submitCheque(swap, owner, alice, 1, 600)
     await increaseTime(1 * epoch)
 
-    const expectedBalanceAlice = (await getBalance(alice)).addn(500);
+    const expectedBalanceAlice = (await balance.current(alice)).addn(500);
 
     var { logs } = await swap.cashCheque(alice)
 
@@ -249,7 +250,7 @@ contract('swap', function(accounts) {
       { event: 'ChequeBounced', args: { paid: 500, bounced:100, serial: 1, beneficiary: alice } }
     ]);
 
-    (await getBalance(alice)).should.eq.BN(expectedBalanceAlice);
+    (await balance.current(alice)).should.eq.BN(expectedBalanceAlice);
   })
 
   it('should not allow an instant decrease for hard deposits', async() => {
@@ -332,13 +333,13 @@ contract('swap', function(accounts) {
 
     await increaseTime(1 * epoch)
 
-    let expectedBalanceCarol = (await getBalance(carol)).addn(noteAmount)
+    let expectedBalanceCarol = (await balance.current(carol)).addn(noteAmount)
 
     let { receipt } = await swap.cashNote(encoded, noteAmount, { from: carol });
 
     expectedBalanceCarol = expectedBalanceCarol.sub(await computeCost(receipt));
 
-    (await getBalance(carol)).should.eq.BN(expectedBalanceCarol)
+    (await balance.current(carol)).should.eq.BN(expectedBalanceCarol)
 
     // already fully cashed out
     await expectFail(swap.cashNote(encoded, noteAmount, { from: carol }));
@@ -379,16 +380,16 @@ contract('swap', function(accounts) {
     await oracle.testify(hash, 1)
 
     // partial payment
-    let expectedBalanceCarol = (await getBalance(carol)).addn(noteAmount / 4)
+    let expectedBalanceCarol = (await balance.current(carol)).addn(noteAmount / 4)
     var { receipt } = await swap.cashNote(encoded, noteAmount / 4, { from: carol });
     expectedBalanceCarol = expectedBalanceCarol.sub(await computeCost(receipt));
-    (await getBalance(carol)).should.eq.BN(expectedBalanceCarol)
+    (await balance.current(carol)).should.eq.BN(expectedBalanceCarol)
 
     // partial payment
-    expectedBalanceCarol = (await getBalance(carol)).addn(noteAmount / 4)
+    expectedBalanceCarol = (await balance.current(carol)).addn(noteAmount / 4)
     var { receipt } = await swap.cashNote(encoded, noteAmount / 4, { from: carol });
     expectedBalanceCarol = expectedBalanceCarol.sub(await computeCost(receipt));
-    (await getBalance(carol)).should.eq.BN(expectedBalanceCarol)
+    (await balance.current(carol)).should.eq.BN(expectedBalanceCarol)
 
     await increaseTime(2 * epoch)
 

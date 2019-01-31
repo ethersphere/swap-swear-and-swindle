@@ -8,8 +8,9 @@ require('chai')
     .use(require('bn-chai')(web3.utils.BN))
     .should();
 
-const { getBalance, getTime, increaseTime, expectFail, matchLogs, matchStruct, sign, nulladdress, computeCost } = require('./testutils')
+const { getTime, increaseTime, expectFail, matchLogs, matchStruct, sign, nulladdress, computeCost } = require('./testutils')
 const { signCheque, signNote, signInvoice } = require('./swutils')
+const { balance } = require('openzeppelin-test-helpers')
 
 const VALID = 1
 const INVALID = 2
@@ -94,12 +95,12 @@ contract('swear', function(accounts) {
       event: 'StateTransition', args: { caseId, from: WITNESS_2, to: GUILTY }
     }])
 
-    const expectedBalanceAlice = (await getBalance(alice)).addn(100)
+    const expectedBalanceAlice = (await balance.current(alice)).addn(100)
 
     await swindle.endTrial(caseId);
 
-    (await getBalance(swear.address)).should.eq.BN(0);
-    (await getBalance(alice)).should.eq.BN(expectedBalanceAlice);
+    (await balance.current(swear.address)).should.eq.BN(0);
+    (await balance.current(alice)).should.eq.BN(expectedBalanceAlice);
   })
 
 })
