@@ -12,10 +12,12 @@
     "chai-as-promised": "^7.1.1",
     "eth-ens-namehash": "^2.0.8",
     "ethereumjs-util": "^5.2.0",
-    "openzeppelin-solidity": "^2.0.0",
+    "openzeppelin-solidity": "^2.1.2",
     "pify": "^4.0.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "openzeppelin-test-helpers": "^0.1.2"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
