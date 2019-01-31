@@ -6,9 +6,9 @@ require('chai')
     .use(require('bn-chai')(web3.utils.BN))
     .should();
 
-const { matchLogs, matchStruct, nulladdress, computeCost } = require('./testutils')
+const { matchLogs, matchStruct, computeCost } = require('./testutils')
 const { signCheque, signNote, signInvoice } = require('./swutils')
-const { balance, time, shouldFail } = require('openzeppelin-test-helpers')
+const { balance, time, shouldFail, constants } = require('openzeppelin-test-helpers')
 
 const epoch = 24 * 3600
 
@@ -318,11 +318,11 @@ contract('swap', function(accounts) {
 
     let validity = (await time.latest()).addn(noteTimeout)
 
-    let { sig, hash } = await signNote(swap, owner, carol, 1, noteAmount, nulladdress, validity, 0, "0x")
+    let { sig, hash } = await signNote(swap, owner, carol, 1, noteAmount, constants.ZERO_ADDRESS, validity, 0, "0x")
 
     await time.increase(4 * epoch)
 
-    let encoded = await swap.encodeNote(swap.address, carol, 1, noteAmount, nulladdress, validity, 0, "0x")
+    let encoded = await swap.encodeNote(swap.address, carol, 1, noteAmount, constants.ZERO_ADDRESS, validity, 0, "0x")
 
     await swap.submitNote(encoded, sig, { from: carol });
 
@@ -407,7 +407,7 @@ contract('swap', function(accounts) {
     // completely offchain cheque of 100
 
     // owner issues note
-    let note = await signNote(swap, owner, carol, 1, noteAmount, nulladdress, 0, 0, "0x")
+    let note = await signNote(swap, owner, carol, 1, noteAmount, constants.ZERO_ADDRESS, 0, 0, "0x")
 
     // carol issues invoice
     let invoice = await signInvoice(swap, carol, note.hash, 200, 2)
@@ -415,7 +415,7 @@ contract('swap', function(accounts) {
     // owner issues cheque for invoice
     let cheque = await signCheque(swap, owner, carol, 3, noteAmount + 200, epoch)
 
-    let encoded = await swap.encodeNote(swap.address, carol, 1, noteAmount, nulladdress, 0, 0, "0x")
+    let encoded = await swap.encodeNote(swap.address, carol, 1, noteAmount, constants.ZERO_ADDRESS, 0, 0, "0x")
     // carol submits note anyway
     await swap.submitNote(encoded, note.sig, { from: carol });
 

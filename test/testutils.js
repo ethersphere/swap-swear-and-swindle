@@ -31,6 +31,5 @@ function matchLogs (logs, template) {
 
 module.exports = {
   matchLogs,
-  computeCost,
-  nulladdress: '0x0000000000000000000000000000000000000000'
+  computeCost
 }
