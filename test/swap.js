@@ -6,7 +6,7 @@ require('chai')
     .use(require('bn-chai')(web3.utils.BN))
     .should();
 
-const { increaseTime, matchLogs, matchStruct, sign, nulladdress, computeCost } = require('./testutils')
+const { increaseTime, matchLogs, matchStruct, nulladdress, computeCost } = require('./testutils')
 const { signCheque, signNote, signInvoice } = require('./swutils')
 const { balance, time, shouldFail } = require('openzeppelin-test-helpers')
 
