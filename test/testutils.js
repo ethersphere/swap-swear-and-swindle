@@ -1,6 +1,3 @@
-const promisify = (inner) => new Promise((resolve, reject) => inner((err, res) => err ? reject(err) : resolve(res)));
-const { time } = require('openzeppelin-test-helpers')
-
 async function computeCost(receipt) {
   let { gasPrice } = await web3.eth.getTransaction(receipt.transactionHash)
   return web3.utils.toBN(gasPrice * receipt.gasUsed);
