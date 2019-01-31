@@ -6,9 +6,9 @@ require('chai')
     .use(require('bn-chai')(web3.utils.BN))
     .should();
 
-const { getTime, increaseTime, expectFail, matchLogs, matchStruct, sign, nulladdress, computeCost } = require('./testutils')
+const { increaseTime, expectFail, matchLogs, matchStruct, sign, nulladdress, computeCost } = require('./testutils')
 const { signCheque, signNote, signInvoice } = require('./swutils')
-const { balance } = require('openzeppelin-test-helpers')
+const { balance, time } = require('openzeppelin-test-helpers')
 
 const epoch = 24 * 3600
 
@@ -57,7 +57,7 @@ contract('swap', function(accounts) {
 
     chequeInfo.serial.should.eq.BN(serial)
     chequeInfo.amount.should.eq.BN(amount)
-    chequeInfo.timeout.should.gte.BN(await getTime() + 1 * epoch - 1)
+    chequeInfo.timeout.should.gte.BN((await time.latest()).addn(1 * epoch - 1))
 
     await increaseTime(1 * epoch);
     let beneficiaryExpectedBalance = (await balance.current(bob)).addn(amount);
@@ -112,7 +112,7 @@ contract('swap', function(accounts) {
 
     chequeInfo.serial.should.eq.BN(2)
     chequeInfo.amount.should.eq.BN(amount)
-    chequeInfo.timeout.should.gte.BN(await getTime() + 1 * epoch - 1)
+    chequeInfo.timeout.should.gte.BN((await time.latest()).addn(1 * epoch - 1))
 
     await increaseTime(1 * epoch);
 
@@ -272,7 +272,7 @@ contract('swap', function(accounts) {
     const hardDeposit = await swap.hardDeposits(bob);
 
     hardDeposit.diff.should.eq.BN(200);
-    hardDeposit.timeout.should.gte.BN(await getTime() + 2 * epoch - 1);
+    hardDeposit.timeout.should.gte.BN((await time.latest()).addn(2 * epoch - 1));
   })
 
   it('should not allow to decrease hard deposit before the timeout', async() => {
@@ -316,7 +316,7 @@ contract('swap', function(accounts) {
     const noteTimeout = 5000;
     const noteAmount = 500
 
-    let validity = await getTime() + noteTimeout
+    let validity = (await time.latest()).addn(noteTimeout)
 
     let { sig, hash } = await signNote(swap, owner, carol, 1, noteAmount, nulladdress, validity, 0, "0x")
 
@@ -329,7 +329,7 @@ contract('swap', function(accounts) {
     const { paidOut, timeout } = await swap.notes(hash)
 
     paidOut.should.eq.BN(0)
-    timeout.should.gte.BN(await getTime() + 1 * epoch - 1)
+    timeout.should.gte.BN((await time.latest()).addn(1 * epoch - 1))
 
     await increaseTime(1 * epoch)
 
@@ -353,7 +353,7 @@ contract('swap', function(accounts) {
     const noteAmount = 500
     const noteTimeout = 2 * epoch
 
-    let bondTimeout = await getTime() + noteTimeout
+    let bondTimeout = (await time.latest()).addn(noteTimeout)
 
     let { sig, hash } = await signNote(swap, owner, carol, 1, noteAmount, oracle.address, 0, bondTimeout, "0x")
 
@@ -365,7 +365,7 @@ contract('swap', function(accounts) {
     const { paidOut, timeout } = await swap.notes(hash)
 
     paidOut.should.eq.BN(0)
-    timeout.should.gte.BN(await getTime() + 1 * epoch - 1)
+    timeout.should.gte.BN((await time.latest()).addn(1 * epoch - 1))
 
     // cashout too soon
     await expectFail(swap.cashNote(encoded, noteAmount, { from: carol }))

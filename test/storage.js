@@ -11,8 +11,9 @@ require('chai')
     .use(require('bn-chai')(web3.utils.BN))
     .should();
 
-const { getTime, increaseTime, expectFail, matchLogs, sign, nulladdress, computeCost } = require('./testutils')
+const { increaseTime, expectFail, matchLogs, sign, nulladdress, computeCost } = require('./testutils')
 const { signNote } = require('./swutils')
+const { balance, time } = require('openzeppelin-test-helpers')
 
 /* Dockerfile from swarm repo */
 const length = 'a701000000000000'
@@ -39,7 +40,7 @@ contract('Storage', (accounts) => {
 
     await swap.send(web3.utils.toWei("1"))
 
-    let expires = await getTime() + 3600 * 24 * 365
+    let expires = (await time.latest()).addn(3600 * 24 * 365)
 
     let remark = '0x' + util.sha3(Buffer.concat([Buffer.from(trial.address.substring(2), 'hex'), Buffer.from(swarmHash.substring(2), 'hex')])).toString('hex')
 
@@ -78,7 +79,7 @@ contract('Storage', (accounts) => {
 
     await swap.send(web3.utils.toWei("1"))
 
-    let expires = await getTime() + 3600 * 24 * 365
+    let expires = (await time.latest()).addn(3600 * 24 * 365)
 
     let remark = '0x' + util.sha3(Buffer.concat([Buffer.from(trial.address.substring(2), 'hex'), Buffer.from(swarmHash.substring(2), 'hex')])).toString('hex')
 
@@ -114,7 +115,7 @@ contract('Storage', (accounts) => {
 
     await swap.send(web3.utils.toWei("1"))
 
-    let expires = await getTime() + 3600 * 24 * 365
+    let expires = (await time.latest()).addn(3600 * 24 * 365)
 
     let remark = '0x' + util.sha3(Buffer.concat([Buffer.from(trial.address.substring(2), 'hex'), Buffer.from(poc3Hash.substring(2), 'hex')])).toString('hex')
 

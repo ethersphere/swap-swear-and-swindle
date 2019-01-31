@@ -1,12 +1,9 @@
 const promisify = (inner) => new Promise((resolve, reject) => inner((err, res) => err ? reject(err) : resolve(res)));
+const { time } = require('openzeppelin-test-helpers')
 
 async function computeCost(receipt) {
   let { gasPrice } = await web3.eth.getTransaction(receipt.transactionHash)
   return web3.utils.toBN(gasPrice * receipt.gasUsed);
-}
-
-async function getTime() {
-  return (await web3.eth.getBlock(await web3.eth.getBlockNumber())).timestamp
 }
 
 const isTestRPC = async () => (await web3.eth.getNodeInfo()).includes("TestRPC/v2")
@@ -68,8 +65,7 @@ module.exports = {
   increaseTime,
   sign,
   matchLogs,
-  expectFail,
-  getTime,
+  expectFail,  
   computeCost,
   nulladdress: '0x0000000000000000000000000000000000000000'
 }

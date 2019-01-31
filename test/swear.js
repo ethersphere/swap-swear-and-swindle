@@ -8,9 +8,9 @@ require('chai')
     .use(require('bn-chai')(web3.utils.BN))
     .should();
 
-const { getTime, increaseTime, expectFail, matchLogs, matchStruct, sign, nulladdress, computeCost } = require('./testutils')
+const { increaseTime, expectFail, matchLogs, matchStruct, sign, nulladdress, computeCost } = require('./testutils')
 const { signCheque, signNote, signInvoice } = require('./swutils')
-const { balance } = require('openzeppelin-test-helpers')
+const { balance, time } = require('openzeppelin-test-helpers')
 
 const VALID = 1
 const INVALID = 2
@@ -62,7 +62,7 @@ contract('swear', function(accounts) {
     const swear = await Swear.new(swindle.address);
     const oracleTrial = await OracleTrial.new();
 
-    var { logs } = await swear.addCommitment(oracleTrial.address, await getTime() + 2 * 30 * 24 * 3600, "0xff", {
+    var { logs } = await swear.addCommitment(oracleTrial.address, (await time.latest()).addn(2 * 30 * 24 * 3600), "0xff", {
       value: 100
     });
 
