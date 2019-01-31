@@ -6,7 +6,7 @@ require('chai')
     .use(require('bn-chai')(web3.utils.BN))
     .should();
 
-const { increaseTime, matchLogs, matchStruct, nulladdress, computeCost } = require('./testutils')
+const { matchLogs, matchStruct, nulladdress, computeCost } = require('./testutils')
 const { signCheque, signNote, signInvoice } = require('./swutils')
 const { balance, time, shouldFail } = require('openzeppelin-test-helpers')
 
@@ -59,7 +59,7 @@ contract('swap', function(accounts) {
     chequeInfo.amount.should.eq.BN(amount)
     chequeInfo.timeout.should.gte.BN((await time.latest()).addn(1 * epoch - 1))
 
-    await increaseTime(1 * epoch);
+    await time.increase(1 * epoch);
     let beneficiaryExpectedBalance = (await balance.current(bob)).addn(amount);
 
     var { logs } = await swap.cashCheque(bob);
@@ -84,7 +84,7 @@ contract('swap', function(accounts) {
   it('should not allow cheque payout if there is nothing to pay out', async() => {
     const { swap, amount } = await prepareSwap()
     await submitCheque(swap, owner, bob, 1, amount);
-    await increaseTime(1 * epoch);
+    await time.increase(1 * epoch);
     await swap.cashCheque(bob);
     await shouldFail.reverting(swap.cashCheque(bob));
   })
@@ -99,7 +99,7 @@ contract('swap', function(accounts) {
     const { swap, amount } = await prepareSwap(1000)
 
     await submitCheque(swap, owner, bob, 1, 500)
-    await increaseTime(1 * epoch);
+    await time.increase(1 * epoch);
     await swap.cashCheque(bob);
 
     var { logs } = await submitCheque(swap, owner, bob, 2, amount)
@@ -114,7 +114,7 @@ contract('swap', function(accounts) {
     chequeInfo.amount.should.eq.BN(amount)
     chequeInfo.timeout.should.gte.BN((await time.latest()).addn(1 * epoch - 1))
 
-    await increaseTime(1 * epoch);
+    await time.increase(1 * epoch);
 
     const beneficiaryExpectedBalance = (await balance.current(bob)).addn(500)
 
@@ -135,7 +135,7 @@ contract('swap', function(accounts) {
     const { swap, amount } = await prepareSwap(1000)
 
     await submitCheque(swap, owner, bob, 1, 500)
-    await increaseTime(1 * epoch);
+    await time.increase(1 * epoch);
     await swap.cashCheque(bob);
 
     await shouldFail.reverting(swap.cashCheque(bob));
@@ -165,7 +165,7 @@ contract('swap', function(accounts) {
     const { swap } = await prepareSwap(1000)
 
     await submitCheque(swap, owner, bob, 1, 1500)
-    await increaseTime(1 * epoch)
+    await time.increase(1 * epoch)
 
     var beneficiaryExpectedBalance = (await balance.current(bob)).addn(1000);
     var { logs } = await swap.cashCheque(bob)
@@ -217,7 +217,7 @@ contract('swap', function(accounts) {
     await swap.increaseHardDeposit(bob, 500)
 
     await submitCheque(swap, owner, bob, 1, 400)
-    await increaseTime(1 * epoch);
+    await time.increase(1 * epoch);
 
     let beneficiaryExpectedBalance = (await balance.current(bob)).addn(400);
 
@@ -240,7 +240,7 @@ contract('swap', function(accounts) {
     await swap.increaseHardDeposit(bob, 500)
 
     await submitCheque(swap, owner, alice, 1, 600)
-    await increaseTime(1 * epoch)
+    await time.increase(1 * epoch)
 
     const expectedBalanceAlice = (await balance.current(alice)).addn(500);
 
@@ -289,7 +289,7 @@ contract('swap', function(accounts) {
 
     let expectedHardDeposit = (await swap.hardDeposits(bob)).amount.subn(200);
 
-    await increaseTime(2 * epoch);
+    await time.increase(2 * epoch);
     const { logs } = await swap.decreaseHardDeposit(bob);
 
     matchLogs(logs, [
@@ -304,7 +304,7 @@ contract('swap', function(accounts) {
     const { swap } = await prepareSwap(1000)
     await swap.increaseHardDeposit(bob, 500)
     await swap.prepareDecreaseHardDeposit(bob, 200);
-    await increaseTime(2 * epoch);
+    await time.increase(2 * epoch);
     await swap.decreaseHardDeposit(bob);
     await shouldFail.reverting(swap.decreaseHardDeposit(bob));
   })
@@ -320,7 +320,7 @@ contract('swap', function(accounts) {
 
     let { sig, hash } = await signNote(swap, owner, carol, 1, noteAmount, nulladdress, validity, 0, "0x")
 
-    await increaseTime(4 * epoch)
+    await time.increase(4 * epoch)
 
     let encoded = await swap.encodeNote(swap.address, carol, 1, noteAmount, nulladdress, validity, 0, "0x")
 
@@ -331,7 +331,7 @@ contract('swap', function(accounts) {
     paidOut.should.eq.BN(0)
     timeout.should.gte.BN((await time.latest()).addn(1 * epoch - 1))
 
-    await increaseTime(1 * epoch)
+    await time.increase(1 * epoch)
 
     let expectedBalanceCarol = (await balance.current(carol)).addn(noteAmount)
 
@@ -370,7 +370,7 @@ contract('swap', function(accounts) {
     // cashout too soon
     await shouldFail.reverting(swap.cashNote(encoded, noteAmount, { from: carol }))
 
-    await increaseTime(1 * epoch)
+    await time.increase(1 * epoch)
 
     await oracle.testify(hash, 0)
 
@@ -391,7 +391,7 @@ contract('swap', function(accounts) {
     expectedBalanceCarol = expectedBalanceCarol.sub(await computeCost(receipt));
     (await balance.current(carol)).should.eq.BN(expectedBalanceCarol)
 
-    await increaseTime(2 * epoch)
+    await time.increase(2 * epoch)
 
     // too late for the rest
     await shouldFail.reverting(swap.cashNote(encoded, noteAmount / 4, { from: carol }))
@@ -422,7 +422,7 @@ contract('swap', function(accounts) {
     // owner presents paid invoice
     await swap.submitPaidInvoice(encoded, 200, 2, invoice.sig, noteAmount, epoch, cheque.sig)
 
-    await increaseTime(2 * epoch)
+    await time.increase(2 * epoch)
 
     await shouldFail.reverting(swap.cashNote(encoded, noteAmount))
 

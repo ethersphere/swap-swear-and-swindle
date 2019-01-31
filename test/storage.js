@@ -11,7 +11,7 @@ require('chai')
     .use(require('bn-chai')(web3.utils.BN))
     .should();
 
-const { increaseTime, matchLogs, nulladdress, computeCost } = require('./testutils')
+const { matchLogs, nulladdress, computeCost } = require('./testutils')
 const { signNote } = require('./swutils')
 const { balance, time, shouldFail } = require('openzeppelin-test-helpers')
 
@@ -53,7 +53,7 @@ contract('Storage', (accounts) => {
     var { logs } = await swear.startTrialFromNote(encoded, trial.address, swarmHash, note.sig)
     let { caseId, commitmentHash } = logs[0].args
 
-    await increaseTime(3600 * 24 * 31)
+    await time.increase(3600 * 24 * 31)
 
     await swindle.continueTrial(caseId)
 
@@ -61,7 +61,7 @@ contract('Storage', (accounts) => {
 
     await swap.submitNote(encoded, note.sig, { from: dataOwner });
 
-    await increaseTime(3600 * 24 * 2)
+    await time.increase(3600 * 24 * 2)
 
     await swap.cashNote(encoded, 1, { from: dataOwner })
   })

@@ -29,20 +29,7 @@ function matchLogs (logs, template) {
   }
 }
 
-const increaseTime = (sec) => {
-  return promisify((cb) => {
-    web3.currentProvider.send(
-      {
-        jsonrpc: "2.0",
-        method: "evm_increaseTime",
-        params: [sec],
-        id: 0
-      }, cb)
-  })
-}
-
 module.exports = {
-  increaseTime,
   matchLogs,
   computeCost,
   nulladdress: '0x0000000000000000000000000000000000000000'
