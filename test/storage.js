@@ -6,14 +6,8 @@ const Swap = artifacts.require('./Swap.sol')
 const SimpleTrial = artifacts.require('./SimpleTrial.sol')
 const util = require('ethereumjs-util')
 
-require('chai')
-    .use(require('chai-as-promised'))
-    .use(require('bn-chai')(web3.utils.BN))
-    .should();
-
-const { matchLogs, computeCost } = require('./testutils')
 const { signNote } = require('./swutils')
-const { balance, time, shouldFail } = require('openzeppelin-test-helpers')
+const { time, shouldFail } = require('openzeppelin-test-helpers')
 
 /* Dockerfile from swarm repo */
 const length = 'a701000000000000'
