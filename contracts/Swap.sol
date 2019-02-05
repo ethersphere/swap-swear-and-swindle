@@ -1,4 +1,5 @@
 pragma solidity ^0.5.0;
+pragma experimental ABIEncoderV2;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/math/Math.sol";
 import "./SW3Utils.sol";
@@ -24,7 +25,7 @@ contract Swap is SimpleSwap {
   constructor(address payable _owner) SimpleSwap(_owner) public { }
 
   /// @dev verify the conditions of a note
-  function verifyNote(Note memory note) internal view {
+  function verifyNote(bytes32 id, Note memory note) internal view {
     /* if there is validFrom make sure it's in the past */
     if(note.validFrom != 0) require(now >= note.validFrom);
     /* if there is validUntil make sure it's in the future */
@@ -33,36 +34,38 @@ contract Swap is SimpleSwap {
     /* if there is a witness check the escrow condition */
     if(note.witness != address(0x0)) {
       /* static call */
-      require(AbstractWitness(note.witness).testimonyFor(owner, note.beneficiary, note.id) == AbstractWitness.TestimonyStatus.VALID);
+      require(AbstractWitness(note.witness).testimonyFor(owner, note.beneficiary, id) == AbstractWitness.TestimonyStatus.VALID);
     }
   }
 
   /// @notice submit a note
   /// @param sig signature of the note
   function submitNote(bytes memory encoded, bytes memory sig) public {
-    Note memory note = decodeNote(encoded);
+    Note memory note = abi.decode(encoded, (Note));
+    bytes32 id = keccak256(encoded);
 
     /* verify the signature of the owner */
-    require(owner == recover(note.id, sig));
+    require(owner == recover(id, sig));
     /* make sure the note has not been submitted before */
-    require(notes[note.id].timeout == 0);
+    require(notes[id].timeout == 0);
 
-    notes[note.id] = NoteInfo({
+    notes[id] = NoteInfo({
       paidOut: 0,
       timeout: now + timeout
     });
 
     /* verify that the note conditions hold, else revert everything */
-    verifyNote(note);
+    verifyNote(id, note);
 
-    emit NoteSubmitted(note.id);
+    emit NoteSubmitted(id);
   }
 
   /// @notice cash a note
   /// @param amount amount to be paid out
   function cashNote(bytes memory encoded, uint amount) public {
-    Note memory note = decodeNote(encoded);
-    NoteInfo storage noteInfo = notes[note.id];
+    Note memory note = abi.decode(encoded, (Note));
+    bytes32 id = keccak256(encoded);
+    NoteInfo storage noteInfo = notes[id];
 
     /* check the note has been submitted */
     require(noteInfo.timeout != 0);
@@ -71,7 +74,7 @@ contract Swap is SimpleSwap {
     /* only the beneficiary of the note may call this */
     require(msg.sender == note.beneficiary); // necessary because of blank cheques
     /* verify that the note conditions hold, static call */
-    verifyNote(note);
+    verifyNote(id, note);
 
     /* if there is a limit make sure we don't exceed it */
     if(note.amount != 0) {
@@ -86,8 +89,8 @@ contract Swap is SimpleSwap {
     /* increase the stored paidOut amount to avoid double payout */
     noteInfo.paidOut += payout;
 
-    if(bounced != 0) emit NoteBounced(note.id, payout, bounced);
-    else emit NoteCashed(note.id, payout);
+    if(bounced != 0) emit NoteBounced(id, payout, bounced);
+    else emit NoteCashed(id, payout);
 
     /* do the payout */
     note.beneficiary.transfer(payout); // TODO: test
@@ -102,10 +105,11 @@ contract Swap is SimpleSwap {
   function submitPaidInvoice(bytes memory encoded, uint swapBalance, uint serial, bytes memory invoiceSig, uint amount, uint timeout, bytes memory chequeSig) public {
     /* only the owner may do this */
     require(msg.sender == owner);
-    Note memory note = decodeNote(encoded);
-    bytes32 invoiceId = invoiceHash(note.id, swapBalance, serial);
+    Note memory note = abi.decode(encoded, (Note));
+    bytes32 id = keccak256(encoded);
+    bytes32 invoiceId = invoiceHash(id, swapBalance, serial);
 
-    NoteInfo storage noteInfo = notes[note.id];
+    NoteInfo storage noteInfo = notes[id];
     /* ensure the note has been submitted */
     require(noteInfo.timeout != 0);
     /* ensure the security delay is not yet over */

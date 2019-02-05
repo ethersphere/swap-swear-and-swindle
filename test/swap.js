@@ -531,16 +531,16 @@ const swapTests = (accounts, Swap) => {
 
     await time.increase(4 * epoch);
 
-    let encoded = await swap.encodeNote(
-      swap.address,
-      carol,
+    let encoded = await swap.encodeNote([
+      swap.address,      
       1,
       noteAmount,
+      carol,
       constants.ZERO_ADDRESS,
       validity,
       0,
       "0x"
-    );
+    ]);
 
     await swap.submitNote(encoded, sig, { from: carol });
 
@@ -589,16 +589,16 @@ const swapTests = (accounts, Swap) => {
 
     await oracle.testify(hash, 1);
 
-    let encoded = await swap.encodeNote(
-      swap.address,
-      carol,
+    let encoded = await swap.encodeNote([
+      swap.address,      
       1,
       noteAmount,
+      carol,
       oracle.address,
       0,
       bondTimeout,
       "0x"
-    );
+    ]);
     await swap.submitNote(encoded, sig, { from: carol });
 
     const { paidOut, timeout } = await swap.notes(hash);
@@ -703,16 +703,16 @@ const swapTests = (accounts, Swap) => {
     // owner issues cheque for invoice
     let cheque = await signCheque(swap, owner, cheques[2]);
 
-    let encoded = await swap.encodeNote(
-      swap.address,
-      beneficiary,
+    let encoded = await swap.encodeNote([
+      swap.address,      
       1,
       noteAmount,
+      beneficiary,
       constants.ZERO_ADDRESS,
       0,
       0,
       "0x"
-    );
+    ]);
     // carol submits note anyway
     await swap.submitNote(encoded, note.sig, { from: carol });
 

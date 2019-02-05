@@ -1,4 +1,5 @@
 pragma solidity ^0.5.0;
+pragma experimental ABIEncoderV2;
 import "./abstracts/AbstractRules.sol";
 import "./abstracts/AbstractWitness.sol";
 import "./abstracts/AbstractSwear.sol";

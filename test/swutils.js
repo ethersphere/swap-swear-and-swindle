@@ -21,16 +21,16 @@ async function signNote(
   validUntil,
   remark
 ) {
-  const hash = await swap.noteHash(
+  const hash = await swap.noteHash([
     swap.address,
-    beneficiary,
     serial,
     amount,
+    beneficiary,
     witness,
     validFrom,
     validUntil,
     remark
-  );
+  ]);
   return { sig: await web3.eth.sign(hash, signer), hash };
 }
 

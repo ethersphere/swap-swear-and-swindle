@@ -40,7 +40,7 @@ contract('Storage', (accounts) => {
 
     let note = await signNote(swap, dataInsurer, dataOwner, 1, amount, witness, 0, expires, remark)
 
-    let encoded = await swap.encodeNote(swap.address, dataOwner, 1, amount, witness, 0, expires, remark);
+    let encoded = await swap.encodeNote([swap.address, 1, amount, dataOwner, witness, 0, expires, remark]);
 
     await shouldFail.reverting(swap.submitNote(encoded, note.sig, { from: dataOwner }));
 
@@ -79,7 +79,7 @@ contract('Storage', (accounts) => {
 
     let note = await signNote(swap, dataInsurer, dataOwner, 1, amount, witness, 0, expires, remark)
 
-    let encoded = await swap.encodeNote(swap.address, dataOwner, 1, amount, witness, 0, expires, remark);
+    let encoded = await swap.encodeNote([swap.address, 1, amount, dataOwner, witness, 0, expires, remark]);
 
     await shouldFail.reverting(swap.submitNote(encoded, note.sig, { from: dataOwner }));
 
@@ -115,7 +115,7 @@ contract('Storage', (accounts) => {
 
     let note = await signNote(swap, dataInsurer, dataOwner, 1, amount, witness, 0, expires, remark)
 
-    let encoded = await swap.encodeNote(swap.address, dataOwner, 1, amount, witness, 0, expires, remark);
+    let encoded = await swap.encodeNote([swap.address, 1, amount, dataOwner, witness, 0, expires, remark]);
 
     await shouldFail.reverting(swap.submitNote(encoded, note.sig, { from: dataOwner }));
 
