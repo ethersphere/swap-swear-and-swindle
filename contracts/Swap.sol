@@ -51,7 +51,7 @@ contract Swap is SimpleSwap {
 
     notes[id] = NoteInfo({
       paidOut: 0,
-      timeout: now + timeout
+      timeout: now + note.timeout
     });
 
     /* verify that the note conditions hold, else revert everything */
@@ -132,7 +132,7 @@ contract Swap is SimpleSwap {
 
     /* process the cheque if it is newer than the previous one */
     if(serial > cheques[note.beneficiary].serial)
-      _submitChequeInternal(note.beneficiary, serial + 1, cumulativeTotal);
+      _submitChequeInternal(note.beneficiary, serial + 1, cumulativeTotal, timeout);
   }
 
 }

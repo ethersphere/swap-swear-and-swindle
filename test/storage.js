@@ -16,6 +16,7 @@ const data = '23204275696c64204765746820696e20612073746f636b20476f206275696c6465
 
 const swarmHash = '0x7ab16e71d5b49df10f4d387baeb83fcd5324d853940ba0a04f73ef3a42fe3239'
 const poc3Hash = '0x2140ed1741bedbc646e644bcb809a075e1f280b3a4007846ee3b2374c65e29bf'
+const epoch = 24 * 3600;
 
 contract('Storage', (accounts) => {
 
@@ -38,9 +39,9 @@ contract('Storage', (accounts) => {
 
     let remark = '0x' + util.sha3(Buffer.concat([Buffer.from(trial.address.substring(2), 'hex'), Buffer.from(swarmHash.substring(2), 'hex')])).toString('hex')
 
-    let note = await signNote(swap, dataInsurer, dataOwner, 1, amount, witness, 0, expires, remark)
+    let note = await signNote(swap, dataInsurer, dataOwner, 1, amount, witness, 0, expires, remark, epoch)
 
-    let encoded = await swap.encodeNote([swap.address, 1, amount, dataOwner, witness, 0, expires, remark]);
+    let encoded = await swap.encodeNote([swap.address, 1, amount, dataOwner, witness, 0, expires, remark, epoch]);
 
     await shouldFail.reverting(swap.submitNote(encoded, note.sig, { from: dataOwner }));
 
@@ -77,9 +78,9 @@ contract('Storage', (accounts) => {
 
     let remark = '0x' + util.sha3(Buffer.concat([Buffer.from(trial.address.substring(2), 'hex'), Buffer.from(swarmHash.substring(2), 'hex')])).toString('hex')
 
-    let note = await signNote(swap, dataInsurer, dataOwner, 1, amount, witness, 0, expires, remark)
+    let note = await signNote(swap, dataInsurer, dataOwner, 1, amount, witness, 0, expires, remark, epoch)
 
-    let encoded = await swap.encodeNote([swap.address, 1, amount, dataOwner, witness, 0, expires, remark]);
+    let encoded = await swap.encodeNote([swap.address, 1, amount, dataOwner, witness, 0, expires, remark, epoch]);
 
     await shouldFail.reverting(swap.submitNote(encoded, note.sig, { from: dataOwner }));
 
@@ -113,9 +114,9 @@ contract('Storage', (accounts) => {
 
     let remark = '0x' + util.sha3(Buffer.concat([Buffer.from(trial.address.substring(2), 'hex'), Buffer.from(poc3Hash.substring(2), 'hex')])).toString('hex')
 
-    let note = await signNote(swap, dataInsurer, dataOwner, 1, amount, witness, 0, expires, remark)
+    let note = await signNote(swap, dataInsurer, dataOwner, 1, amount, witness, 0, expires, remark, epoch)
 
-    let encoded = await swap.encodeNote([swap.address, 1, amount, dataOwner, witness, 0, expires, remark]);
+    let encoded = await swap.encodeNote([swap.address, 1, amount, dataOwner, witness, 0, expires, remark, epoch]);
 
     await shouldFail.reverting(swap.submitNote(encoded, note.sig, { from: dataOwner }));
 

@@ -19,7 +19,8 @@ async function signNote(
   witness,
   validFrom,
   validUntil,
-  remark
+  remark,
+  timeout
 ) {
   const hash = await swap.noteHash([
     swap.address,
@@ -29,7 +30,8 @@ async function signNote(
     witness,
     validFrom,
     validUntil,
-    remark
+    remark,
+    timeout
   ]);
   return { sig: await web3.eth.sign(hash, signer), hash };
 }

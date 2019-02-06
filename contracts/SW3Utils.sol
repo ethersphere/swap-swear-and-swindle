@@ -17,6 +17,7 @@ contract SW3Utils {
     uint validFrom; /* earliest timestamp for submission and payout */
     uint validUntil; /* latest timestamp for submission and payout */
     bytes32 remark ;/* arbitrary 32-bytes, can be used to encode information for Swear and witnesses */
+    uint timeout;
   }
 
   /// @dev compute hash for a cheque

@@ -456,7 +456,7 @@ const simpleSwapTests = (accounts, Swap) => {
 
     hardDeposit.diff.should.bignumber.equal(diff);
     hardDeposit.timeout.should.bignumber.gte(
-      (await time.latest()).addn(2 * epoch - 1)
+      (await time.latest()).addn(epoch - 1)
     );
   });
 
@@ -526,7 +526,8 @@ const swapTests = (accounts, Swap) => {
       constants.ZERO_ADDRESS,
       validity,
       0,
-      "0x"
+      "0x",
+      epoch
     );
 
     await time.increase(4 * epoch);
@@ -539,7 +540,8 @@ const swapTests = (accounts, Swap) => {
       constants.ZERO_ADDRESS,
       validity,
       0,
-      "0x"
+      "0x",
+      epoch
     ]);
 
     await swap.submitNote(encoded, sig, { from: carol });
@@ -584,7 +586,8 @@ const swapTests = (accounts, Swap) => {
       oracle.address,
       0,
       bondTimeout,
-      "0x"
+      "0x",
+      epoch
     );
 
     await oracle.testify(hash, 1);
@@ -597,7 +600,8 @@ const swapTests = (accounts, Swap) => {
       oracle.address,
       0,
       bondTimeout,
-      "0x"
+      "0x",
+      epoch
     ]);
     await swap.submitNote(encoded, sig, { from: carol });
 
@@ -688,7 +692,8 @@ const swapTests = (accounts, Swap) => {
       constants.ZERO_ADDRESS,
       0,
       0,
-      "0x"
+      "0x",
+      epoch
     );
 
     // carol issues invoice
@@ -711,7 +716,8 @@ const swapTests = (accounts, Swap) => {
       constants.ZERO_ADDRESS,
       0,
       0,
-      "0x"
+      "0x",
+      epoch
     ]);
     // carol submits note anyway
     await swap.submitNote(encoded, note.sig, { from: carol });

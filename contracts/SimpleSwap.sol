@@ -18,7 +18,7 @@ contract SimpleSwap is SW3Utils {
   event HardDepositDecreasePrepared(address indexed beneficiary, uint diff);
 
   /* magic timeout used throughout the code, cause of many security issues */
-  uint constant timeout = 1 days;
+  uint constant hardDepositTimeout = 1 days;
 
   /* structure to keep track of the hard deposit for one beneficiary */
   struct HardDeposit {
@@ -64,7 +64,7 @@ contract SimpleSwap is SW3Utils {
   /// @param beneficiary the beneficiary of the cheque
   /// @param serial the serial number of the cheque
   /// @param amount the (cumulative) amount of the cheque
-  function _submitChequeInternal(address beneficiary, uint serial, uint amount) internal {
+  function _submitChequeInternal(address beneficiary, uint serial, uint amount, uint timeout) internal {
     /* ensure serial is increasing */
     ChequeInfo storage info = cheques[beneficiary];
     require(serial > info.serial);
@@ -93,7 +93,7 @@ contract SimpleSwap is SW3Utils {
     /*  amount needs to be larger. since this can only be called by the beneficiary this is probably not necessary */
     require(amount > cheques[beneficiary].amount);
     /* update the cheque data */
-    _submitChequeInternal(beneficiary, serial, amount);
+    _submitChequeInternal(beneficiary, serial, amount, timeout);
   }
 
   /* TODO: security implications of anyone being able to call this and the resulting timeout delay */
@@ -109,7 +109,7 @@ contract SimpleSwap is SW3Utils {
     /* verify signature of the beneficiary */
     require(beneficiary ==  recover(chequeHash(address(this), beneficiary, serial, amount, timeout), beneficarySig));
     /* update the cheque data */
-    _submitChequeInternal(beneficiary, serial, amount);
+    _submitChequeInternal(beneficiary, serial, amount, timeout);
   }
 
   /// @dev helper function to calculate payout value while respecting hard deposits
@@ -176,7 +176,7 @@ contract SimpleSwap is SW3Utils {
     require(diff < deposit.amount);
 
     /* timeout is twice the normal timeout to ensure users can submit and cash in time */
-    deposit.timeout = now + timeout * 2;
+    deposit.timeout = now + hardDepositTimeout;
     deposit.diff = diff;
     emit HardDepositDecreasePrepared(beneficiary, diff);
   }
