@@ -1,5 +1,6 @@
 const Swap = artifacts.require("./Swap.sol");
 const SimpleSwap = artifacts.require("./SimpleSwap.sol");
+const SoftSwap = artifacts.require("./SoftSwap.sol");
 const OracleWitness = artifacts.require("./OracleWitness.sol");
 
 const {
@@ -500,6 +501,17 @@ const simpleSwapTests = (accounts, Swap) => {
   });
 };
 
+const softSwapTests = (accounts, Swap) => {
+  const [owner, bob, alice] = accounts;
+
+  async function prepareSwap(prefilledAmount = 1000) {
+    const swap = await Swap.new(owner);
+    await swap.send(prefilledAmount, { from: owner });
+    return { swap, prefilledAmount: new BN(prefilledAmount) };
+  }
+
+};
+
 const swapTests = (accounts, Swap) => {
   const [owner, bob, alice, carol] = accounts;
 
@@ -751,7 +763,13 @@ contract("SimpleSwap", function(accounts) {
   simpleSwapTests(accounts, SimpleSwap);
 });
 
+contract("SoftSwap", function(accounts) {
+  simpleSwapTests(accounts, SoftSwap);
+  softSwapTests(accounts, SoftSwap);
+});
+
 contract("Swap", function(accounts) {
   simpleSwapTests(accounts, Swap);
+  softSwapTests(accounts, Swap);
   swapTests(accounts, Swap);
 });

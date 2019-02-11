@@ -1,13 +1,10 @@
 pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "openzeppelin-solidity/contracts/math/Math.sol";
-import "./SW3Utils.sol";
 import "./abstracts/AbstractWitness.sol";
-import "./SimpleSwap.sol";
+import "./SoftSwap.sol";
 
 /// @title Swap Channel Contract
-contract Swap is SimpleSwap {
+contract Swap is SoftSwap {
   event NoteSubmitted(bytes32 indexed noteId);
   event NoteCashed(bytes32 indexed noteId, uint amount);
   event NoteBounced(bytes32 indexed noteId, uint paid, uint bounced);
@@ -22,7 +19,7 @@ contract Swap is SimpleSwap {
   /* associates every noteId with a NoteInfo */
   mapping (bytes32 => NoteInfo) public notes;
 
-  constructor(address payable _owner) SimpleSwap(_owner) public { }
+  constructor(address payable _owner) SoftSwap(_owner) public { }
 
   /// @dev verify the conditions of a note
   function verifyNote(bytes32 id, Note memory note) internal view {
