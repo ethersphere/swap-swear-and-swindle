@@ -21,31 +21,19 @@ contract MailboxTrial is AbstractTrialRules, SW3Utils {
     uint dataTime;
     bytes32 updateRoot;
   }
-
-  mapping (bytes32 => TrialData) public data;  
-
+  
   Swindle public swindle;
   SwapWitness public swapWitness;
   AckWitness public ackWitness;
   UpdateWitness public updateWitness;
   MerkleWitness public merkleWitness;
-
-  modifier only_swindle {
-    require(msg.sender == address(swindle), "only_swindle");
-    _;
-  }
-
-  constructor(address _swindle, UpdateWitness _updateWitness, MerkleWitness _merkleWitness) public {
-    swindle = Swindle(_swindle);
-    swapWitness = new SwapWitness();
-    ackWitness = new AckWitness();
+  
+  constructor(Swindle _swindle, UpdateWitness _updateWitness, MerkleWitness _merkleWitness, SwapWitness _swapWitness, AckWitness _ackWitness) public {
+    swindle = _swindle;
+    swapWitness = _swapWitness;
+    ackWitness = _ackWitness;
     updateWitness = _updateWitness;
     merkleWitness = _merkleWitness;
-  }
-
-  function encodeNoteRemarkData(address trial, uint payment) 
-  public pure returns (bytes memory) {
-    return abi.encode(trial, abi.encode(payment));
   }
 
   function getSwearNoteRemark(  
@@ -54,13 +42,22 @@ contract MailboxTrial is AbstractTrialRules, SW3Utils {
     return keccak256(encodeNoteRemarkData(address(this), payment));
   }
 
-  function getInitialStatus()
-  public view returns (uint8 status) {
-    return TRIAL_STATUS_SWEAR_NOTE;
+  function getInitialStatus(bytes memory payload)
+  public pure returns (uint8, bytes memory) {
+    (uint payment) = abi.decode(payload, (uint));
+    return (TRIAL_STATUS_SWEAR_NOTE,
+      abi.encode(TrialData({
+        payment: payment,
+        serviceNoteHash: bytes32(0),
+        dataHash: bytes32(0),
+        dataTime: 0,
+        updateRoot: bytes32(0)
+      }))
+    );
   }
   
   function nextStatus(AbstractWitness.TestimonyStatus witnessStatus, uint8 trialStatus)
-  public view returns (uint8 status) {
+  public pure returns (uint8 status) {
     if(witnessStatus == AbstractWitness.TestimonyStatus.PENDING) {      
       if(trialStatus == TRIAL_STATUS_INCLUSION)
         return TRIAL_STATUS_GUILTY;
@@ -99,31 +96,35 @@ contract MailboxTrial is AbstractTrialRules, SW3Utils {
     revert("no witness");
   }
 
-  function setRoles(bytes32 caseId, AbstractWitness.TestimonyStatus witnessStatus, uint8 status, bytes memory roles)
-  public only_swindle {
+  function updateData(AbstractWitness.TestimonyStatus witnessStatus, uint8 status, bytes memory trialData, bytes memory roles)
+  public pure returns (bytes memory) {
+    TrialData memory data = abi.decode(trialData, (TrialData));
+
     require(witnessStatus == AbstractWitness.TestimonyStatus.VALID);
     if(status == TRIAL_STATUS_SWEAR_NOTE) {
       bytes[] memory swapRoles = abi.decode(roles, (bytes[]));
-      data[caseId].serviceNoteHash = abi.decode(swapRoles[9], (bytes32));
+      data.serviceNoteHash = abi.decode(swapRoles[9], (bytes32));
     } else if(status == TRIAL_STATUS_PAYMENT_NOTE) {      
     } else if(status == TRIAL_STATUS_ACK) {
-      bytes[] memory ackRoles = abi.decode(roles, (bytes[]));
-      data[caseId].dataHash = abi.decode(ackRoles[1], (bytes32));
-      data[caseId].dataTime = abi.decode(ackRoles[0], (uint));
+      (uint dataTime, bytes32 dataHash) = abi.decode(roles, (uint, bytes32));
+      data.dataHash = dataHash;
+      data.dataTime = dataTime;
     } else if(status == TRIAL_STATUS_UPDATE) {
-      bytes[] memory decodedRoles = abi.decode(roles, (bytes[]));
-      data[caseId].updateRoot = abi.decode(decodedRoles[0], (bytes32));
+      data.updateRoot = abi.decode(roles, (bytes32));
     } else if(status == TRIAL_STATUS_INCLUSION) {      
     } else revert("setRoles");
+
+    return abi.encode(data);
   }
 
 
   /// @notice return witness for a given status
-  function getWitnessPayload(uint8 trialStatus, bytes32 caseId, address payable provider, address payable plaintiff)
-  public view returns (bytes memory specification) {    
+  function getWitnessPayload(uint8 trialStatus, address payable provider, address payable plaintiff, bytes memory trialData)
+  public view returns (bytes memory specification) {
+    TrialData memory data = abi.decode(trialData, (TrialData));
+
     if(trialStatus == TRIAL_STATUS_SWEAR_NOTE) {
-      uint payment = data[caseId].payment;
-      bytes32 expectedRemark = getSwearNoteRemark(payment);
+      bytes32 expectedRemark = getSwearNoteRemark(data.payment);
       return abi.encode(
         Note({
           swap: address(0),
@@ -145,12 +146,12 @@ contract MailboxTrial is AbstractTrialRules, SW3Utils {
         Note({
           swap: address(0),
           index: 0,
-          amount: data[caseId].payment,
+          amount: data.payment,
           beneficiary: address(0),
           witness: address(0),
           validFrom: 0,
           validUntil: 0,
-          remark: data[caseId].serviceNoteHash,
+          remark: data.serviceNoteHash,
           timeout: 0
         }),
         plaintiff
@@ -162,19 +163,14 @@ contract MailboxTrial is AbstractTrialRules, SW3Utils {
     }
 
     if(trialStatus == TRIAL_STATUS_UPDATE) {
-      return abi.encode(provider, plaintiff, data[caseId].dataTime);
+      return abi.encode(provider, plaintiff, data.dataTime);
     }
 
     if(trialStatus == TRIAL_STATUS_INCLUSION) {
-      return abi.encode(data[caseId].updateRoot, data[caseId].dataHash);
+      return abi.encode(data.updateRoot, data.dataHash);
     }
 
     revert("no payload");
-  }
-
-  function initialize(bytes32 caseId, bytes memory payload) public only_swindle {
-    (uint payment) = abi.decode(payload, (uint));
-    data[caseId].payment = payment;
   }
 
   function encodeInitialPayload(uint payment)
@@ -185,5 +181,10 @@ contract MailboxTrial is AbstractTrialRules, SW3Utils {
   function encodePayloadSwearNote(bytes memory encodedNote, bytes memory sig) 
   public view returns (bytes memory) {
     return abi.encode(encodedNote, sig);
+  }
+
+  function encodeNoteRemarkData(address trial, uint payment) 
+  public pure returns (bytes memory) {
+    return abi.encode(trial, abi.encode(payment));
   }
 }

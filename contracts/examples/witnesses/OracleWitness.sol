@@ -12,7 +12,7 @@ contract OracleWitness is AbstractWitness {
 
   function testimonyFor(bytes memory specification, bytes memory)
   public view returns (TestimonyStatus, bytes memory) {    
-    bytes32 hash = abi.decode(specification, (bytes32));    
+    bytes32 hash = abi.decode(specification, (bytes32));  
     return (testimonies[hash], new bytes(0));
   }
 

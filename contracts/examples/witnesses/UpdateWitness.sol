@@ -43,9 +43,7 @@ contract UpdateWitness is AbstractWitness, SW3Utils {
     require(update.destination == expectedDestination, "wrong destination");
     require(update.timeUntil >= expectedTime, "message after update");
     require(update.timeFrom <= expectedTime, "message before update");
-
-    bytes[] memory kvs = new bytes[](1);
-    kvs[0] = abi.encode(update.updateRoot);    
-    return (TestimonyStatus.VALID, abi.encode(kvs));
+    
+    return (TestimonyStatus.VALID, abi.encode(update.updateRoot));
   }
 }

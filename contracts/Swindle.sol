@@ -9,17 +9,18 @@ contract Swindle is AbstractConstants {
 
   // structure to keep track of trial
   struct Trial {    
-    AbstractTrialRules rules; // trial contract
+    AbstractTrialRules rules; // trial contract    
     address payable plaintiff;
     address payable provider;
     bytes32 inputHash;
-    uint lastAction; // timestamp of the last status change
+    bytes32 trialDataHash;
+    uint64 lastAction; // timestamp of the last status change    
     uint8 status; // current status
-  }
+  }  
 
-  event TrialStarted(bytes32 indexed caseId, address provider, address plaintiff, AbstractTrialRules rules);
+  event TrialStarted(bytes32 indexed caseId, address provider, address plaintiff, AbstractTrialRules rules, bytes trialData);
   // fired whenever the state of a case changes
-  event StateTransition(bytes32 indexed caseId, uint from, uint to);
+  event StateTransition(bytes32 indexed caseId, uint from, uint to, bytes trialData);
 
   // map from caseId to trial structure
   mapping (bytes32 => Trial) trials;
@@ -40,53 +41,56 @@ contract Swindle is AbstractConstants {
     // derive a caseId, WARNING: horribly broken and insecure
     bytes32 caseId = keccak256(abi.encodePacked(msg.sender, provider, plaintiff, rules));
 
+    (uint8 status, bytes memory trialData) = rules.getInitialStatus(input);
+
     trials[caseId] = Trial({
       rules: rules,
       plaintiff: plaintiff,
       provider: provider,
       inputHash: keccak256(input),
-      status: rules.getInitialStatus(),
-      lastAction: now
+      status: status,
+      trialDataHash: keccak256(trialData),
+      lastAction: uint64(now)
     });
 
-    emit TrialStarted(caseId, provider, plaintiff, rules);
-
-    rules.initialize(caseId, input);
+    emit TrialStarted(caseId, provider, plaintiff, rules, trialData);    
 
     return caseId;
   }
 
-  function continueTrial(bytes32 caseId, bytes memory input) public {
+  function continueTrial(bytes32 caseId, bytes memory trialData, bytes memory input) public {
     Trial storage trial = trials[caseId];
     // if the trial is not going on or there is already a verdict abort
     require(trial.status > TRIAL_STATUS_NOT_GUILTY);
+    require(keccak256(trialData) == trial.trialDataHash);
 
     // outcome will be written to this variable
     AbstractWitness.TestimonyStatus outcome;
 
     // get the next step from the rules
-    (address witness, uint expiry) = trial.rules.getWitness(trial.status);    
+    (address witness, uint expiry) = trial.rules.getWitness(trial.status);
 
     if(now - trial.lastAction > expiry) {      
       // if too much time has passed assume the testimony to be PENDING
       outcome = AbstractWitness.TestimonyStatus.PENDING;
     } else {
-      bytes memory specification = trial.rules.getWitnessPayload(trial.status, caseId, trial.provider, trial.plaintiff);
+      bytes memory specification = trial.rules.getWitnessPayload(trial.status, trial.provider, trial.plaintiff, trialData);
       bytes memory kv;      
       
       (outcome, kv) = AbstractWitness(witness).testimonyFor(specification, input);      
       require(outcome != AbstractWitness.TestimonyStatus.PENDING, "still pending");      
 
-      trial.rules.setRoles(caseId, outcome, trial.status, kv);
+      trialData = trial.rules.updateData(outcome, trial.status, trialData, kv);
+      bytes32 trialDataHash = keccak256(trialData);
+      if(trialDataHash != trial.trialDataHash) trial.trialDataHash = trialDataHash;
     }
-    
-    // status change so we need to update the lastAction timestamp
-    trial.lastAction = now;
-
+      
     // get the next status from the rules, different variable because we still need the old status in the next line
     uint8 next = trial.rules.nextStatus(outcome, trial.status);
 
-    emit StateTransition(caseId, trial.status, next);
+    emit StateTransition(caseId, trial.status, next, trialData);
+    // status change so we need to update the lastAction timestamp
+    trial.lastAction = uint64(now);
     // update the status
     trial.status = next;
   }

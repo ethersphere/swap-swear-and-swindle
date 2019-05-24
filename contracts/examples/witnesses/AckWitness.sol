@@ -40,9 +40,6 @@ contract AckWitness is AbstractWitness, SW3Utils {
 
     require(ack.destination == expectedDestination, "wrong destination");
 
-    bytes[] memory kvs = new bytes[](2);
-    kvs[0] = abi.encode(ack.time);
-    kvs[1] = abi.encode(ack.dataHash);
-    return (TestimonyStatus.VALID, abi.encode(kvs));
+    return (TestimonyStatus.VALID, abi.encode(ack.time, ack.dataHash));
   }
 }
