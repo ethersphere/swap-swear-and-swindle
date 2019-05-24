@@ -12,7 +12,7 @@ const {
   expectEvent
 } = require("openzeppelin-test-helpers");
 
-const { signCheque, signNote, signInvoice } = require("./swutils");
+const { signCheque, signNote, signInvoice, encodeNote } = require("./swutils");
 const { computeCost } = require("./testutils");
 
 const epoch = 24 * 3600;
@@ -528,34 +528,24 @@ const swapTests = (accounts, Swap) => {
     const noteAmount = 500;
 
     let validity = (await time.latest()).addn(noteTimeout);
-
-    let { sig, hash } = await signNote(
-      swap,
-      owner,
-      carol,
-      1,
-      noteAmount,
-      constants.ZERO_ADDRESS,
-      validity,
-      0,
-      "0x",
-      epoch
-    );
+    
+    let note = {
+      swap: swap.address,
+      beneficiary: carol,
+      serial: 1,
+      amount: noteAmount,
+      witness: constants.ZERO_ADDRESS,
+      validFrom: validity,
+      validUntil: 0,
+      remark: '0x',
+      timeout: epoch
+    }    
+    
+    let { sig, hash } = await signNote(owner, note);
 
     await time.increase(4 * epoch);
 
-    let encoded = await swap.encodeNote([
-      swap.address,      
-      1,
-      noteAmount,
-      carol,
-      constants.ZERO_ADDRESS,
-      validity,
-      0,
-      "0x",
-      epoch
-    ]);
-
+    let encoded = await encodeNote(note);
     await swap.submitNote(encoded, sig, { from: carol });
 
     const { paidOut, timeout } = await swap.notes(hash);
@@ -580,7 +570,7 @@ const swapTests = (accounts, Swap) => {
   });
 
   // TODO: split
-  it("should accept a valid note (conditional bond)", async () => {
+  it("should accept a valid note (conditional bond)", async () => {    
     const { swap } = await prepareSwap(1000);
     const oracle = await OracleWitness.new();
 
@@ -589,32 +579,25 @@ const swapTests = (accounts, Swap) => {
 
     let bondTimeout = (await time.latest()).addn(noteTimeout);
 
-    let { sig, hash } = await signNote(
-      swap,
-      owner,
-      carol,
-      1,
-      noteAmount,
-      oracle.address,
-      0,
-      bondTimeout,
-      "0x",
-      epoch
-    );
+    let remark = '0xaa'
 
-    await oracle.testify(hash, 1);
+    let note = {
+      swap: swap.address,
+      beneficiary: carol,
+      serial: 1,
+      amount: noteAmount,
+      witness: oracle.address,
+      validFrom: 0,
+      validUntil: bondTimeout,
+      remark: remark,
+      timeout: epoch
+    }
 
-    let encoded = await swap.encodeNote([
-      swap.address,      
-      1,
-      noteAmount,
-      carol,
-      oracle.address,
-      0,
-      bondTimeout,
-      "0x",
-      epoch
-    ]);
+    let { sig, hash } = await signNote(owner, note)      
+    let encoded = await encodeNote(note)
+
+    await oracle.testify(remark, 1);
+
     await swap.submitNote(encoded, sig, { from: carol });
 
     const { paidOut, timeout } = await swap.notes(hash);
@@ -629,14 +612,14 @@ const swapTests = (accounts, Swap) => {
 
     await time.increase(1 * epoch);
 
-    await oracle.testify(hash, 0);
+    await oracle.testify(remark, 0);
 
     // oracle says no
     await shouldFail.reverting(
       swap.cashNote(encoded, noteAmount, { from: carol })
     );
 
-    await oracle.testify(hash, 1);
+    await oracle.testify(remark, 1);
 
     // partial payment
     let expectedBalanceCarol = (await balance.current(carol)).addn(
@@ -665,7 +648,7 @@ const swapTests = (accounts, Swap) => {
   });
 
   // TODO: split
-  it("should allow to submit paid invoices", async () => {
+  it("should allow to submit paid invoices", async () => {    
     const { swap } = await prepareSwap(1000);
     const noteAmount = new BN(500);
 
@@ -694,25 +677,26 @@ const swapTests = (accounts, Swap) => {
 
     // completely offchain cheque of 100
 
-    // owner issues note
-    let note = await signNote(
-      swap,
-      owner,
+    let note = {
+      swap: swap.address,
       beneficiary,
-      1,
-      noteAmount,
-      constants.ZERO_ADDRESS,
-      0,
-      0,
-      "0x",
-      epoch
-    );
+      serial: 1,
+      amount: noteAmount,
+      witness: constants.ZERO_ADDRESS,
+      validFrom: 0,
+      validUntil: 0,
+      remark: '0x',
+      timeout: epoch
+    }
+
+    // owner issues note
+    let { sig, hash } = await signNote(owner, note);
 
     // carol issues invoice
     let invoice = await signInvoice(
       swap,
       beneficiary,
-      note.hash,
+      hash,
       cheques[1].amount,
       cheques[1].serial
     );
@@ -720,19 +704,9 @@ const swapTests = (accounts, Swap) => {
     // owner issues cheque for invoice
     let cheque = await signCheque(swap, owner, cheques[2]);
 
-    let encoded = await swap.encodeNote([
-      swap.address,      
-      1,
-      noteAmount,
-      beneficiary,
-      constants.ZERO_ADDRESS,
-      0,
-      0,
-      "0x",
-      epoch
-    ]);
+    let encoded = await encodeNote(note);
     // carol submits note anyway
-    await swap.submitNote(encoded, note.sig, { from: carol });
+    await swap.submitNote(encoded, sig, { from: carol });
 
     // owner presents paid invoice
     await swap.submitPaidInvoice(

@@ -1,3 +1,12 @@
+const Swap = artifacts.require('./Swap')
+const {
+  constants
+} = require("openzeppelin-test-helpers");
+
+function getSwap() {  
+  return Swap.new(constants.ZERO_ADDRESS)    
+}
+
 async function signCheque(swap, signer, cheque) {
   const { owner, beneficiary, serial, amount, timeout } = cheque;
   const hash = await swap.chequeHash(
@@ -10,30 +19,33 @@ async function signCheque(swap, signer, cheque) {
   return { sig: await web3.eth.sign(hash, signer) };
 }
 
-async function signNote(
-  swap,
-  signer,
-  beneficiary,
-  serial,
-  amount,
-  witness,
-  validFrom,
-  validUntil,
-  remark,
-  timeout
-) {
-  const hash = await swap.noteHash([
-    swap.address,
-    serial,
-    amount,
-    beneficiary,
-    witness,
-    validFrom,
-    validUntil,
-    remark,
-    timeout
+async function signNote(signer, note) {  
+  const hash = await (await getSwap()).noteHash([
+    note.swap,
+    note.serial,
+    note.amount,
+    note.beneficiary,
+    note.witness,
+    note.validFrom,
+    note.validUntil,
+    note.remark,
+    note.timeout
   ]);
   return { sig: await web3.eth.sign(hash, signer), hash };
+}
+
+async function encodeNote(note) {  
+  return (await getSwap()).encodeNote([
+    note.swap,
+    note.serial,
+    note.amount,
+    note.beneficiary,
+    note.witness,
+    note.validFrom,
+    note.validUntil,
+    note.remark,
+    note.timeout
+  ]);  
 }
 
 async function signInvoice(swap, signer, noteId, swapBalance, serial) {
@@ -43,6 +55,7 @@ async function signInvoice(swap, signer, noteId, swapBalance, serial) {
 
 module.exports = {
   signCheque,
+  encodeNote,
   signNote,
   signInvoice
 };

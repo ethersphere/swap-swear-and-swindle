@@ -22,7 +22,7 @@ contract Swap is SoftSwap {
   constructor(address payable _owner) SoftSwap(_owner) public { }
 
   /// @dev verify the conditions of a note
-  function verifyNote(bytes32 id, Note memory note) internal view {
+  function verifyNote(bytes32 id, Note memory note, bytes memory payload) internal view {
     /* if there is validFrom make sure it's in the past */
     if(note.validFrom != 0) require(now >= note.validFrom);
     /* if there is validUntil make sure it's in the future */
@@ -31,18 +31,27 @@ contract Swap is SoftSwap {
     /* if there is a witness check the escrow condition */
     if(note.witness != address(0x0)) {
       /* static call */
-      require(AbstractWitness(note.witness).testimonyFor(owner, note.beneficiary, id) == AbstractWitness.TestimonyStatus.VALID);
+      (AbstractWitness.TestimonyStatus status,) = AbstractWitness(note.witness).testimonyFor(abi.encode(note.remark), payload);
+      require(status == AbstractWitness.TestimonyStatus.VALID);
     }
+  }
+
+  function submitNote(bytes memory encoded, bytes memory sig) public {
+    submitNoteWithData(encoded, sig, new bytes(0));
+  }
+
+  function cashNote(bytes memory encoded, uint amount) public {
+    cashNoteWithData(encoded, amount, new bytes(0));
   }
 
   /// @notice submit a note
   /// @param sig signature of the note
-  function submitNote(bytes memory encoded, bytes memory sig) public {
+  function submitNoteWithData(bytes memory encoded, bytes memory sig, bytes memory payload) public {
     Note memory note = abi.decode(encoded, (Note));
     bytes32 id = keccak256(encoded);
 
     /* verify the signature of the owner */
-    require(owner == recover(id, sig));
+    require(owner == recover(id, sig), "invalid signature");
     /* make sure the note has not been submitted before */
     require(notes[id].timeout == 0);
 
@@ -52,26 +61,26 @@ contract Swap is SoftSwap {
     });
 
     /* verify that the note conditions hold, else revert everything */
-    verifyNote(id, note);
+    verifyNote(id, note, payload);
 
     emit NoteSubmitted(id);
   }
 
   /// @notice cash a note
   /// @param amount amount to be paid out
-  function cashNote(bytes memory encoded, uint amount) public {
+  function cashNoteWithData(bytes memory encoded, uint amount, bytes memory payload) public {
     Note memory note = abi.decode(encoded, (Note));
     bytes32 id = keccak256(encoded);
     NoteInfo storage noteInfo = notes[id];
 
     /* check the note has been submitted */
-    require(noteInfo.timeout != 0);
+    require(noteInfo.timeout != 0, "already submitted");
     /* check that the security delay is over */
-    require(now >= noteInfo.timeout);
+    require(now >= noteInfo.timeout, "security delay not over");
     /* only the beneficiary of the note may call this */
-    require(msg.sender == note.beneficiary); // necessary because of blank cheques
+    require(msg.sender == note.beneficiary, "not beneficiary"); // necessary because of blank cheques
     /* verify that the note conditions hold, static call */
-    verifyNote(id, note);
+    verifyNote(id, note, payload);
 
     /* if there is a limit make sure we don't exceed it */
     if(note.amount != 0) {

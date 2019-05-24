@@ -1,107 +1,93 @@
 pragma solidity ^0.5.0;
-import "./abstracts/AbstractSwear.sol";
-import "./abstracts/AbstractRules.sol";
+pragma experimental ABIEncoderV2;
+import "./abstracts/AbstractTrialRules.sol";
 import "./abstracts/AbstractWitness.sol";
 import "./abstracts/AbstractConstants.sol";
 
 /// @title Swindle contract
 contract Swindle is AbstractConstants {
 
-  /* structure to keep track of trial */
-  struct Trial {
-    AbstractSwear swear; /* address that initiated this trial, should implement the Swear interface */
-    AbstractRules rules; /* rules contract */
+  // structure to keep track of trial
+  struct Trial {    
+    AbstractTrialRules rules; // trial contract
     address payable plaintiff;
-    address provider;
-    bytes32 payload;
-    bytes32 commitmentHash; /* commitmentHash from Swear */
-    uint lastAction; /* timestamp of the last status change */
-    uint8 status; /* current status */
+    address payable provider;
+    bytes32 inputHash;
+    uint lastAction; // timestamp of the last status change
+    uint8 status; // current status
   }
 
-  /* fired whenever the state of a case changes */
+  event TrialStarted(bytes32 indexed caseId, address provider, address plaintiff, AbstractTrialRules rules);
+  // fired whenever the state of a case changes
   event StateTransition(bytes32 indexed caseId, uint from, uint to);
 
-  /* map from caseId to trial structure */
+  // map from caseId to trial structure
   mapping (bytes32 => Trial) trials;
+
+  function getTrialInfo(bytes32 caseId)
+  public view returns (uint8 status, address rules, bytes32 inputHash) {
+    Trial storage trial = trials[caseId];
+    return (trial.status, address(trial.rules), trial.inputHash);
+  }
 
   /// @dev start a trial, should be called from a Swear contract
   /// @param provider service provider
   /// @param plaintiff plaintiff, could be trial initiator or beneficiary in a Swap note
-  /// @param payload data for the witnesses
-  /// @param commitmentHash hash to identify the commitment with Swear
   /// @param rules to use
   /// @return the caseId of the new trial
-  function startTrial(address provider, address payable plaintiff, bytes32 payload, bytes32 commitmentHash, AbstractRules rules) public returns (bytes32) {
-    /* derive a caseId, WARNING: horribly broken and insecure */
-    bytes32 caseId = keccak256(abi.encodePacked(provider, plaintiff, payload, commitmentHash));
+  function startTrial(address payable provider, address payable plaintiff, AbstractTrialRules rules, bytes memory input)
+  public returns (bytes32) {
+    // derive a caseId, WARNING: horribly broken and insecure
+    bytes32 caseId = keccak256(abi.encodePacked(msg.sender, provider, plaintiff, rules));
 
     trials[caseId] = Trial({
-      swear: AbstractSwear(msg.sender),
       rules: rules,
       plaintiff: plaintiff,
       provider: provider,
-      payload: payload,
-      commitmentHash: commitmentHash,
-      status: rules.getInitialStatus() /* static call */,
+      inputHash: keccak256(input),
+      status: rules.getInitialStatus(),
       lastAction: now
     });
+
+    emit TrialStarted(caseId, provider, plaintiff, rules);
+
+    rules.initialize(caseId, input);
 
     return caseId;
   }
 
-  /// @notice try to advance the trial by one step
-  /// @param caseId case to proceed
-  function continueTrial(bytes32 caseId) public {
+  function continueTrial(bytes32 caseId, bytes memory input) public {
     Trial storage trial = trials[caseId];
-    /* if the trial is not going on or there is already a verdict abort */
-    if(trial.status <= TRIAL_STATUS_NOT_GUILTY) return;
+    // if the trial is not going on or there is already a verdict abort
+    require(trial.status > TRIAL_STATUS_NOT_GUILTY);
 
-    /* outcome will be written to this variable */
+    // outcome will be written to this variable
     AbstractWitness.TestimonyStatus outcome;
 
-    /* get the next step from the rules */
-    (address witness, uint expiry) = trial.rules.getWitness(trial.status);
+    // get the next step from the rules
+    (address witness, uint expiry) = trial.rules.getWitness(trial.status);    
 
-    if(now - trial.lastAction > expiry) {
-      /* if too much time has passed assume the testimony to be INVALID */
-      outcome = AbstractWitness.TestimonyStatus.INVALID;
+    if(now - trial.lastAction > expiry) {      
+      // if too much time has passed assume the testimony to be PENDING
+      outcome = AbstractWitness.TestimonyStatus.PENDING;
     } else {
-      /* static call */
-      outcome = AbstractWitness(witness).testimonyFor(trial.provider, trial.plaintiff, trial.payload);
+      bytes memory specification = trial.rules.getWitnessPayload(trial.status, caseId, trial.provider, trial.plaintiff);
+      bytes memory kv;      
+      
+      (outcome, kv) = AbstractWitness(witness).testimonyFor(specification, input);      
+      require(outcome != AbstractWitness.TestimonyStatus.PENDING, "still pending");      
+
+      trial.rules.setRoles(caseId, outcome, trial.status, kv);
     }
-
-    /* if the outcode is still PENDING abort */
-    if(outcome == AbstractWitness.TestimonyStatus.PENDING) return;
-
-    /* status change so we need to update the lastAction timestamp */
+    
+    // status change so we need to update the lastAction timestamp
     trial.lastAction = now;
 
-    /* get the next status from the rules, different variable because we still need the old status in the next line */
+    // get the next status from the rules, different variable because we still need the old status in the next line
     uint8 next = trial.rules.nextStatus(outcome, trial.status);
 
     emit StateTransition(caseId, trial.status, next);
-    /* update the status */
+    // update the status
     trial.status = next;
   }
-
-  /// @notice end a trial (there needs to be a verdict already)
-  /// @param caseId case to end
-  function endTrial(bytes32 caseId) public {
-    Trial storage trial = trials[caseId];
-
-    if(trial.status == TRIAL_STATUS_NOT_GUILTY) {
-      /* invalidate the trial */
-      trial.status = 0;
-      /* no special code for a not guilty verdict for now */
-    } else if(trial.status == TRIAL_STATUS_GUILTY) {
-      /* invalidate the trial */
-      trial.status = 0;
-      /* if GUILTY instruct Swear to compensate the plaintiff with the entire deposit */
-      trial.swear.compensate(trial.commitmentHash, trial.plaintiff, trial.rules.getDeposit());
-    } else revert(); /* revert if we are not at a verdict or the trial is invalid */
-    /* notify Swear of trial end regardless of verdict */
-    trial.swear.notifyTrialEnd(trial.commitmentHash);
-  }
-
 }
