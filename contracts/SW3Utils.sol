@@ -19,12 +19,6 @@ contract SW3Utils {
     bytes32 remark ;/* arbitrary 32-bytes, can be used to encode information for Swear and witnesses */
     uint timeout;
   }
-
-  /// @dev compute hash for a cheque
-  function chequeHash(address swap, address beneficiary, uint serial, uint amount, uint timeout)
-  public pure returns (bytes32) {
-    return keccak256(abi.encodePacked(swap, serial, beneficiary, amount, timeout));
-  }
   
   /// @dev compute hash for an invoice
   function invoiceHash(bytes32 noteId, uint swapBalance, uint serial) public pure returns (bytes32) {

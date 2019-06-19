@@ -2,9 +2,10 @@ pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 import "./abstracts/AbstractWitness.sol";
 import "./SoftSwap.sol";
+import "./SW3Utils.sol";
 
 /// @title Swap Channel Contract
-contract Swap is SoftSwap {
+contract Swap is SoftSwap, SW3Utils {
   event NoteSubmitted(bytes32 indexed noteId);
   event NoteCashed(bytes32 indexed noteId, uint amount);
   event NoteBounced(bytes32 indexed noteId, uint paid, uint bounced);

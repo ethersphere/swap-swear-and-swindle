@@ -1,11 +1,10 @@
 pragma solidity ^0.5.0;
-pragma experimental ABIEncoderV2;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "./SW3Utils.sol";
-import "./abstracts/AbstractWitness.sol";
+import "openzeppelin-solidity/contracts/math/Math.sol";
+import "openzeppelin-solidity/contracts/cryptography/ECDSA.sol";
 
 /// @title Swap Channel Contract
-contract SimpleSwap is SW3Utils {
+contract SimpleSwap {
   using SafeMath for uint;
 
   event Deposit(address depositor, uint amount);
@@ -230,5 +229,14 @@ contract SimpleSwap is SW3Utils {
   /// @notice deposit ether
   function() payable external {
     emit Deposit(msg.sender, msg.value);
+  }
+
+  function recover(bytes32 hash, bytes memory sig) internal pure returns (address) {
+    return ECDSA.recover(ECDSA.toEthSignedMessageHash(hash), sig);
+  }
+
+  function chequeHash(address swap, address beneficiary, uint serial, uint amount, uint timeout)
+  public pure returns (bytes32) {
+    return keccak256(abi.encodePacked(swap, serial, beneficiary, amount, timeout));
   }
 }
