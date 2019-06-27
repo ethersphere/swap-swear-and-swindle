@@ -530,6 +530,30 @@ const simpleSwapTests = (accounts, Swap) => {
     await shouldFail.reverting(submitChequeBeneficiary(swap, cheques[2], sender))
   })
 
+  it("should be cheaper in gas to submit the same cheque via submitChequeOwner or submitChequeBeneficiary than via submitCheque", async() => {
+    const { swap: swapAlice, prefilledAmount } = await prepareSwap();
+    const { swap: swapOwner, prefilledAmount1 } = await prepareSwap();
+    const { swap: swapBeneficiary, prefilledAmount2 } = await prepareSwap();
+
+    const cheque = {
+      owner,
+      beneficiary: bob,
+      serial: new BN(1),
+      amount: prefilledAmount,
+    }
+
+    const { receipt: receiptOne} = await submitChequeOwner(swapOwner, cheque, cheque.owner)
+    const { receipt: receiptTwo } = await submitChequeBeneficiary(swapBeneficiary, cheque, cheque.beneficiary)
+    const { receipt: receiptThree } = await submitCheque(swapAlice, cheque, alice)
+
+    let gasCostOwner = await computeCost(receiptOne)
+    let gasCostBeneficiary = await computeCost(receiptTwo)
+    let gasCostAlice = await computeCost(receiptThree)
+
+    gasCostOwner.should.bignumber.be.below(gasCostAlice, "submitChequeOwner should cost less than submitCheque")
+    gasCostBeneficiary.should.bignumber.be.below(gasCostAlice, "submitChequeBeneficiary should cost less than submitCheque")
+  })
+
   it("should allow cheque payout after timeout", async () => {
     const { swap, prefilledAmount } = await prepareSwap();
 
