@@ -1,4 +1,3 @@
-//TODO: 
 pragma solidity ^0.5.10;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/math/Math.sol";
@@ -12,7 +11,6 @@ contract SimpleSwap {
   event ChequeCashed(address indexed beneficiary, uint indexed serial, uint amount);
   event ChequeSubmitted(address indexed beneficiary, uint indexed serial, uint amount);
   event ChequeBounced(address indexed beneficiary, uint indexed serial, uint paid, uint bounced);
-  event LogAddress(address testAddress);
   event HardDepositChanged(address indexed beneficiary, uint amount);
   event HardDepositDecreasePrepared(address indexed beneficiary, uint diff);
 
@@ -84,7 +82,7 @@ contract SimpleSwap {
   /// @param timeout the check can be cashed timeout seconds in the future
   /// @param beneficiarySig signature of the owner
   function submitChequeOwner(address beneficiary, uint serial, uint amount, uint timeout, bytes memory beneficiarySig) public {
-    require(msg.sender == owner);
+    require(msg.sender == owner, "SimpleSwap: not owner");
     /* verify signature of the beneficiary */
     require(beneficiary == recover(chequeHash(address(this), beneficiary, serial, amount, timeout), beneficiarySig),
      "SimpleSwap: invalid beneficiarySig");
@@ -158,11 +156,11 @@ contract SimpleSwap {
     ChequeInfo storage info = cheques[beneficiary];
 
     /* grace period must have ended */
-    require(now >= info.timeout);
+    require(now >= info.timeout,  "SimpleSwap: cheque not yet timed out");
 
     /* ensure there is actually ether to be paid out */
     uint value = info.amount.sub(info.paidOut); /* throws if paidOut > amount */
-    require(value > 0);
+    require(value > 0, "SimpleSwap: no balance owed");
 
     /* compute the actual payout */
     (uint payout, uint bounced) = _computePayout(beneficiary, value);
@@ -182,10 +180,10 @@ contract SimpleSwap {
   /// @param beneficiary beneficiary whose hard deposit should be decreased
   /// @param diff amount that the deposit is supposed to be decreased by
   function prepareDecreaseHardDeposit(address beneficiary, uint diff) public {
-    require(msg.sender == owner);
+    require(msg.sender == owner, "SimpleSwap: not owner");
     HardDeposit storage deposit = hardDeposits[beneficiary];
     /* cannot decrease it by more than the deposit */
-    require(diff < deposit.amount);
+    require(diff < deposit.amount, "SimpleSwap: balance insufficient");
 
     /* timeout is twice the normal timeout to ensure users can submit and cash in time */
     deposit.timeout = now + hardDepositTimeout;
@@ -200,8 +198,8 @@ contract SimpleSwap {
     HardDeposit storage deposit = hardDeposits[beneficiary];
 
     /* check that there was a timeout and that it has passed */
-    require(deposit.timeout != 0);
-    require(now >= deposit.timeout);
+    require(deposit.timeout != 0, "SimpleSwap: no timeout set");
+    require(now >= deposit.timeout, "SimpleSwap: deposit not yet timed out");
 
     /* decrease the amount */
     /* this throws if diff > amount */
@@ -218,9 +216,9 @@ contract SimpleSwap {
   /// @param beneficiary beneficiary whose hard deposit should be decreased
   /// @param amount the new hard deposit
   function increaseHardDeposit(address beneficiary, uint amount) public {
-    require(msg.sender == owner);
+    require(msg.sender == owner, "SimpleSwap: not owner");
     /* ensure hard deposits don't exceed the global balance */
-    require(totalDeposit.add(amount) <= address(this).balance);
+    require(totalDeposit.add(amount) <= address(this).balance, "SimpleSwap: hard deposit cannot be more than balance ");
 
     HardDeposit storage deposit = hardDeposits[beneficiary];
     deposit.amount = deposit.amount.add(amount);
@@ -234,9 +232,9 @@ contract SimpleSwap {
   /// @param amount amount to withdraw
   function withdraw(uint amount) public {
     /* only owner can do this */
-    require(msg.sender == owner);
+    require(msg.sender == owner, "SimpleSwap: not owner");
     /* ensure we don't take anything from the hard deposit */
-    require(amount <= liquidBalance());
+    require(amount <= liquidBalance(), "SimpleSwap: liquidBalance not sufficient");
     owner.transfer(amount);
   }
 

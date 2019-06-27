@@ -104,27 +104,6 @@ const simpleSwapTests = (accounts, Swap) => {
     chequeInfo.timeout.should.bignumber.gte(
       (await time.latest()).addn(1 * epoch - 1)
     );
-
-    // await time.increase(1 * epoch);
-    // let beneficiaryExpectedBalance = (await balance.current(
-    //   cheque.beneficiary
-    // )).add(cheque.amount);
-
-    // var { logs } = await swap.cashCheque(cheque.beneficiary);
-
-    // expectEvent.inLogs(logs, "ChequeCashed", {
-    //   beneficiary: cheque.beneficiary,
-    //   serial: cheque.serial,
-    //   amount: cheque.amount
-    // });
-
-    // (await balance.current(cheque.beneficiary)).should.bignumber.equal(
-    //   beneficiaryExpectedBalance
-    // );
-
-    // var chequeInfo = await swap.cheques(cheque.beneficiary);
-
-    // chequeInfo.paidOut.should.bignumber.equal(cheque.amount);
   });
 
   it("should accept a valid first cheque by the beneficiary", async () => {
