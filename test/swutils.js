@@ -8,7 +8,7 @@ function getSwap() {
 }
 
 async function signCheque(swap, signer, cheque) {
-  const { owner, beneficiary, serial, amount, timeout } = cheque;
+  const { beneficiary, serial, amount, timeout } = cheque;
   const hash = await swap.chequeHash(
     swap.address,
     beneficiary,
@@ -16,7 +16,7 @@ async function signCheque(swap, signer, cheque) {
     amount,
     timeout
   );
-  return { sig: await web3.eth.sign(hash, signer) };
+  return { sig: await web3.eth.sign(hash, signer)} ;
 }
 
 async function signNote(signer, note) {  

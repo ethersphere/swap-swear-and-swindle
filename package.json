@@ -6,20 +6,25 @@
   "directories": {
     "test": "test"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ethersphere/swap-swear-and-swindle.git"
+  },
   "dependencies": {
     "bn-chai": "^1.0.1",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "eth-ens-namehash": "^2.0.8",
     "ethereumjs-util": "^5.2.0",
-    "openzeppelin-solidity": "^2.1.2",
-    "pify": "^4.0.1"
+    "openzeppelin-solidity": "2.1.2",
+    "pify": "^4.0.1",
+    "truffle": "^5.0.24"
   },
   "devDependencies": {
     "openzeppelin-test-helpers": "^0.1.2"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "./node_modules/.bin/truffle test"
   },
   "keywords": [],
   "author": "",
