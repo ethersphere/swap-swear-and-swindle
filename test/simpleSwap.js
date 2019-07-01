@@ -12,7 +12,7 @@ const {
 const { signCheque, signNote, signInvoice, encodeNote } = require("./swutils");
 const { computeCost } = require("./testutils");
 
-const epoch = 24 * 3600;
+const epoch = new BN(24 * 3600);
 
 async function submitChequeBeneficiary(swap, cheque, sender) {
   cheque = { timeout: epoch, ...cheque };
@@ -94,7 +94,8 @@ const simpleSwapTests = (accounts, Swap) => {
     expectEvent.inLogs(logs, "ChequeSubmitted", {
       amount: cheque.amount,
       beneficiary: cheque.beneficiary,
-      serial: cheque.serial
+      serial: cheque.serial,
+      timeout: epoch
     });
 
     var chequeInfo = await swap.cheques(cheque.beneficiary);
@@ -122,7 +123,8 @@ const simpleSwapTests = (accounts, Swap) => {
     expectEvent.inLogs(logs, "ChequeSubmitted", {
       amount: cheque.amount,
       beneficiary: cheque.beneficiary,
-      serial: cheque.serial
+      serial: cheque.serial,
+      timeout: epoch
     });
 
     var chequeInfo = await swap.cheques(cheque.beneficiary);
@@ -150,7 +152,8 @@ const simpleSwapTests = (accounts, Swap) => {
     expectEvent.inLogs(logs, "ChequeSubmitted", {
       amount: cheque.amount,
       beneficiary: cheque.beneficiary,
-      serial: cheque.serial
+      serial: cheque.serial,
+      timeout: epoch
     });
 
     var chequeInfo = await swap.cheques(cheque.beneficiary);
@@ -185,7 +188,8 @@ const simpleSwapTests = (accounts, Swap) => {
     expectEvent.inLogs(logs, "ChequeSubmitted", {
       amount: cheques[0].amount,
       beneficiary: cheques[0].beneficiary,
-      serial: cheques[0].serial
+      serial: cheques[0].serial,
+      timeout: epoch
     });
 
     var chequeInfo = await swap.cheques(cheques[0].beneficiary);
@@ -201,7 +205,8 @@ const simpleSwapTests = (accounts, Swap) => {
     expectEvent.inLogs(logs, "ChequeSubmitted", {
       amount: amounts[1],
       beneficiary: cheques[1].beneficiary,
-      serial: cheques[1].serial
+      serial: cheques[1].serial,
+      timeout: epoch
     });
 
     var chequeInfo = await swap.cheques(cheques[1].beneficiary);
@@ -237,7 +242,8 @@ const simpleSwapTests = (accounts, Swap) => {
     expectEvent.inLogs(logs, "ChequeSubmitted", {
       amount: cheques[0].amount,
       beneficiary: cheques[0].beneficiary,
-      serial: cheques[0].serial
+      serial: cheques[0].serial,
+      timeout: epoch
     });
 
     var chequeInfo = await swap.cheques(cheques[0].beneficiary);
@@ -253,7 +259,8 @@ const simpleSwapTests = (accounts, Swap) => {
     expectEvent.inLogs(logs, "ChequeSubmitted", {
       amount: amounts[1],
       beneficiary: cheques[1].beneficiary,
-      serial: cheques[1].serial
+      serial: cheques[1].serial,
+      timeout: epoch
     });
 
     var chequeInfo = await swap.cheques(cheques[1].beneficiary);
@@ -289,7 +296,8 @@ const simpleSwapTests = (accounts, Swap) => {
     expectEvent.inLogs(logs, "ChequeSubmitted", {
       amount: cheques[0].amount,
       beneficiary: cheques[0].beneficiary,
-      serial: cheques[0].serial
+      serial: cheques[0].serial,
+      timeout: epoch
     });
 
     var chequeInfo = await swap.cheques(cheques[0].beneficiary);
@@ -305,7 +313,8 @@ const simpleSwapTests = (accounts, Swap) => {
     expectEvent.inLogs(logs, "ChequeSubmitted", {
       amount: amounts[1],
       beneficiary: cheques[0].beneficiary,
-      serial: cheques[1].serial
+      serial: cheques[1].serial,
+      timeout: epoch
     });
 
     var chequeInfo = await swap.cheques(cheques[1].beneficiary);
@@ -341,7 +350,8 @@ const simpleSwapTests = (accounts, Swap) => {
     expectEvent.inLogs(logs, "ChequeSubmitted", {
       amount: cheques[0].amount,
       beneficiary: cheques[0].beneficiary,
-      serial: cheques[0].serial
+      serial: cheques[0].serial,
+      timeout: epoch
     });
 
     var chequeInfo = await swap.cheques(cheques[0].beneficiary);
@@ -357,7 +367,8 @@ const simpleSwapTests = (accounts, Swap) => {
     expectEvent.inLogs(logs, "ChequeSubmitted", {
       amount: amounts[1],
       beneficiary: cheques[1].beneficiary,
-      serial: cheques[1].serial
+      serial: cheques[1].serial,
+      timeout: epoch
     });
 
     var chequeInfo = await swap.cheques(cheques[1].beneficiary);
@@ -393,7 +404,8 @@ const simpleSwapTests = (accounts, Swap) => {
     expectEvent.inLogs(logs, "ChequeSubmitted", {
       amount: cheques[0].amount,
       beneficiary: cheques[0].beneficiary,
-      serial: cheques[0].serial
+      serial: cheques[0].serial,
+      timeout: epoch
     });
 
     var chequeInfo = await swap.cheques(cheques[0].beneficiary);
@@ -409,7 +421,8 @@ const simpleSwapTests = (accounts, Swap) => {
     expectEvent.inLogs(logs, "ChequeSubmitted", {
       amount: amounts[1],
       beneficiary: cheques[0].beneficiary,
-      serial: cheques[1].serial
+      serial: cheques[1].serial,
+      timeout: epoch
     });
 
     var chequeInfo = await swap.cheques(cheques[1].beneficiary);
@@ -445,7 +458,8 @@ const simpleSwapTests = (accounts, Swap) => {
     expectEvent.inLogs(logs, "ChequeSubmitted", {
       amount: cheques[0].amount,
       beneficiary: cheques[0].beneficiary,
-      serial: cheques[0].serial
+      serial: cheques[0].serial,
+      timeout: epoch
     });
 
     var chequeInfo = await swap.cheques(cheques[0].beneficiary);
@@ -461,7 +475,8 @@ const simpleSwapTests = (accounts, Swap) => {
     expectEvent.inLogs(logs, "ChequeSubmitted", {
       amount: amounts[1],
       beneficiary: cheques[0].beneficiary,
-      serial: cheques[1].serial
+      serial: cheques[1].serial,
+      timeout: epoch
     });
 
     var chequeInfo = await swap.cheques(cheques[1].beneficiary);
@@ -571,7 +586,8 @@ const simpleSwapTests = (accounts, Swap) => {
     expectEvent.inLogs(logs, "ChequeSubmitted", {
       amount: cheque.amount,
       beneficiary: cheque.beneficiary,
-      serial: cheque.serial
+      serial: cheque.serial,
+      timeout: epoch
     });
 
     var chequeInfo = await swap.cheques(cheque.beneficiary);
@@ -689,7 +705,8 @@ const simpleSwapTests = (accounts, Swap) => {
     expectEvent.inLogs(logs, "ChequeCashed", {
       amount: bounced,
       serial: cheque.serial,
-      beneficiary
+      beneficiary,
+      timeout: epoch
     });
   });
 
