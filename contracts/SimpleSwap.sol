@@ -121,7 +121,6 @@ contract SimpleSwap {
     _submitChequeInternal(beneficiary, serial, amount, timeout);
   }
 
-//TODO: discuss the possibility of partial payouts (requestPayout given as argument)
   /// @notice attempt to cash latest cheque
   /// @param beneficiary beneficiary for whose cheque should be paid out
   /// @param requestPayout amount requested to pay out
@@ -210,6 +209,34 @@ contract SimpleSwap {
     /* ensure we don't take anything from the hard deposit */
     require(amount <= liquidBalance(), "SimpleSwap: liquidBalance not sufficient");
     owner.transfer(amount);
+  }
+
+   /// @dev helper function to calculate payout value while respecting hard deposits
+  /// @param beneficiary the address to send to
+  /// @param value maximum amount to send
+  /// @return payout amount that was actually paid out
+  /// @return payout amount that bounced
+  function _computePayout(address payable beneficiary, uint value) internal returns (uint payout, uint bounced) {
+    /* part of hard deposit used */
+    payout = Math.min(value, hardDeposits[beneficiary].amount);
+    /* if there some of the hard deposit is used update the structure */
+    if(payout != 0) {
+      hardDeposits[beneficiary].amount -= payout;
+      totalDeposit -= payout;
+    }
+
+    /* amount of the cash not backed by a hard deposit */
+    uint rest = value - payout;
+    uint liquid = liquidBalance();
+
+    if(liquid >= rest) {
+      /* swap channel is solvent */
+      payout = value;
+    } else {
+      /* part of the cheque bounces */
+      payout += liquid;
+      bounced = rest - liquid;
+    }
   }
 
   /// @notice deposit ether
