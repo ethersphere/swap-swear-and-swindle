@@ -88,19 +88,8 @@ contract Swap is SoftSwap, SW3Utils {
       require(noteInfo.paidOut.add(amount) <= note.amount);
     }
 
-    /* compute the actual payout */
-    (uint payout, uint bounced) = _computePayout(note.beneficiary, amount);
-
-    /* TODO: event */
-
-    /* increase the stored paidOut amount to avoid double payout */
-    noteInfo.paidOut += payout;
-
-    if(bounced != 0) emit NoteBounced(id, payout, bounced);
-    else emit NoteCashed(id, payout);
-
-    /* do the payout */
-    note.beneficiary.transfer(payout); // TODO: test
+    uint payout = cashCheque(note.beneficiary, amount);
+    emit NoteCashed(id, payout);
   }
 
   /// @notice demonstrate that an invoice was paid

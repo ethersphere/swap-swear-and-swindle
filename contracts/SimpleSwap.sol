@@ -8,7 +8,7 @@ contract SimpleSwap {
   using SafeMath for uint;
 
   event Deposit(address depositor, uint amount);
-  event ChequeCashed(address indexed beneficiary, uint indexed serial, uint amount);
+  event ChequeCashed(address indexed beneficiary, uint indexed serial, uint payout, uint requestPayout);
   event ChequeSubmitted(address indexed beneficiary, uint indexed serial, uint amount, uint timeout);
   event ChequeBounced(address indexed beneficiary, uint indexed serial, uint paid, uint bounced);
   event HardDepositChanged(address indexed beneficiary, uint amount);
@@ -121,58 +121,33 @@ contract SimpleSwap {
     _submitChequeInternal(beneficiary, serial, amount, timeout);
   }
 
-  /// @dev helper function to calculate payout value while respecting hard deposits
-  /// @param beneficiary the address to send to
-  /// @param value maximum amount to send
-  /// @return payout amount that was actually paid out
-  /// @return payout amount that bounced
-  function _computePayout(address payable beneficiary, uint value) internal returns (uint payout, uint bounced) {
-    /* part of hard deposit used */
-    payout = Math.min(value, hardDeposits[beneficiary].amount);
-    /* if there some of the hard deposit is used update the structure */
-    if(payout != 0) {
-      hardDeposits[beneficiary].amount -= payout;
-      totalDeposit -= payout;
-    }
-
-    /* amount of the cash not backed by a hard deposit */
-    uint rest = value - payout;
-    uint liquid = liquidBalance();
-
-    if(liquid >= rest) {
-      /* swap channel is solvent */
-      payout = value;
-    } else {
-      /* part of the cheque bounces */
-      payout += liquid;
-      bounced = rest - liquid;
-    }
-  }
-
+//TODO: discuss the possibility of partial payouts (requestPayout given as argument)
   /// @notice attempt to cash latest cheque
   /// @param beneficiary beneficiary for whose cheque should be paid out
-  function cashCheque(address payable beneficiary) public {
-    ChequeInfo storage info = cheques[beneficiary];
-
+  /// @param requestPayout amount requested to pay out
+  function cashCheque(address payable beneficiary, uint requestPayout) public returns (uint) {
+    ChequeInfo storage cheque = cheques[beneficiary];
     /* grace period must have ended */
-    require(now >= info.timeout,  "SimpleSwap: cheque not yet timed out");
-
-    /* ensure there is actually ether to be paid out */
-    uint value = info.amount.sub(info.paidOut); /* throws if paidOut > amount */
-    require(value > 0, "SimpleSwap: no balance owed");
-
-    /* compute the actual payout */
-    (uint payout, uint bounced) = _computePayout(beneficiary, value);
-
-    /* emit the correct event depending on wether it bounced or not */
-    if(bounced != 0) emit ChequeBounced(beneficiary, info.serial, payout, bounced);
-    else emit ChequeCashed(beneficiary, info.serial, payout);
-
+    require(now >= cheque.timeout,  "SimpleSwap: cheque not yet timed out");
+    /* ensure there is a balance to claim */
+    require(requestPayout < cheque.amount.sub(cheque.paidOut), "SimpleSwap: requestPayout more than owed");
+     /* calculates hard-deposit usage */
+    uint hardDepositUsage = Math.min(requestPayout, hardDeposits[beneficiary].amount);
+    /* calculates acutal payout */
+    uint payout = Math.min(requestPayout, liquidBalance() + hardDepositUsage);
+    /* will throw if chequebook is not solvent */
+    require(payout != 0, "SimpleSwap: contract not solvent");
+      /* if there some of the hard deposit is used update the structure */
+    if(hardDepositUsage != 0) {
+      hardDeposits[beneficiary].amount = hardDepositUsage.sub(hardDepositUsage);
+      totalDeposit = totalDeposit.sub(hardDepositUsage);
+    }
     /* increase the stored paidOut amount to avoid double payout */
-    info.paidOut = info.paidOut.add(payout);
-
+    cheque.paidOut = cheque.paidOut.add(payout);
     /* do the actual payment */
     beneficiary.transfer(payout);
+    emit ChequeCashed(beneficiary, cheque.serial, payout, requestPayout);
+    return payout;
   }
 
   /// @notice prepare to decrease the hard deposit
