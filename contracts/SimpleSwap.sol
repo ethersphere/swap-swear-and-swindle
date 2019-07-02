@@ -10,7 +10,7 @@ contract SimpleSwap {
   event Deposit(address depositor, uint amount);
   event ChequeCashed(address indexed beneficiary, uint indexed serial, uint payout, uint requestPayout);
   event ChequeSubmitted(address indexed beneficiary, uint indexed serial, uint amount, uint timeout);
-  event ChequeBounced(address indexed beneficiary, uint indexed serial, uint paid, uint bounced);
+  event ChequeBounced();
   event HardDepositChanged(address indexed beneficiary, uint amount);
   event HardDepositDecreasePrepared(address indexed beneficiary, uint diff);
 
@@ -128,8 +128,8 @@ contract SimpleSwap {
     ChequeInfo storage cheque = cheques[beneficiary];
     /* grace period must have ended */
     require(now >= cheque.timeout,  "SimpleSwap: cheque not yet timed out");
+    require(requestPayout <= cheque.amount.sub(cheque.paidOut), "SimpleSwap: not enough balance owed");
     /* ensure there is a balance to claim */
-    require(requestPayout < cheque.amount.sub(cheque.paidOut), "SimpleSwap: requestPayout more than owed");
      /* calculates hard-deposit usage */
     uint hardDepositUsage = Math.min(requestPayout, hardDeposits[beneficiary].amount);
     /* calculates acutal payout */
@@ -138,7 +138,7 @@ contract SimpleSwap {
     require(payout != 0, "SimpleSwap: contract not solvent");
       /* if there some of the hard deposit is used update the structure */
     if(hardDepositUsage != 0) {
-      hardDeposits[beneficiary].amount = hardDepositUsage.sub(hardDepositUsage);
+      hardDeposits[beneficiary].amount = hardDeposits[beneficiary].amount.sub(hardDepositUsage);
       totalDeposit = totalDeposit.sub(hardDepositUsage);
     }
     /* increase the stored paidOut amount to avoid double payout */
@@ -146,6 +146,9 @@ contract SimpleSwap {
     /* do the actual payment */
     beneficiary.transfer(payout);
     emit ChequeCashed(beneficiary, cheque.serial, payout, requestPayout);
+    if(requestPayout != payout) {
+      emit ChequeBounced();
+    }
     return payout;
   }
 
