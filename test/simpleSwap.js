@@ -668,7 +668,7 @@ const simpleSwapTests = (accounts, Swap) => {
 
     const cheque = {
       owner,
-      beneficiary,
+      beneficiary, 
       serial: new BN(1),
       amount: new BN(1500),
     };
@@ -778,42 +778,43 @@ const simpleSwapTests = (accounts, Swap) => {
   // TODO: only part covered by HD, but not enough
   // TODO: many cheques test
 
-  // it("should not spend ether locked away by hard deposit of another address", async () => {
-  //   const { swap, prefilledAmount } = await prepareSwap(1000);
+  it("should not spend ether locked away by hard deposit of another address", async () => {
+    const { swap, prefilledAmount } = await prepareSwap(1000);
 
-  //   const beneficiary = alice;
-  //   const cheque = {
-  //     owner,
-  //     beneficiary,
-  //     serial: new BN(1),
-  //     amount: new BN(600),
-  //   };
+    const beneficiary = alice;
+    const cheque = {
+      owner,
+      beneficiary,
+      serial: new BN(1),
+      amount: new BN(600),
+    };
 
-  //   const sender = cheque.beneficiary
+    const sender = cheque.beneficiary
 
-  //   const hardDepositAmount = new BN(500);
-  //   const available = prefilledAmount.sub(hardDepositAmount);
+    const hardDepositAmount = new BN(500);
+    const available = prefilledAmount.sub(hardDepositAmount);
 
-  //   await swap.increaseHardDeposit(bob, hardDepositAmount);
+    await swap.increaseHardDeposit(bob, hardDepositAmount);
 
-  //   await submitChequeBeneficiary(swap, cheque, sender);
-  //   await time.increase(1 * epoch);
+    await submitChequeBeneficiary(swap, cheque, sender);
+    await time.increase(1 * epoch);
 
-  //   const expectedBalanceAlice = (await balance.current(beneficiary)).add(
-  //     available
-  //   );
+    const expectedBalanceAlice = (await balance.current(beneficiary)).add(
+      available
+    );
 
-  //   var { logs } = await swap.cashCheque(beneficiary, cheque.amount);
+    var { logs } = await swap.cashCheque(beneficiary, cheque.amount);
 
-  //   expectEvent.inLogs(logs, "ChequeBounced", {
-  //     paid: available,
-  //     bounced: cheque.amount.sub(available),
-  //     serial: cheque.serial,
-  //     beneficiary
-  //   });
+    expectEvent.inLogs(logs, "ChequeBounced", { });
+    expectEvent.inLogs(logs, "ChequeCashed", { 
+      payout: available,
+      requestPayout: cheque.amount,
+      serial: cheque.serial,
+      beneficiary
+    });
 
-  //   (await balance.current(alice)).should.bignumber.equal(expectedBalanceAlice);
-  // });
+    (await balance.current(alice)).should.bignumber.equal(expectedBalanceAlice);
+  });
 
   it("should not allow an instant decrease for hard deposits", async () => {
     const { swap } = await prepareSwap(1000);
