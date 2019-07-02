@@ -9,7 +9,7 @@ contract SimpleSwap {
 
   event Deposit(address depositor, uint amount);
   event ChequeCashed(address indexed beneficiary, uint indexed serial, uint amount);
-  event ChequeSubmitted(address indexed beneficiary, uint indexed serial, uint amount);
+  event ChequeSubmitted(address indexed beneficiary, uint indexed serial, uint amount, uint timeout);
   event ChequeBounced(address indexed beneficiary, uint indexed serial, uint paid, uint bounced);
   event HardDepositChanged(address indexed beneficiary, uint amount);
   event HardDepositDecreasePrepared(address indexed beneficiary, uint diff);
@@ -65,14 +65,13 @@ contract SimpleSwap {
   function _submitChequeInternal(address beneficiary, uint serial, uint amount, uint timeout) internal {
     ChequeInfo storage cheque = cheques[beneficiary];
     /* ensure serial is increasing */
-    require(serial > cheque.serial,
-    "SimpleSwap: invalid serial");
+    require(serial > cheque.serial, "SimpleSwap: invalid serial");
     /* update the stored info */
     cheque.serial = serial;
     cheque.amount = amount;
     cheque.timeout = now + timeout;
     /* the channel participants should watch to this event to find out if an older cheque is being submitted */
-    emit ChequeSubmitted(beneficiary, serial, amount);
+    emit ChequeSubmitted(beneficiary, serial, amount, timeout);
   }
 
   /// @notice submit a cheque by the owner
