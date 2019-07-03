@@ -30,9 +30,9 @@ async function submitChequeOwner(swap, cheque, sender) {
     return swap.submitChequeOwner(beneficiary, serial, amount, timeout, beneficiarySig, {
       from: sender
     });
-  }
+}
 
-  async function submitCheque(swap, cheque, sender) {
+async function submitCheque(swap, cheque, sender) {
     cheque = { timeout: epoch, ...cheque };
     const { owner, beneficiary, serial, amount, timeout } = cheque;
     const { sig: ownerSig } = await signCheque(swap, owner, cheque);
@@ -40,7 +40,7 @@ async function submitChequeOwner(swap, cheque, sender) {
     return swap.submitCheque(beneficiary, serial, amount, timeout, ownerSig, beneficiarySig, {
       from: sender
     })
-  }
+}
 
 const simpleSwapTests = (accounts, Swap) => {
   const [owner, bob, alice] = accounts;
@@ -603,12 +603,13 @@ const simpleSwapTests = (accounts, Swap) => {
       cheque.beneficiary
     )).add(cheque.amount);
 
-    var { logs } = await swap.cashCheque(cheque.beneficiary);
+    var { logs } = await swap.cashCheque(cheque.beneficiary, cheque.amount);
 
     expectEvent.inLogs(logs, "ChequeCashed", {
       beneficiary: cheque.beneficiary,
       serial: cheque.serial,
-      amount: cheque.amount
+      payout: cheque.amount,
+      requestPayout: cheque.amount
     });
 
     (await balance.current(cheque.beneficiary)).should.bignumber.equal(
@@ -629,7 +630,7 @@ const simpleSwapTests = (accounts, Swap) => {
       serial: new BN(1),
       amount: prefilledAmount
     }, bob);
-    await shouldFail.reverting(swap.cashCheque(bob));
+    await shouldFail.reverting(swap.cashCheque(bob, prefilledAmount));
   });
 
   it("should not allow cheque payout if there is nothing to pay out", async () => {
@@ -641,8 +642,8 @@ const simpleSwapTests = (accounts, Swap) => {
       amount: prefilledAmount
     }, bob);
     await time.increase(1 * epoch);
-    await swap.cashCheque(bob);
-    await shouldFail.reverting(swap.cashCheque(bob));
+    await swap.cashCheque(bob, prefilledAmount);
+    await shouldFail.reverting(swap.cashCheque(bob, prefilledAmount));
   });
 
   it("should not allow cheque payout before increased timeout", async () => {
@@ -655,9 +656,9 @@ const simpleSwapTests = (accounts, Swap) => {
       amount: new BN(500)
     }, bob);
     await time.increase(1 * epoch);
-    await swap.cashCheque(bob);
+    await swap.cashCheque(bob, new BN(500));
 
-    await shouldFail.reverting(swap.cashCheque(bob));
+    await shouldFail.reverting(swap.cashCheque(bob, new BN(500)));
   });
 
   it("should allow partial payments for a bouncing check", async () => {
@@ -667,7 +668,7 @@ const simpleSwapTests = (accounts, Swap) => {
 
     const cheque = {
       owner,
-      beneficiary,
+      beneficiary, 
       serial: new BN(1),
       amount: new BN(1500),
     };
@@ -679,16 +680,11 @@ const simpleSwapTests = (accounts, Swap) => {
     var beneficiaryExpectedBalance = (await balance.current(beneficiary)).add(
       prefilledAmount
     );
-    var { logs } = await swap.cashCheque(beneficiary);
+    var { logs } = await swap.cashCheque(beneficiary, cheque.amount);
 
     const bounced = cheque.amount.sub(prefilledAmount);
 
-    expectEvent.inLogs(logs, "ChequeBounced", {
-      paid: prefilledAmount,
-      bounced,
-      serial: cheque.serial,
-      beneficiary
-    });
+    expectEvent.inLogs(logs, "ChequeBounced", { });
 
     (await balance.current(beneficiary)).should.bignumber.equal(
       beneficiaryExpectedBalance
@@ -700,14 +696,14 @@ const simpleSwapTests = (accounts, Swap) => {
       bounced
     );
 
-    var { logs } = await swap.cashCheque(beneficiary);
+    var { logs } = await swap.cashCheque(beneficiary, bounced);
 
     expectEvent.inLogs(logs, "ChequeCashed", {
-      amount: bounced,
+      payout: bounced,
+      requestPayout: bounced,
       serial: cheque.serial,
-      beneficiary,
-      timeout: epoch
-    });
+      beneficiary
+     });
   });
 
   it("should allow hard deposits if they do not exceed the global deposit", async () => {
@@ -761,10 +757,11 @@ const simpleSwapTests = (accounts, Swap) => {
       cheque.amount
     );
 
-    var { logs } = await swap.cashCheque(beneficiary);
+    var { logs } = await swap.cashCheque(beneficiary, cheque.amount);
 
     expectEvent.inLogs(logs, "ChequeCashed", {
-      amount: cheque.amount,
+      payout: cheque.amount,
+      requestPayout: cheque.amount,
       serial: cheque.serial,
       beneficiary
     });
@@ -806,11 +803,12 @@ const simpleSwapTests = (accounts, Swap) => {
       available
     );
 
-    var { logs } = await swap.cashCheque(beneficiary);
+    var { logs } = await swap.cashCheque(beneficiary, cheque.amount);
 
-    expectEvent.inLogs(logs, "ChequeBounced", {
-      paid: available,
-      bounced: cheque.amount.sub(available),
+    expectEvent.inLogs(logs, "ChequeBounced", { });
+    expectEvent.inLogs(logs, "ChequeCashed", { 
+      payout: available,
+      requestPayout: cheque.amount,
       serial: cheque.serial,
       beneficiary
     });
