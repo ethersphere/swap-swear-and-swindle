@@ -670,7 +670,6 @@ const simpleSwapTests = (accounts, Swap) => {
       amount: new BN(500)
     }, bob);
     await time.increase(1 * epoch);
-    await swap.cashCheque(bob, new BN(500));
     var { logs } = await swap.cashCheque(bob, new BN(500));
 
     expectEvent.inLogs(logs, "ChequeBounced", { });

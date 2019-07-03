@@ -124,7 +124,7 @@ contract SimpleSwap {
   /// @notice attempt to cash latest cheque
   /// @param beneficiary beneficiary for whose cheque should be paid out
   /// @param requestPayout amount requested to pay out
-  function cashCheque(address payable beneficiary, uint requestPayout) public returns (uint) {
+  function cashCheque(address payable beneficiary, uint requestPayout) public {
     ChequeInfo storage cheque = cheques[beneficiary];
     /* grace period must have ended */
     require(now >= cheque.timeout,  "SimpleSwap: cheque not yet timed out");
@@ -134,8 +134,6 @@ contract SimpleSwap {
     uint hardDepositUsage = Math.min(requestPayout, hardDeposits[beneficiary].amount);
     /* calculates acutal payout */
     uint payout = Math.min(requestPayout, liquidBalance() + hardDepositUsage);
-    /* will throw if chequebook is not solvent */
-    require(payout != 0, "SimpleSwap: contract not solvent");
       /* if there some of the hard deposit is used update the structure */
     if(hardDepositUsage != 0) {
       hardDeposits[beneficiary].amount = hardDeposits[beneficiary].amount.sub(hardDepositUsage);
@@ -149,7 +147,6 @@ contract SimpleSwap {
     if(requestPayout != payout) {
       emit ChequeBounced();
     }
-    return payout;
   }
 
   /// @notice prepare to decrease the hard deposit
