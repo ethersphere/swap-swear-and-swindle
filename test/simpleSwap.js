@@ -661,6 +661,22 @@ const simpleSwapTests = (accounts, Swap) => {
     await shouldFail.reverting(swap.cashCheque(bob, new BN(500)));
   });
 
+  it("should emit a bounced event when the actual payout is 0", async () => {
+    const { swap } = await prepareSwap(0);
+    await submitChequeBeneficiary(swap, {
+      owner,
+      beneficiary: bob,
+      serial: new BN(1),
+      amount: new BN(500)
+    }, bob);
+    await time.increase(1 * epoch);
+    await swap.cashCheque(bob, new BN(500));
+    var { logs } = await swap.cashCheque(bob, new BN(500));
+
+    expectEvent.inLogs(logs, "ChequeBounced", { });
+
+  })
+
   it("should allow partial payments for a bouncing check", async () => {
     const { swap, prefilledAmount } = await prepareSwap(1000);
 
