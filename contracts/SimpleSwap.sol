@@ -37,7 +37,7 @@ contract SimpleSwap {
   /* associates every beneficiary with their HardDeposit */
   mapping (address => HardDeposit) public hardDeposits;
   /* sum of all hard deposits */
-  uint public totalDeposit;
+  uint public totalHardDeposit;
 
   /* owner of the contract, set at construction */
   address payable public owner;
@@ -49,7 +49,7 @@ contract SimpleSwap {
 
   /// @return the part of the balance that is not covered by hard deposits
   function liquidBalance() public view returns(uint) {
-    return address(this).balance.sub(totalDeposit);
+    return address(this).balance.sub(totalHardDeposit);
   }
 
   /// @return the part of the balance usable for a specific beneficiary
@@ -97,9 +97,8 @@ contract SimpleSwap {
   /// @param ownerSig signature of the owner
   function submitChequeBeneficiary(uint serial, uint amount, uint timeout, bytes memory ownerSig) public {
     /* verify signature of the owner */
-    //emit LogAddress(recover(chequeHash(address(this), msg.sender, serial, amount, timeout), ownerSig));
     require(owner == recover(chequeHash(address(this), msg.sender, serial, amount, timeout), ownerSig),
-     "SimpleSwap: invalid ownerSig");
+      "SimpleSwap: invalid ownerSig");
     /* update the cheque data */
     _submitChequeInternal(msg.sender, serial, amount, timeout);
   }
@@ -133,7 +132,7 @@ contract SimpleSwap {
     /* if there some of the hard deposit is used update the structure */
     if(payout != 0) {
       hardDeposits[beneficiary].amount -= payout;
-      totalDeposit -= payout;
+      totalHardDeposit -= payout;
     }
 
     /* amount of the cash not backed by a hard deposit */
@@ -206,8 +205,8 @@ contract SimpleSwap {
     deposit.amount = deposit.amount.sub(deposit.diff);
     /* reset the timeout to avoid a double decrease */
     deposit.timeout = 0;
-    /* keep totalDeposit in sync */
-    totalDeposit = totalDeposit.sub(deposit.diff);
+    /* keep totalHardDeposit in sync */
+    totalHardDeposit = totalHardDeposit.sub(deposit.diff);
 
     emit HardDepositChanged(beneficiary, deposit.amount);
   }
@@ -218,11 +217,11 @@ contract SimpleSwap {
   function increaseHardDeposit(address beneficiary, uint amount) public {
     require(msg.sender == owner, "SimpleSwap: not owner");
     /* ensure hard deposits don't exceed the global balance */
-    require(totalDeposit.add(amount) <= address(this).balance, "SimpleSwap: hard deposit cannot be more than balance ");
+    require(totalHardDeposit.add(amount) <= address(this).balance, "SimpleSwap: hard deposit cannot be more than balance ");
 
     HardDeposit storage deposit = hardDeposits[beneficiary];
     deposit.amount = deposit.amount.add(amount);
-    totalDeposit = totalDeposit.add(amount);
+    totalHardDeposit = totalHardDeposit.add(amount);
     /* disable any pending decrease */
     deposit.timeout = 0;
     emit HardDepositChanged(beneficiary, deposit.amount);
@@ -248,7 +247,7 @@ contract SimpleSwap {
   }
 
   function chequeHash(address swap, address beneficiary, uint serial, uint amount, uint timeout)
-  public pure returns (bytes32) {
-    return keccak256(abi.encodePacked(swap, serial, beneficiary, amount, timeout));
+    public pure returns (bytes32) {
+      return keccak256(abi.encodePacked(swap, serial, beneficiary, amount, timeout));
   }
 }
