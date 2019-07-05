@@ -19,33 +19,30 @@ const { signCheque } = require("./swutils");
 // @param alice a counterparty of the checkbook 
 // @param bob a counterparty of the checkbook
 function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
+  const defaultCheck = {
+    beneficiary: bob,
+    serial: new BN(3),
+    amount: new BN(Math.floor(Math.random() * 100000)),
+    timeout: new BN(Math.floor(Math.random() * 100000)),
+    signee: owner,
+    signature: ""
+  }
   describe('as a simple swap', function() {
-    // beforeEach(async function() {
-    //   it('should have a correct owner', async function() {
-    //     expect(await this.simpleSwap.owner()).to.equal(owner)          
-    //   })
-    // })
+    beforeEach(async function() {
+      it('should have a correct owner', async function() {
+        expect(await this.simpleSwap.owner()).to.equal(owner)          
+      })
+    })
     describe('submitChequeBeneficiary', function() {
-      let beneficiary = bob
-      let amount = new BN(Math.floor(Math.random() * 100000))
-      let timeout = new BN(Math.floor(Math.random() * 100000))
-
-      //TODO: explicit check on allowing overdraft
+        //TODO: explicit check on allowing overdraft
       describe('when the sender is the beneficiary', function() {
-        let sender = beneficiary
+        let sender = defaultCheck.beneficiary
         describe('when the first serial is higher than 0', function() {
-          let serial = new BN(3)
+          expect(defaultCheck.serial).bignumber.to.be.above(new BN(0), "Serial of defaultCheck not above 0")
           describe('when the owner is a signee', function() {
-            let signee = owner
+            expect(defaultCheck.signee).to.be.equal(owner, "Signee of defaultCheck is not owner")
             describe('when the signee signs the correct fields', function() {
-              const unsignedCheque = {
-                beneficiary: beneficiary,
-                serial: serial,
-                amount: amount,
-                timeout: timeout,
-                signee: signee,
-                signature: ""
-              }
+              let unsignedCheque = Object.assign({}, defaultCheck)
               describe('when we send one cheque', function() {
                 shouldSubmitChequeBeneficiary(unsignedCheque, sender)
               })
@@ -53,26 +50,12 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
                 shouldSubmitChequeBeneficiary(unsignedCheque, sender)
                 describe('when the serial number is increasing', function() {
                   let secondSerial = new BN(parseInt(unsignedCheque.serial) + 1)
-                  let increasing_serial_unsignedCheque = {
-                    beneficiary: beneficiary,
-                    serial: secondSerial,
-                    amount: amount,
-                    timeout: timeout,
-                    signee: signee,
-                    signature: ""
-                  }
+                  let increasing_serial_unsignedCheque = Object.assign({}, defaultCheck, {serial: secondSerial})
                   shouldSubmitChequeBeneficiary(increasing_serial_unsignedCheque, sender)
                 })
                 describe('when the serial number stays the same', function() {
-                  let secondSerial = unsignedCheque.serial
-                  let same_serial_unsignedCheque = {
-                    beneficiary: beneficiary,
-                    serial: secondSerial,
-                    amount: amount,
-                    timeout: timeout,
-                    signee: signee,
-                    signature: ""
-                  }
+                  let secondSerial = new BN(parseInt(unsignedCheque.serial))
+                  let same_serial_unsignedCheque = Object.assign({}, defaultCheck, {serial: secondSerial})
                   it('reverts', async function() {
                     this.signedCheque = await signCheque(this.simpleSwap, same_serial_unsignedCheque)
                     await expectRevert(this.simpleSwap.submitChequeBeneficiary(
@@ -84,14 +67,7 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
                 })
                 describe('when the serial number is decreasing', function() {
                   let secondSerial = new BN(parseInt(unsignedCheque.serial) + -1)
-                  let decreasing_serial_unsignedCheque = {
-                    beneficiary: beneficiary,
-                    serial: secondSerial,
-                    amount: amount,
-                    timeout: timeout,
-                    signee: signee,
-                    signature: ""
-                  }
+                  let decreasing_serial_unsignedCheque = Object.assign({}, defaultCheck, {serial: secondSerial})
                   it('reverts', async function() {
                     this.signedCheque = await signCheque(this.simpleSwap, decreasing_serial_unsignedCheque)
                     await expectRevert(this.simpleSwap.submitChequeBeneficiary(
@@ -104,14 +80,8 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
               })
             })
             describe('when the signee does not sign the correct fields', function() {
-              let wrong_beneficiary_unsignedCheque = {
-                beneficiary: constants.ZERO_ADDRESS,
-                serial: serial,
-                amount: amount,
-                timeout: timeout,
-                signee: signee,
-                signature: ""
-              }
+              let wrongBeneficiary = constants.ZERO_ADDRESS
+              let wrong_beneficiary_unsignedCheque = Object.assign({}, defaultCheck, {beneficiary: wrongBeneficiary})
               it('reverts', async function() {
                 this.signedCheque = await signCheque(this.simpleSwap, wrong_beneficiary_unsignedCheque)
                 await expectRevert(this.simpleSwap.submitChequeBeneficiary(
@@ -124,14 +94,7 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
           })
           describe('when the owner is not the signee', function() {
             let signee = alice
-            const wrong_signee_unsignedCheque = {
-              beneficiary: beneficiary,
-              serial: serial,
-              amount: amount,
-              timeout: timeout,
-              signee: signee,
-              signature: ""
-            }
+            const wrong_signee_unsignedCheque = Object.assign({}, defaultCheck, {signee: signee})
             it('reverts', async function() {
               this.signedCheque = await signCheque(this.simpleSwap, wrong_signee_unsignedCheque)
               await expectRevert(this.simpleSwap.submitChequeBeneficiary(
@@ -144,15 +107,7 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
         })
         describe('when the serial is 0', function() {
           let serial = new BN(0)
-          let signee = owner
-          const zero_serial_unsignedCheque = {
-            beneficiary: beneficiary,
-            serial: serial,
-            amount: amount,
-            timeout: timeout,
-            signee: signee,
-            signature: ""
-          }
+          const zero_serial_unsignedCheque = Object.assign({}, defaultCheck, {serial: serial})
           it('reverts', async function() {
             this.signedCheque = await signCheque(this.simpleSwap, zero_serial_unsignedCheque)
             await expectRevert(this.simpleSwap.submitChequeBeneficiary(
