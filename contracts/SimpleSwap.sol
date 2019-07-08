@@ -35,21 +35,21 @@ contract SimpleSwap {
   /* associates every beneficiary with their HardDeposit */
   mapping (address => HardDeposit) public hardDeposits;
   /* sum of all hard deposits */
-  uint public totalDeposit;
+  uint public totalHardDeposit;
 
-  /* owner of the contract, sehttps://www.google.com/search?client=ubuntu&channel=fs&q=git+load+from+stashed+file&ie=utf-8&oe=utf-8t at construction */
+  /* owner of the contract, set at construction */
   address payable public owner;
 
   /// @notice constructor, allows setting the owner (needed for "setup wallet as payment")
-  constructor(address payable _owner, uint defaultHardDepositDecreaseTimeout) public {
-    // DEFAULT_HARDDEPOSIT_TIMOUTE_DURATION will be one week or a whatever non-zero argument given as an argument to the constructor
-    DEFAULT_HARDDEPPOSIT_TIMEOUT_DURATION = defaultHardDepositDecreaseTimeout == 0 ? 1 days : defaultHardDepositTimeoutDuration;
+  constructor(address payable _owner, uint defaultHardDepositTimeoutDuration) public {
+    // DEFAULT_HARDDEPOSIT_TIMOUTE_DURATION will be one day or a whatever non-zero argument given as an argument to the constructor
+    DEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT = defaultHardDepositTimeoutDuration == 0 ? 1 days : defaultHardDepositTimeoutDuration;
     owner = _owner;
   }
 
   /// @return the part of the balance that is not covered by hard deposits
   function liquidBalance() public view returns(uint) {
-    return address(this).balance.sub(totalDeposit);
+    return address(this).balance.sub(totalHardDeposit);
   }
 
   /// @return the part of the balance usable for a specific beneficiary
@@ -92,7 +92,7 @@ contract SimpleSwap {
   /// @notice submit a cheque by the beneficiary
   /// @param serial the serial number of the cheque
   /// @param amount the (cumulative) amount of the cheque
-  /// @param timeocashTimeoutut the check can be cashed timecashTimeoutout seconds in the future
+  /// @param cashTimeout the check can be cashed cashTimeout seconds in the future
   /// @param ownerSig signature of the owner
   function submitChequeBeneficiary(uint serial, uint amount, uint cashTimeout, bytes memory ownerSig) public {
     /* verify signature of the owner */
@@ -137,7 +137,7 @@ contract SimpleSwap {
       /* if there some of the hard deposit is used update the structure */
     if(hardDepositUsage != 0) {
       hardDeposits[beneficiary].amount = hardDeposits[beneficiary].amount.sub(hardDepositUsage);
-      totalDeposit = totalDeposit.sub(hardDepositUsage);
+      totalHardDeposit = totalHardDeposit.sub(hardDepositUsage);
     }
     /* increase the stored paidOut amount to avoid double payout */
     cheque.paidOut = cheque.paidOut.add(payout);
@@ -157,8 +157,8 @@ contract SimpleSwap {
     HardDeposit storage hardDeposit = hardDeposits[beneficiary];
     /* cannot decrease it by more than the deposit */
     require(decreaseAmount <= hardDeposit.amount, "SimpleSwap: hard deposit not sufficient");
-    // if hardDeposit.decreaseTimeout was never set, we DEFAULT_DECREASE_TIMEOUT. Otherwise we use the one which was set.
-    uint decreaseTimeout = hardDeposit.decreaseTimeout == 0 ? DEFAULT_DECREASE_TIMEOUT : hardDeposit.decreaseTimeout;
+    // if hardDeposit.decreaseTimeout was never set, we DEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT. Otherwise we use the one which was set.
+    uint decreaseTimeout = hardDeposit.decreaseTimeout == 0 ? DEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT : hardDeposit.decreaseTimeout;
     hardDeposit.decreaseTimeout = now + decreaseTimeout;
     hardDeposit.decreaseAmount = decreaseAmount;
     emit HardDepositDecreasePrepared(beneficiary, decreaseAmount);
@@ -177,7 +177,7 @@ contract SimpleSwap {
     /* reset the decreaseTimeout to avoid a double decrease */
     hardDeposit.decreaseTimeout = 0;
     /* keep totalDeposit in sync */
-    totalDeposit = totalDeposit.sub(hardDeposit.decreaseAmount);
+    totalHardDeposit = totalHardDeposit.sub(hardDeposit.decreaseAmount);
 
     emit HardDepositAmountChanged(beneficiary, hardDeposit.amount);
   }
@@ -188,12 +188,12 @@ contract SimpleSwap {
   function increaseHardDeposit(address beneficiary, uint amount) public {
     require(msg.sender == owner, "SimpleSwap: not owner");
     /* ensure hard deposits don't exceed the global balance */
-    require(totalDeposit.add(amount) <= address(this).balance, "SimpleSwap: hard deposit cannot be more than balance ");
+    require(totalHardDeposit.add(amount) <= address(this).balance, "SimpleSwap: hard deposit cannot be more than balance ");
 
     HardDeposit storage hardDeposit = hardDeposits[beneficiary];
     hardDeposit.amount = hardDeposit.amount.add(amount);
-    // we don't explicitely set decreaseTimeout, as zero means using the DEFAULT_DECREASE_TIMEOUT
-    totalDeposit = totalDeposit.add(amount);
+    // we don't explicitely set timeoutDuration, as zero means using the DEFAULT_HARDDEPOSIT_TIMEOUT_DURATION
+    totalHardDeposit = totalHardDeposit.add(amount);
     /* disable any pending decrease */
     hardDeposit.decreaseTimeout = 0;
     emit HardDepositAmountChanged(beneficiary, hardDeposit.amount);
@@ -220,34 +220,6 @@ contract SimpleSwap {
     /* ensure we don't take anything from the hard deposit */
     require(amount <= liquidBalance(), "SimpleSwap: liquidBalance not sufficient");
     owner.transfer(amount);
-  }
-
-   /// @dev helper function to calculate payout value while respecting hard deposits
-  /// @param beneficiary the address to send to
-  /// @param value maximum amount to send
-  /// @return payout amount that was actually paid out
-  /// @return payout amount that bounced
-  function _computePayout(address payable beneficiary, uint value) internal returns (uint payout, uint bounced) {
-    /* part of hard deposit used */
-    payout = Math.min(value, hardDeposits[beneficiary].amount);
-    /* if there some of the hard deposit is used update the structure */
-    if(payout != 0) {
-      hardDeposits[beneficiary].amount -= payout;
-      totalDeposit -= payout;
-    }
-
-    /* amount of the cash not backed by a hard deposit */
-    uint rest = value - payout;
-    uint liquid = liquidBalance();
-
-    if(liquid >= rest) {
-      /* swap channel is solvent */
-      payout = value;
-    } else {
-      /* part of the cheque bounces */
-      payout += liquid;
-      bounced = rest - liquid;
-    }
   }
 
   /// @notice deposit ether
