@@ -184,16 +184,19 @@ const swapTests = (accounts, Swap) => {
         beneficiary,
         serial: new BN(1),
         amount: new BN(100),
+        timeout: epoch
       },
       {
         serial: new BN(2),
-        amount: new BN(200)
+        amount: new BN(200),
+        timeout: epoch
       },
       {
         owner,
         beneficiary,
         serial: new BN(3),
         amount: noteAmount.addn(200),
+        timeout: epoch
       }
     ];
 
@@ -247,12 +250,13 @@ const swapTests = (accounts, Swap) => {
 
     await shouldFail.reverting(swap.cashNote(encoded, noteAmount));
 
-    let { logs } = await swap.cashCheque(carol);
+    let { logs } = await swap.cashCheque(carol, cheques[2].amount);
 
     expectEvent.inLogs(logs, "ChequeCashed", {
       beneficiary: carol,
       serial: cheques[2].serial,
-      amount: cheques[2].amount
+      payout: cheques[2].amount,
+      requestPayout: cheques[2].amount
     });
   });
 };
