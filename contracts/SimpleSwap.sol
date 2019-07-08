@@ -37,12 +37,13 @@ contract SimpleSwap {
   /* sum of all hard deposits */
   uint public totalDeposit;
 
-  /* owner of the contract, set at construction */
+  /* owner of the contract, sehttps://www.google.com/search?client=ubuntu&channel=fs&q=git+load+from+stashed+file&ie=utf-8&oe=utf-8t at construction */
   address payable public owner;
 
   /// @notice constructor, allows setting the owner (needed for "setup wallet as payment")
   constructor(address payable _owner, uint defaultHardDepositTimeoutDuration) public {
-    DEFAULT_HARDDEPPOSIT_TIMEOUT_DURATION = defaultHardDepositTimeoutDuration == 0 ? 86400 : defaultHardDepositTimeoutDuration;
+    // DEFAULT_HARDDEPOSIT_TIMOUTE_DURATION will be one week or a whatever non-zero argument given as an argument to the constructor
+    DEFAULT_HARDDEPPOSIT_TIMEOUT_DURATION = defaultHardDepositTimeoutDuration == 0 ? 1 days : defaultHardDepositTimeoutDuration;
     owner = _owner;
   }
 
