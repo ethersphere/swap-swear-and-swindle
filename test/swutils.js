@@ -1,4 +1,4 @@
-
+const Swap = artifacts.require('./SimpleSwap')
 const {
   constants
 } = require("openzeppelin-test-helpers");
@@ -15,6 +15,7 @@ async function signCheque(swap, cheque) {
     cheque.amount,
     cheque.timeout
   );
+  
   if(cheque.signee.length == 2) {
     cheque.signature = []
     cheque.signature[0] = await web3.eth.sign(hash, cheque.signee[0])
