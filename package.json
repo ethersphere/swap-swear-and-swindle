@@ -14,9 +14,10 @@
     "openzeppelin-solidity": "2.1.2"
   },
   "devDependencies": {
-    "openzeppelin-test-helpers": "^0.1.2",
     "bn-chai": "^1.0.1",
     "chai": "^4.1.2",
+    "ethereumjs-util": "^6.1.0",
+    "openzeppelin-test-helpers": "^0.1.2",
     "truffle": "^5.0.24"
   },
   "scripts": {
