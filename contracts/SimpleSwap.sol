@@ -42,7 +42,7 @@ contract SimpleSwap {
 
   /// @notice constructor, allows setting the owner (needed for "setup wallet as payment")
   constructor(address payable _owner, uint defaultHardDepositTimeoutDuration) public {
-    // DEFAULT_HARDDEPOSIT_TIMOUTE_DURATION will be one week or a whatever non-zero argument given as an argument to the constructor
+    // DEFAULT_HARDDEPOSIT_TIMOUTE_DURATION will be one day or a whatever non-zero argument given as an argument to the constructor
     DEFAULT_HARDDEPPOSIT_TIMEOUT_DURATION = defaultHardDepositTimeoutDuration == 0 ? 1 days : defaultHardDepositTimeoutDuration;
     owner = _owner;
   }
