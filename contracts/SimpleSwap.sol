@@ -11,27 +11,25 @@ contract SimpleSwap {
   event ChequeCashed(address indexed beneficiary, uint indexed serial, uint payout, uint requestPayout);
   event ChequeSubmitted(address indexed beneficiary, uint indexed serial, uint amount, uint timeout);
   event ChequeBounced();
-  event HardDepositChanged(address indexed beneficiary, uint amount);
-  event HardDepositDecreasePrepared(address indexed beneficiary, uint diff);
+  event HardDepositAmountChanged(address indexed beneficiary, uint amount);
+  event HardDepositDecreasePrepared(address indexed beneficiary, uint decreaseAmount);
+  event HardDepositTimeoutDurationChanged(address indexed beneficiary, uint timeoutDuration);
 
-  /* magic timeout used throughout the code, cause of many security issues */
-  uint constant hardDepositTimeout = 1 days;
-
-  /* structure to keep track of the hard deposit for one beneficiary */
+  uint DEFAULT_HARDDEPPOSIT_TIMEOUT_DURATION = 86400; // 1 day // TODO: set this one in constructor?
+  /* structure to keep track of the hard deposits (on-chain guarantee of solvency) per beneficiary*/
   struct HardDeposit {
-    uint amount; /* current hard deposit */
-    uint timeout; /* timeout of prepared HardDepositDecrease or 0 */
-    uint diff; /* amount that will be removed on decrease */
+    uint amount; /* hard deposit amount allocated */
+    uint decreaseAmount; /* decreaseAmount substranced from amount when decrease is requested */
+    uint timeoutDuration; /* owner has to wait timeoutDuration seconds after decrease is requested to decrease hardDeposit */
+    uint timeout; /* timeout after which harddeposit can be decreased*/
   }
-
-  /* structure to keep track of the lastest cheque for one beneficiary */
+  /* structure to keep track of the latest cheque for one beneficiary */
   struct ChequeInfo {
     uint serial; /* serial of the last submitted cheque */
     uint amount; /* cumulative amount of the last submitted cheque */
     uint paidOut; /* total amount paid out */
     uint timeout; /* timeout after which payout can happen */
   }
-
   /* associates every beneficiary with their ChequeInfo */
   mapping (address => ChequeInfo) public cheques;
   /* associates every beneficiary with their HardDeposit */
@@ -43,7 +41,9 @@ contract SimpleSwap {
   address payable public owner;
 
   /// @notice constructor, allows setting the owner (needed for "setup wallet as payment")
-  constructor(address payable _owner) public {
+  constructor(address payable _owner, uint defaultHardDepositTimeoutDuration) public {
+    // DEFAULT_HARDDEPOSIT_TIMOUTE_DURATION will be one day or a whatever non-zero argument given as an argument to the constructor
+    DEFAULT_HARDDEPPOSIT_TIMEOUT_DURATION = defaultHardDepositTimeoutDuration == 0 ? 1 days : defaultHardDepositTimeoutDuration;
     owner = _owner;
   }
 
@@ -148,40 +148,39 @@ contract SimpleSwap {
     }
   }
 
+
+
   /// @notice prepare to decrease the hard deposit
   /// @param beneficiary beneficiary whose hard deposit should be decreased
-  /// @param diff amount that the deposit is supposed to be decreased by
-  function prepareDecreaseHardDeposit(address beneficiary, uint diff) public {
+  /// @param decreaseAmount amount that the deposit is supposed to be decreased by
+  function prepareDecreaseHardDeposit(address beneficiary, uint decreaseAmount) public {
     require(msg.sender == owner, "SimpleSwap: not owner");
-    HardDeposit storage deposit = hardDeposits[beneficiary];
+    HardDeposit storage hardDeposit = hardDeposits[beneficiary];
     /* cannot decrease it by more than the deposit */
-    require(diff < deposit.amount, "SimpleSwap: balance insufficient");
-
-    /* timeout is twice the normal timeout to ensure users can submit and cash in time */
-    deposit.timeout = now + hardDepositTimeout;
-    deposit.diff = diff;
-    emit HardDepositDecreasePrepared(beneficiary, diff);
+    require(decreaseAmount <= hardDeposit.amount, "SimpleSwap: hard deposit not sufficient");
+    // if hardDeposit.timeoutDuration was never set, we use the default timeoutDuration. Otherwise we use the one which was set.
+    uint timeoutDuration = hardDeposit.timeoutDuration == 0 ? DEFAULT_HARDDEPPOSIT_TIMEOUT_DURATION : hardDeposit.timeoutDuration;
+    hardDeposit.timeout = now + timeoutDuration;
+    hardDeposit.decreaseAmount = decreaseAmount;
+    emit HardDepositDecreasePrepared(beneficiary, decreaseAmount);
   }
 
-  /* TODO: necessary to make sure no funds can be permanently locked but this also breaks security of off-chain Swear, so this needs to change */
   /// @notice actually decrease the hard deposit
   /// @param beneficiary beneficiary whose hard deposit should be decreased
   function decreaseHardDeposit(address beneficiary) public {
-    HardDeposit storage deposit = hardDeposits[beneficiary];
+    HardDeposit storage hardDeposit = hardDeposits[beneficiary];
 
-    /* check that there was a timeout and that it has passed */
-    require(deposit.timeout != 0, "SimpleSwap: no timeout set");
-    require(now >= deposit.timeout, "SimpleSwap: deposit not yet timed out");
+    require(now >= hardDeposit.timeout && hardDeposit.timeout != 0, "SimpleSwap: deposit not yet timed out");
 
     /* decrease the amount */
-    /* this throws if diff > amount */
-    deposit.amount = deposit.amount.sub(deposit.diff);
+    /* this throws if decreaseAmount > amount */
+    hardDeposit.amount = hardDeposit.amount.sub(hardDeposit.decreaseAmount);
     /* reset the timeout to avoid a double decrease */
-    deposit.timeout = 0;
-    /* keep totalHardDeposit in sync */
-    totalHardDeposit = totalHardDeposit.sub(deposit.diff);
+    hardDeposit.timeout = 0;
+    /* keep totalDeposit in sync */
+    totalHardDeposit = totalHardDeposit.sub(hardDeposit.decreaseAmount);
 
-    emit HardDepositChanged(beneficiary, deposit.amount);
+    emit HardDepositAmountChanged(beneficiary, hardDeposit.amount);
   }
 
   /// @notice increase the hard deposit
@@ -192,12 +191,26 @@ contract SimpleSwap {
     /* ensure hard deposits don't exceed the global balance */
     require(totalHardDeposit.add(amount) <= address(this).balance, "SimpleSwap: hard deposit cannot be more than balance ");
 
-    HardDeposit storage deposit = hardDeposits[beneficiary];
-    deposit.amount = deposit.amount.add(amount);
+    HardDeposit storage hardDeposit = hardDeposits[beneficiary];
+    hardDeposit.amount = hardDeposit.amount.add(amount);
+    // we don't explicitely set timeoutDuration, as zero means using the DEFAULT_HARDDEPOSIT_TIMEOUT_DURATION
     totalHardDeposit = totalHardDeposit.add(amount);
     /* disable any pending decrease */
-    deposit.timeout = 0;
-    emit HardDepositChanged(beneficiary, deposit.amount);
+    hardDeposit.timeout = 0;
+    emit HardDepositAmountChanged(beneficiary, hardDeposit.amount);
+  }
+
+
+  function setCustomHardDepositTimeoutDuration(
+    address beneficiary,
+    uint hardDepositTimeoutDuration,
+    bytes memory ownerSig,
+    bytes memory beneficiarySig
+  ) public {
+    require(owner == recover(keccak256(abi.encodePacked(address(this), beneficiary, hardDepositTimeoutDuration)), ownerSig));
+    require(beneficiary == recover(keccak256(abi.encodePacked(address(this), beneficiary, hardDepositTimeoutDuration)), beneficiarySig));
+    hardDeposits[beneficiary].timeoutDuration = hardDepositTimeoutDuration;
+    emit HardDepositTimeoutDurationChanged(beneficiary, hardDeposits[beneficiary].timeoutDuration);
   }
 
   /// @notice withdraw ether
