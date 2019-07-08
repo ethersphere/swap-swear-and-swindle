@@ -187,7 +187,7 @@ contract SimpleSwap {
     require(decreaseAmount <= hardDeposit.amount, "SimpleSwap: hard deposit not sufficient");
     // if hardDeposit.timeoutDuration was never set, we use the default timeoutDuration. Otherwise we use the one which was set.
     uint timeoutDuration = hardDeposit.timeoutDuration == 0 ? DEFAULT_HARDDEPPOSIT_TIMEOUT_DURATION : hardDeposit.timeoutDuration;
-    hardDeposit.timeout = now + hardDeposit.timeoutDuration;
+    hardDeposit.timeout = now + timeoutDuration;
     hardDeposit.decreaseAmount = decreaseAmount;
     emit HardDepositDecreasePrepared(beneficiary, decreaseAmount);
   }
@@ -197,7 +197,7 @@ contract SimpleSwap {
   function decreaseHardDeposit(address beneficiary) public {
     HardDeposit storage hardDeposit = hardDeposits[beneficiary];
 
-    require(now >= hardDeposit.timeout, "SimpleSwap: deposit not yet timed out");
+    require(now >= hardDeposit.timeout && hardDeposit.timeout != 0, "SimpleSwap: deposit not yet timed out");
 
     /* decrease the amount */
     /* this throws if decreaseAmount > amount */
@@ -220,6 +220,7 @@ contract SimpleSwap {
 
     HardDeposit storage hardDeposit = hardDeposits[beneficiary];
     hardDeposit.amount = hardDeposit.amount.add(amount);
+    // we don't explicitely set timeoutDuration, as zero means using the DEFAULT_HARDDEPOSIT_TIMEOUT_DURATION
     totalDeposit = totalDeposit.add(amount);
     /* disable any pending decrease */
     hardDeposit.timeout = 0;
@@ -229,7 +230,7 @@ contract SimpleSwap {
 
   function setCustomHardDepositTimeoutDuration(
     address beneficiary,
-    uint hardDepositTimeoutDuration.,
+    uint hardDepositTimeoutDuration,
     bytes memory ownerSig,
     bytes memory beneficiarySig
   ) public {

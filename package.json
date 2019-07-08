@@ -15,6 +15,7 @@
     "truffle": "^5.0.24"
   },
   "devDependencies": {
+    "chai": "^4.2.0",
     "openzeppelin-test-helpers": "^0.1.2"
   },
   "scripts": {
