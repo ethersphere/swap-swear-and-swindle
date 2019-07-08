@@ -37,7 +37,7 @@ contract SimpleSwap {
   /* sum of all hard deposits */
   uint public totalDeposit;
 
-  /* owner of the contract, sehttps://www.google.com/search?client=ubuntu&channel=fs&q=git+load+from+stashed+file&ie=utf-8&oe=utf-8t at construction */
+  /* owner of the contract, set at construction */
   address payable public owner;
 
   /// @notice constructor, allows setting the owner (needed for "setup wallet as payment")
