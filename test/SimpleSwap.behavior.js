@@ -470,7 +470,7 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
       expect(this.currentCheque.amount).bignumber.is.equal(this.signedCheque.amount, "amount was not updated")
     })
     it('should update the cheque timeout', async function() {
-      expect(parseInt(this.currentCheque.timeout)).is.equal(parseInt(await time.latest()) + parseInt(this.signedCheque.timeout))
+      expect(parseInt(this.currentCheque.cashTimeout)).is.equal(parseInt(await time.latest()) + parseInt(this.signedCheque.timeout))
     })
     it('should emit a chequeSubmitted event', async function() {
       expectEvent.inLogs(this.logs, "ChequeSubmitted", {
