@@ -35,7 +35,7 @@ contract SimpleSwap {
   /* associates every beneficiary with their HardDeposit */
   mapping (address => HardDeposit) public hardDeposits;
   /* sum of all hard deposits */
-  uint public totalDeposit;
+  uint public totalHardDeposit;
 
   /* owner of the contract, set at construction */
   address payable public owner;
@@ -49,7 +49,7 @@ contract SimpleSwap {
 
   /// @return the part of the balance that is not covered by hard deposits
   function liquidBalance() public view returns(uint) {
-    return address(this).balance.sub(totalDeposit);
+    return address(this).balance.sub(totalHardDeposit);
   }
 
   /// @return the part of the balance usable for a specific beneficiary
@@ -96,9 +96,8 @@ contract SimpleSwap {
   /// @param ownerSig signature of the owner
   function submitChequeBeneficiary(uint serial, uint amount, uint timeout, bytes memory ownerSig) public {
     /* verify signature of the owner */
-    //emit LogAddress(recover(chequeHash(address(this), msg.sender, serial, amount, timeout), ownerSig));
     require(owner == recover(chequeHash(address(this), msg.sender, serial, amount, timeout), ownerSig),
-     "SimpleSwap: invalid ownerSig");
+      "SimpleSwap: invalid ownerSig");
     /* update the cheque data */
     _submitChequeInternal(msg.sender, serial, amount, timeout);
   }
@@ -137,7 +136,7 @@ contract SimpleSwap {
       /* if there some of the hard deposit is used update the structure */
     if(hardDepositUsage != 0) {
       hardDeposits[beneficiary].amount = hardDeposits[beneficiary].amount.sub(hardDepositUsage);
-      totalDeposit = totalDeposit.sub(hardDepositUsage);
+      totalHardDeposit = totalHardDeposit.sub(hardDepositUsage);
     }
     /* increase the stored paidOut amount to avoid double payout */
     cheque.paidOut = cheque.paidOut.add(payout);
@@ -179,7 +178,7 @@ contract SimpleSwap {
     /* reset the timeout to avoid a double decrease */
     hardDeposit.timeout = 0;
     /* keep totalDeposit in sync */
-    totalDeposit = totalDeposit.sub(hardDeposit.decreaseAmount);
+    totalHardDeposit = totalHardDeposit.sub(hardDeposit.decreaseAmount);
 
     emit HardDepositAmountChanged(beneficiary, hardDeposit.amount);
   }
@@ -190,12 +189,12 @@ contract SimpleSwap {
   function increaseHardDeposit(address beneficiary, uint amount) public {
     require(msg.sender == owner, "SimpleSwap: not owner");
     /* ensure hard deposits don't exceed the global balance */
-    require(totalDeposit.add(amount) <= address(this).balance, "SimpleSwap: hard deposit cannot be more than balance ");
+    require(totalHardDeposit.add(amount) <= address(this).balance, "SimpleSwap: hard deposit cannot be more than balance ");
 
     HardDeposit storage hardDeposit = hardDeposits[beneficiary];
     hardDeposit.amount = hardDeposit.amount.add(amount);
     // we don't explicitely set timeoutDuration, as zero means using the DEFAULT_HARDDEPOSIT_TIMEOUT_DURATION
-    totalDeposit = totalDeposit.add(amount);
+    totalHardDeposit = totalHardDeposit.add(amount);
     /* disable any pending decrease */
     hardDeposit.timeout = 0;
     emit HardDepositAmountChanged(beneficiary, hardDeposit.amount);
@@ -224,34 +223,6 @@ contract SimpleSwap {
     owner.transfer(amount);
   }
 
-   /// @dev helper function to calculate payout value while respecting hard deposits
-  /// @param beneficiary the address to send to
-  /// @param value maximum amount to send
-  /// @return payout amount that was actually paid out
-  /// @return payout amount that bounced
-  function _computePayout(address payable beneficiary, uint value) internal returns (uint payout, uint bounced) {
-    /* part of hard deposit used */
-    payout = Math.min(value, hardDeposits[beneficiary].amount);
-    /* if there some of the hard deposit is used update the structure */
-    if(payout != 0) {
-      hardDeposits[beneficiary].amount -= payout;
-      totalDeposit -= payout;
-    }
-
-    /* amount of the cash not backed by a hard deposit */
-    uint rest = value - payout;
-    uint liquid = liquidBalance();
-
-    if(liquid >= rest) {
-      /* swap channel is solvent */
-      payout = value;
-    } else {
-      /* part of the cheque bounces */
-      payout += liquid;
-      bounced = rest - liquid;
-    }
-  }
-
   /// @notice deposit ether
   function() payable external {
     emit Deposit(msg.sender, msg.value);
@@ -262,7 +233,7 @@ contract SimpleSwap {
   }
 
   function chequeHash(address swap, address beneficiary, uint serial, uint amount, uint timeout)
-  public pure returns (bytes32) {
-    return keccak256(abi.encodePacked(swap, serial, beneficiary, amount, timeout));
+    public pure returns (bytes32) {
+      return keccak256(abi.encodePacked(swap, serial, beneficiary, amount, timeout));
   }
 }
