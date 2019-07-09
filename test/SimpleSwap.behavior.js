@@ -508,7 +508,30 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
         })
       })
     })
+    describe('liquidBalanceFor', function() {
+      let beneficiary = bob
+      let amount = new BN(50)
+      beforeEach(async function() {
+        await this.simpleSwap.send(amount)
+      })
 
+      context('when no hard deposits', function() {
+        it('should equal the liquid balance', async function() {
+          expect(await this.simpleSwap.liquidBalanceFor(beneficiary)).bignumber.equal(await this.simpleSwap.liquidBalance())
+        })
+      })
+
+      context('when hard deposits', function() {
+        let hardDeposit = new BN(10)
+        beforeEach(async function() {
+          await this.simpleSwap.increaseHardDeposit(beneficiary, hardDeposit)
+          await this.simpleSwap.increaseHardDeposit(alice, hardDeposit)
+        })
+        it('should be higher than the liquid balance', async function() {
+          expect(await this.simpleSwap.liquidBalanceFor(beneficiary)).bignumber.equal((await this.simpleSwap.liquidBalance()).add(hardDeposit))
+        })
+      })
+    })
     describe('prepareDecreaseHardDeposit', function() {
       let amount = new BN(50)
       let beneficiary = bob
