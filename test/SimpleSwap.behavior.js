@@ -625,7 +625,7 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
             beneficiary,
             decreaseTimeout,
             '0x',
-            await web3.eth.sign(this.data, beneficiary)
+            await sign(this.data, beneficiary)
           ))
         })
       })
@@ -634,7 +634,7 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
           await expectRevert.unspecified(this.simpleSwap.setCustomHardDepositDecreaseTimeout(
             beneficiary,
             decreaseTimeout,
-            await web3.eth.sign(this.data, owner),
+            await sign(this.data, owner),
             '0x'
           ))
         })
