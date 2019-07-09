@@ -49,10 +49,13 @@ contract SimpleSwap {
   address payable public owner;
 
   /// @notice constructor, allows setting the owner (needed for "setup wallet as payment")
-  constructor(address payable _owner, uint defaultHardDepositTimeoutDuration) public {
+  constructor(address payable _owner, uint defaultHardDepositTimeoutDuration) public payable {
     // DEFAULT_HARDDEPOSIT_TIMOUTE_DURATION will be one day or a whatever non-zero argument given as an argument to the constructor
     DEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT = defaultHardDepositTimeoutDuration == 0 ? 1 days : defaultHardDepositTimeoutDuration;
     owner = _owner;
+    if(msg.value > 0) {
+      emit Deposit(msg.sender, msg.value);
+    }
   }
 
   /// @return the part of the balance that is not covered by hard deposits
@@ -159,11 +162,11 @@ contract SimpleSwap {
     address payable beneficiaryAgent,
     uint requestPayout,
     bytes memory beneficiarySig,
-    uint256 maximumBlock,
+    uint256 expiry,
     uint256 calleePayout
   ) public {
-    require(now <= maximumBlock, "SimpleSwap: beneficiarySig expired");
-    require(beneficiaryPrincipal == recover(keccak256(abi.encodePacked(address(this), msg.sender, beneficiaryAgent, maximumBlock, calleePayout)), beneficiarySig), 
+    require(now <= expiry, "SimpleSwap: beneficiarySig expired");
+    require(beneficiaryPrincipal == recover(keccak256(abi.encodePacked(address(this), msg.sender, beneficiaryAgent, expiry, calleePayout)), beneficiarySig), 
       "SimpleSwap: invalid beneficiarySig");
     _cashChequeInternal(beneficiaryPrincipal, beneficiaryAgent, requestPayout, calleePayout);
     msg.sender.transfer(calleePayout);
@@ -250,7 +253,9 @@ contract SimpleSwap {
 
   /// @notice deposit ether
   function() payable external {
-    emit Deposit(msg.sender, msg.value);
+    if(msg.value > 0) {
+      emit Deposit(msg.sender, msg.value);
+    }
   }
 
   function recover(bytes32 hash, bytes memory sig) internal pure returns (address) {
