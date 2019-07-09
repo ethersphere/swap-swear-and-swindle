@@ -313,21 +313,6 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
           })
         })         
       })
-      function shouldSubmitChequeBeneficiary(unsignedCheque, sender) {
-        beforeEach(async function() {
-          let lastCheque = await this.simpleSwap.cheques(unsignedCheque.beneficiary)
-          expect(unsignedCheque.serial).bignumber.is.above(new BN(0), "serial is not positive")
-          expect(unsignedCheque.amount).bignumber.to.be.above(new BN(0), "amount is not positive")
-          expect(unsignedCheque.beneficiary).to.equal(sender, "beneficiary is not the sender")
-          expect(unsignedCheque.serial).bignumber.is.above(lastCheque.serial, "serial is not above the serial of the last submitted cheque")   
-          this.signedCheque = await signCheque(this.simpleSwap, unsignedCheque)
-          const { logs } = await this.simpleSwap.submitChequeBeneficiary(this.signedCheque.serial, this.signedCheque.amount, this.signedCheque.timeout, this.signedCheque.signature, {from: sender})
-          this.logs = logs
-        })
-        context('uses _submitChequeInternal', function() {
-          _shouldSubmitChequeInternal() 
-        })
-      }
     })
     describe('submitChequeOwner', function() {
       context('when the sender is the owner', function() {
@@ -522,7 +507,22 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
         })
       })
     })
+    describe('cashcheque', function() {
+
+    })
+    describe('cashChequeBeneficiary', function() {
+      let cheque = defaultCheque
+      shouldDeposit(defaultCheque.amount, owner)
+      shouldSubmitChequeBeneficiary(cheque, unsignedCheque.beneficiary)
+      time.increase(new BN(86400))
+      _shouldCashChequeInternal(unsignedCheque.beneficiary, unsignedCheque.beneficiary, defaultCheque.amount, 0)
+    })
   })
+
+  function _shouldCashChequeInternal() {
+    // it should test all updates to state variables and tests
+
+  }
   function _shouldSubmitChequeInternal() {    
     beforeEach(async function() {
       this.currentCheque = await this.simpleSwap.cheques(this.signedCheque.beneficiary)
@@ -566,6 +566,22 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
         depositor: sender,
         amount: amount
       })
+    })
+  }
+
+  function shouldSubmitChequeBeneficiary(unsignedCheque, sender) {
+    beforeEach(async function() {
+      let lastCheque = await this.simpleSwap.cheques(unsignedCheque.beneficiary)
+      expect(unsignedCheque.serial).bignumber.is.above(new BN(0), "serial is not positive")
+      expect(unsignedCheque.amount).bignumber.to.be.above(new BN(0), "amount is not positive")
+      expect(unsignedCheque.beneficiary).to.equal(sender, "beneficiary is not the sender")
+      expect(unsignedCheque.serial).bignumber.is.above(lastCheque.serial, "serial is not above the serial of the last submitted cheque")   
+      this.signedCheque = await signCheque(this.simpleSwap, unsignedCheque)
+      const { logs } = await this.simpleSwap.submitChequeBeneficiary(this.signedCheque.serial, this.signedCheque.amount, this.signedCheque.timeout, this.signedCheque.signature, {from: sender})
+      this.logs = logs
+    })
+    context('uses _submitChequeInternal', function() {
+      _shouldSubmitChequeInternal() 
     })
   }
 }
