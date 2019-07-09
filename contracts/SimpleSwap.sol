@@ -121,32 +121,52 @@ contract SimpleSwap {
     _submitChequeInternal(beneficiary, serial, amount, cashTimeout);
   }
 
-  /// @notice attempt to cash latest cheque
-  /// @param beneficiary beneficiary for whose cheque should be paid out
-  /// @param requestPayout amount requested to pay out
-  function cashCheque(address payable beneficiary, uint requestPayout) public {
-    ChequeInfo storage cheque = cheques[beneficiary];
+
+  function _cashChequeInternal(address beneficiaryPrincipal, address payable beneficiaryAgent, uint requestPayout, uint calleePayout) public {
+     ChequeInfo storage cheque = cheques[beneficiaryPrincipal];
     /* grace period must have ended */
     require(now >= cheque.cashTimeout,  "SimpleSwap: cheque not yet timed out");
     require(requestPayout <= cheque.amount.sub(cheque.paidOut), "SimpleSwap: not enough balance owed");
     /* ensure there is a balance to claim */
      /* calculates hard-deposit usage */
-    uint hardDepositUsage = Math.min(requestPayout, hardDeposits[beneficiary].amount);
+    uint hardDepositUsage = Math.min(requestPayout, hardDeposits[beneficiaryPrincipal].amount);
     /* calculates acutal payout */
     uint payout = Math.min(requestPayout, liquidBalance() + hardDepositUsage);
       /* if there some of the hard deposit is used update the structure */
     if(hardDepositUsage != 0) {
-      hardDeposits[beneficiary].amount = hardDeposits[beneficiary].amount.sub(hardDepositUsage);
+      hardDeposits[beneficiaryPrincipal].amount = hardDeposits[beneficiaryPrincipal].amount.sub(hardDepositUsage);
       totalHardDeposit = totalHardDeposit.sub(hardDepositUsage);
     }
     /* increase the stored paidOut amount to avoid double payout */
     cheque.paidOut = cheque.paidOut.add(payout);
-    /* do the actual payment */
-    beneficiary.transfer(payout);
-    emit ChequeCashed(beneficiary, cheque.serial, payout, requestPayout);
+    /* do the actual payments */
+    beneficiaryAgent.transfer(payout.sub(calleePayout));
+    //TODO: adjust event to include beneficiaryAgent?
+    emit ChequeCashed(beneficiaryPrincipal, cheque.serial, payout, requestPayout);
     if(requestPayout != payout) {
       emit ChequeBounced();
     }
+  }
+  function cashChequeNotBeneficiary(
+    address beneficiaryPrincipal,
+    address payable beneficiaryAgent,
+    uint requestPayout,
+    bytes memory beneficiarySig,
+    uint256 maximumBlock,
+    uint256 calleePayout
+  ) public {
+    require(now <= maximumBlock, "SimpleSwap: beneficiarySig expired");
+    require(beneficiaryPrincipal == recover(keccak256(abi.encodePacked(address(this), msg.sender, beneficiaryAgent, maximumBlock, calleePayout)), beneficiarySig), 
+      "SimpleSwap: invalid beneficiarySig");
+    _cashChequeInternal(beneficiaryPrincipal, beneficiaryAgent, requestPayout, calleePayout);
+    //TODO: event?
+    msg.sender.transfer(calleePayout);
+  }
+  /// @notice attempt to cash latest chequebeneficiary
+  /// @param beneficiaryAgent agent (of the beneficiary) who receives the payment (i.e. other chequebook contract or the beneficiary)
+  /// @param requestPayout amount requested to pay out
+  function cashCheque(address payable beneficiaryAgent, uint requestPayout) public {
+    _cashChequeInternal(msg.sender, beneficiaryAgent, requestPayout, 0);
   }
 
   /// @notice prepare to decrease the hard deposit
