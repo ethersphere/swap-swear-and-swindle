@@ -588,6 +588,58 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
         })
       })
     })
+
+    describe('setCustomHardDepositDecreaseTimeout', function() {
+      let beneficiary = bob
+      let decreaseTimeout = new BN(10)
+      beforeEach(function() {
+        this.data = web3.utils.keccak256(web3.eth.abi.encodeParameters(['address', 'address', 'uint256'], [this.simpleSwap.address, beneficiary, decreaseTimeout.toString()]))
+      })
+      describe('when both signature are valid', function() {
+        beforeEach(async function() {
+          let { logs } = await this.simpleSwap.setCustomHardDepositDecreaseTimeout(
+            beneficiary,
+            decreaseTimeout,
+            await sign(this.data, owner),
+            await sign(this.data, beneficiary)
+          )
+
+          this.logs = logs
+        })
+
+        it('should set the decreaseTimeout', async function() {
+          expect((await this.simpleSwap.hardDeposits(beneficiary))[2]).bignumber.is.equal(decreaseTimeout)
+        })
+
+        it('should fire the HardDepositDecreaseTimeoutChanged', async function() {
+          expectEvent.inLogs(this.logs, 'HardDepositDecreaseTimeoutChanged', {
+            beneficiary,
+            decreaseTimeout
+          })
+        })
+      })
+      context('when ownerSig invalid', function() {
+        it('reverts', async function() {
+          await expectRevert.unspecified(this.simpleSwap.setCustomHardDepositDecreaseTimeout(
+            beneficiary,
+            decreaseTimeout,
+            '0x',
+            await web3.eth.sign(this.data, beneficiary)
+          ))
+        })
+      })
+      context('when beneficiarySig invalid', function() {
+        it('reverts', async function() {
+          await expectRevert.unspecified(this.simpleSwap.setCustomHardDepositDecreaseTimeout(
+            beneficiary,
+            decreaseTimeout,
+            await web3.eth.sign(this.data, owner),
+            '0x'
+          ))
+        })
+      })
+    })
+
     describe('cashcheque', function() {
 
     })
