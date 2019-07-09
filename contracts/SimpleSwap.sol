@@ -8,7 +8,15 @@ contract SimpleSwap {
   using SafeMath for uint;
 
   event Deposit(address depositor, uint amount);
-  event ChequeCashed(address indexed beneficiary, uint indexed serial, uint payout, uint requestPayout);
+  event ChequeCashed(
+    address indexed beneficiaryPrincipal,
+    address indexed beneficiaryAgent,
+    address indexed callee,
+    uint serial,
+    uint totalPayout,
+    uint requestPayout,
+    uint calleePayout
+  );
   event ChequeSubmitted(address indexed beneficiary, uint indexed serial, uint amount, uint cashTimeout);
   event ChequeBounced();
   event HardDepositAmountChanged(address indexed beneficiary, uint amount);
@@ -131,23 +139,22 @@ contract SimpleSwap {
      /* calculates hard-deposit usage */
     uint hardDepositUsage = Math.min(requestPayout, hardDeposits[beneficiaryPrincipal].amount);
     /* calculates acutal payout */
-    uint payout = Math.min(requestPayout, liquidBalance() + hardDepositUsage);
+    uint totalPayout = Math.min(requestPayout, liquidBalance() + hardDepositUsage);
       /* if there some of the hard deposit is used update the structure */
     if(hardDepositUsage != 0) {
       hardDeposits[beneficiaryPrincipal].amount = hardDeposits[beneficiaryPrincipal].amount.sub(hardDepositUsage);
       totalHardDeposit = totalHardDeposit.sub(hardDepositUsage);
     }
     /* increase the stored paidOut amount to avoid double payout */
-    cheque.paidOut = cheque.paidOut.add(payout);
+    cheque.paidOut = cheque.paidOut.add(totalPayout);
     /* do the actual payments */
-    beneficiaryAgent.transfer(payout.sub(calleePayout));
-    //TODO: adjust event to include beneficiaryAgent?
-    emit ChequeCashed(beneficiaryPrincipal, cheque.serial, payout, requestPayout);
-    if(requestPayout != payout) {
+    beneficiaryAgent.transfer(totalPayout.sub(calleePayout));
+    emit ChequeCashed(beneficiaryPrincipal, beneficiaryAgent, msg.sender, cheque.serial, totalPayout, requestPayout, calleePayout);
+    if(requestPayout != totalPayout) {
       emit ChequeBounced();
     }
   }
-  function cashChequeNotBeneficiary(
+  function cashCheque(
     address beneficiaryPrincipal,
     address payable beneficiaryAgent,
     uint requestPayout,
@@ -159,13 +166,12 @@ contract SimpleSwap {
     require(beneficiaryPrincipal == recover(keccak256(abi.encodePacked(address(this), msg.sender, beneficiaryAgent, maximumBlock, calleePayout)), beneficiarySig), 
       "SimpleSwap: invalid beneficiarySig");
     _cashChequeInternal(beneficiaryPrincipal, beneficiaryAgent, requestPayout, calleePayout);
-    //TODO: event?
     msg.sender.transfer(calleePayout);
   }
   /// @notice attempt to cash latest chequebeneficiary
   /// @param beneficiaryAgent agent (of the beneficiary) who receives the payment (i.e. other chequebook contract or the beneficiary)
   /// @param requestPayout amount requested to pay out
-  function cashCheque(address payable beneficiaryAgent, uint requestPayout) public {
+  function cashChequeBeneficiary(address payable beneficiaryAgent, uint requestPayout) public {
     _cashChequeInternal(msg.sender, beneficiaryAgent, requestPayout, 0);
   }
 
