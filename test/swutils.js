@@ -36,5 +36,6 @@ async function signCheque(swap, cheque) {
 }
 
 module.exports = {
-  signCheque
+  signCheque,
+  sign
 };

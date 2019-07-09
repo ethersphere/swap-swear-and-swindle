@@ -188,7 +188,7 @@ contract SimpleSwap {
     require(decreaseAmount <= hardDeposit.amount, "SimpleSwap: hard deposit not sufficient");
     // if hardDeposit.decreaseTimeout was never set, we DEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT. Otherwise we use the one which was set.
     uint decreaseTimeout = hardDeposit.decreaseTimeout == 0 ? DEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT : hardDeposit.decreaseTimeout;
-    hardDeposit.decreaseTimeout = now + decreaseTimeout;
+    hardDeposit.canBeDecreasedAt = now + decreaseTimeout;
     hardDeposit.decreaseAmount = decreaseAmount;
     emit HardDepositDecreasePrepared(beneficiary, decreaseAmount);
   }
@@ -235,8 +235,8 @@ contract SimpleSwap {
     bytes memory ownerSig,
     bytes memory beneficiarySig
   ) public {
-    require(owner == recover(keccak256(abi.encodePacked(address(this), beneficiary, decreaseTimeout)), ownerSig));
-    require(beneficiary == recover(keccak256(abi.encodePacked(address(this), beneficiary, decreaseTimeout)), beneficiarySig));
+    require(owner == recover(keccak256(abi.encode(address(this), beneficiary, decreaseTimeout)), ownerSig));
+    require(beneficiary == recover(keccak256(abi.encode(address(this), beneficiary, decreaseTimeout)), beneficiarySig));
     hardDeposits[beneficiary].decreaseTimeout = decreaseTimeout;
     emit HardDepositDecreaseTimeoutChanged(beneficiary, hardDeposits[beneficiary].decreaseTimeout);
   }
