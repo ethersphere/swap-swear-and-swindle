@@ -10,6 +10,7 @@ const {
 const { expect } = require('chai');
 
 const { signCheque, sign } = require("./swutils");
+const { computeCost } = require("./testutils");
 
 
 
@@ -638,6 +639,54 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
           ))
         })
       })
+    })
+
+    describe('withdraw', function() {
+      let amount = new BN(100)
+
+      beforeEach(async function() {
+        await this.simpleSwap.send(amount)
+      })
+
+      context('when the sender is the owner', function() {
+        let sender = owner
+        context('when the liquid balance is high enought', function() {
+          beforeEach(async function() {
+            let ownerBalancePrior = await balance.current(owner)
+            let { logs, receipt } = await this.simpleSwap.withdraw(
+              amount,
+              { from: sender }
+            )
+
+            this.logs = logs
+            this.expectedBalance = ownerBalancePrior.add(amount).sub(await computeCost(receipt))
+          })
+
+          it('should change the owner balance correctly', async function() {
+            expect(await balance.current(owner)).bignumber.is.equal(this.expectedBalance)
+          })
+        })
+        context('when the liquid balance is too low', function() {
+          beforeEach(async function() {
+            await this.simpleSwap.increaseHardDeposit(bob, new BN(1), { from: sender })
+          })
+
+          it('reverts', async function() {
+            await expectRevert(this.simpleSwap.withdraw(amount, { 
+              from: sender 
+            }), "SimpleSwap: liquidBalance not sufficient")
+          })
+        })
+      })
+
+      context('when the sender is not the owner', function() {
+        let sender = bob        
+        it('reverts', async function() {
+          await expectRevert(this.simpleSwap.withdraw(amount, {
+            from: sender
+          }), 'SimpleSwap: not owner')
+        })
+      })      
     })
 
     describe('cashcheque', function() {
