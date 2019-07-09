@@ -641,6 +641,59 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
       })
     })
 
+    describe('decreaseHardDeposit', function() {
+      let beneficiary = bob
+      let amount = new BN(500)
+      let decrease = new BN(400)
+      beforeEach(async function() {
+        await this.simpleSwap.send(amount)
+        await this.simpleSwap.increaseHardDeposit(beneficiary, amount)
+      })
+      context('when decrease is ready', function() {
+        context('when there is enough hard deposit left', function() {
+          beforeEach(async function() {
+            await this.simpleSwap.prepareDecreaseHardDeposit(beneficiary, decrease)
+            await time.increase(await this.simpleSwap.DEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT())            
+            let { logs } = await this.simpleSwap.decreaseHardDeposit(beneficiary)
+            this.logs = logs
+          })
+
+          it('should fire the HardDepositAmountChanged event', async function() {
+            expectEvent.inLogs(this.logs, 'HardDepositAmountChanged', {
+              beneficiary,
+              amount: amount.sub(decrease)
+            })
+          })
+
+          it('should set the new amount', async function() {
+            expect((await this.simpleSwap.hardDeposits(beneficiary))[0]).bignumber.is.equal(amount.sub(decrease))
+          })
+        })
+        // TODO: when there is not enough left
+      })
+
+      context('when timeout not yet expired', function() {
+        beforeEach(async function() {
+          await this.simpleSwap.prepareDecreaseHardDeposit(beneficiary, amount)
+        })
+        it('reverts', async function() {
+          await expectRevert(
+            this.simpleSwap.decreaseHardDeposit(beneficiary, { from: owner }),
+            "SimpleSwap: deposit not yet timed out"
+          )
+        })
+      })
+
+      context('when no decrease prepared', async function() {
+        it('reverts', async function() {
+          await expectRevert(
+            this.simpleSwap.decreaseHardDeposit(beneficiary, { from: owner }),
+            "SimpleSwap: deposit not yet timed out"
+          )
+        })
+      })
+    })
+
     describe('withdraw', function() {
       let amount = new BN(100)
 
@@ -650,7 +703,7 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
 
       context('when the sender is the owner', function() {
         let sender = owner
-        context('when the liquid balance is high enought', function() {
+        context('when the liquid balance is high enough', function() {
           beforeEach(async function() {
             let ownerBalancePrior = await balance.current(owner)
             let { logs, receipt } = await this.simpleSwap.withdraw(
@@ -672,21 +725,21 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
           })
 
           it('reverts', async function() {
-            await expectRevert(this.simpleSwap.withdraw(amount, { 
-              from: sender 
+            await expectRevert(this.simpleSwap.withdraw(amount, {
+              from: sender
             }), "SimpleSwap: liquidBalance not sufficient")
           })
         })
       })
 
       context('when the sender is not the owner', function() {
-        let sender = bob        
+        let sender = bob
         it('reverts', async function() {
           await expectRevert(this.simpleSwap.withdraw(amount, {
             from: sender
           }), 'SimpleSwap: not owner')
         })
-      })      
+      })
     })
 
     describe('cashcheque', function() {

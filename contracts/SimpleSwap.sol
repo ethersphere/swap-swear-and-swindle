@@ -23,7 +23,7 @@ contract SimpleSwap {
   event HardDepositDecreasePrepared(address indexed beneficiary, uint decreaseAmount);
   event HardDepositDecreaseTimeoutChanged(address indexed beneficiary, uint decreaseTimeout);
 
-  uint DEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT;
+  uint public DEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT;
   /* structure to keep track of the hard deposits (on-chain guarantee of solvency) per beneficiary*/
   struct HardDeposit {
     uint amount; /* hard deposit amount allocated */
@@ -198,13 +198,13 @@ contract SimpleSwap {
   function decreaseHardDeposit(address beneficiary) public {
     HardDeposit storage hardDeposit = hardDeposits[beneficiary];
 
-    require(now >= hardDeposit.decreaseTimeout && hardDeposit.decreaseTimeout != 0, "SimpleSwap: deposit not yet timed out");
+    require(now >= hardDeposit.canBeDecreasedAt && hardDeposit.canBeDecreasedAt != 0, "SimpleSwap: deposit not yet timed out");
 
     /* decrease the amount */
     /* this throws if decreaseAmount > amount */
     hardDeposit.amount = hardDeposit.amount.sub(hardDeposit.decreaseAmount);
-    /* reset the decreaseTimeout to avoid a double decrease */
-    hardDeposit.decreaseTimeout = 0;
+    /* reset the canBeDecreasedAt to avoid a double decrease */
+    hardDeposit.canBeDecreasedAt = 0;
     /* keep totalDeposit in sync */
     totalHardDeposit = totalHardDeposit.sub(hardDeposit.decreaseAmount);
 
