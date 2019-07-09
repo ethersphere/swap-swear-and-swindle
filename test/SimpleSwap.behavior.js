@@ -458,6 +458,70 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
         })
       }
     })
+    describe('increaseHardDeposit', function() {
+      let amount = new BN(50)
+      let beneficiary = bob
+      context('when the sender is the owner', function() {
+        let sender = owner
+        context('when the totalHardDeposit is below the swap balance', function() {
+          shouldDeposit(amount.muln(2), owner)
+          describe('when there is no prior deposit', function() {
+            shouldIncreaseHardDeposit(sender, amount)
+          })
+          context('when there is a prior deposit', function() {
+            shouldIncreaseHardDeposit(sender, amount)
+            describe('when the totalHardDeposit is below the swap balance', function() {
+              shouldIncreaseHardDeposit(sender, amount)
+            })
+          })
+        })
+        context('when the totalHardDeposit exceeds the swap balance', function() {
+          it('reverts', async function() {
+            await expectRevert(this.simpleSwap.increaseHardDeposit(
+              bob,
+              new BN(amount),
+              { from: sender }), "SimpleSwap: hard deposit cannot be more than balance ")
+          })
+        })
+        function shouldIncreaseHardDeposit(sender, amount) {
+          beforeEach(async function() {
+            this.previousTotalHardDeposit = await this.simpleSwap.totalHardDeposit()
+            this.previousHardDeposit = (await this.simpleSwap.hardDeposits(beneficiary))[0]
+            let { logs } = await this.simpleSwap.increaseHardDeposit(
+              beneficiary,
+              amount,
+              { from: sender }
+            )
+            this.logs = logs
+          })
+
+          it('should fire the HardDepositAmountChanged event', async function() {
+            expectEvent.inLogs(this.logs, 'HardDepositAmountChanged', {
+              beneficiary,
+              amount: this.previousHardDeposit.add(amount)
+            })
+          })
+          it('increases the totalHardDeposit', async function() {
+            expect(await this.simpleSwap.totalHardDeposit()).bignumber.is.equal(this.previousTotalHardDeposit.add(amount))
+          })
+          it('increases the hardDeposit amount', async function() {
+            expect((await this.simpleSwap.hardDeposits(beneficiary))[0]).bignumber.is.equal(this.previousHardDeposit.add(amount))
+          })
+          it('reset the canBeDecreasedAt  value', async function() {
+            expect((await this.simpleSwap.hardDeposits(beneficiary))[3]).bignumber.is.equal(new BN(0))
+          })
+        }
+      })
+      context('when the sender is not the owner', function() {
+        let sender = bob
+        it('reverts', async function() {
+          await expectRevert(this.simpleSwap.increaseHardDeposit(
+            bob,
+            new BN(amount),
+            { from: sender }), "SimpleSwap: not owner")
+        })
+      })
+    })
   })
   function _shouldSubmitChequeInternal() {    
     beforeEach(async function() {
