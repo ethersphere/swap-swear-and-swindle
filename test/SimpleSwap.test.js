@@ -13,11 +13,11 @@ const { shouldBehaveLikeSimpleSwap } = require('./SimpleSwap.behavior')
 
 const SimpleSwap = artifacts.require('SimpleSwap')
 
-contract('SimpleSwap', function([owner, alice, bob]) {
+contract('SimpleSwap', function([issuer, alice, bob]) {
 
   beforeEach(async function() {
-    this.simpleSwap = await SimpleSwap.new(owner, 0)
+    this.simpleSwap = await SimpleSwap.new(issuer, 0)
   })
 
-  shouldBehaveLikeSimpleSwap([owner, alice, bob])
+  shouldBehaveLikeSimpleSwap([issuer, alice, bob])
 })

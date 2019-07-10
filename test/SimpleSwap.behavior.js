@@ -14,11 +14,11 @@ const { computeCost } = require("./testutils");
 
 
 enabledTests = {
-  owner: true,
+  issuer: true,
   deposit: true,
   submitCheque: true,
   submitChequeBeneficiary: true,
-  submitChequeOwner: true,
+  submitChequeissuer: true,
   increaseHardDeposit: true,
   cashCheque: true,
   cashChequeBeneficiary: true
@@ -27,33 +27,33 @@ enabledTests = {
 
 // @param balance total ether deposited in checkbook
 // @param liquidBalance totalDeposit - harddeposits
-// @param owner the owner of the checkbook
+// @param issuer the issuer of the checkbook
 // @param alice a counterparty of the checkbook 
 // @param bob a counterparty of the checkbook
-function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
+function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
   const defaultCheque = {
     beneficiary: bob,
     serial: new BN(3),
     amount: new BN(Math.floor(Math.random() * 100000)),
     timeout: new BN(86400),
-    signee: owner,
+    signee: issuer,
     signature: ""
   }
   context('as a simple swap', function() {
-    if(enabledTests.owner) {
-      it('should have a correct owner', async function() {
-        expect(await this.simpleSwap.owner()).to.equal(owner)          
+    if(enabledTests.issuer) {
+      it('should have a correct issuer', async function() {
+        expect(await this.simpleSwap.issuer()).to.equal(issuer)          
       })
     }
     describe('deposit', function() {
       if(enabledTests.deposit) {  
-        shouldDeposit(new BN(1), owner)
+        shouldDeposit(new BN(1), issuer)
       }
     })
     describe('submitCheque', function() {
       if(enabledTests.submitCheque) {
-        context('when the sender is the owner', function() {
-          submitChequeBySender(owner)
+        context('when the sender is the issuer', function() {
+          submitChequeBySender(issuer)
         })
         context('when the sender is the beneficiary', function() {
           submitChequeBySender(defaultCheque.beneficiary)  
@@ -67,14 +67,14 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
           expect(defaultCheque.serial).bignumber.to.be.above(new BN(0), "Serial of defaultCheque not above 0")
           context('when the first serial is below MAX_UINT256', function() {
             expect(defaultCheque.serial).bignumber.to.be.below(constants.MAX_UINT256, "Serial of defaultCheque not above 0")
-            context('when the beneficiary and owners are both a signee', function() {
-              let unsignedCheque = Object.assign({}, defaultCheque, {signee: [defaultCheque.beneficiary, owner]})
+            context('when the beneficiary and issuers are both a signee', function() {
+              let unsignedCheque = Object.assign({}, defaultCheque, {signee: [defaultCheque.beneficiary, issuer]})
               expect(unsignedCheque.signee).to.be.include(unsignedCheque.beneficiary, "Signee of unsignedCheque is not beneficiary")
-              expect(unsignedCheque.signee).to.be.include(owner, "Signee of unsignedCheque is not owner")
+              expect(unsignedCheque.signee).to.be.include(issuer, "Signee of unsignedCheque is not issuer")
               context('when the signees signs the correct fields', function() {
                 context('when we send one cheque', function() {
                   context('when there is a liquidBalance to cover the cheque', function() {
-                    shouldDeposit(unsignedCheque.amount + new BN(1), owner)
+                    shouldDeposit(unsignedCheque.amount + new BN(1), issuer)
                     shouldSubmitCheque(unsignedCheque, sender)
                   })
                   context('when there is no liquidBalance to cover the cheque', function() {
@@ -85,12 +85,12 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
                   shouldSubmitCheque(unsignedCheque, sender)
                   context('when the serial number is increasing', function() {
                     let secondSerial = new BN(parseInt(unsignedCheque.serial) + 1)
-                    let increasing_serial_unsignedCheque = Object.assign({}, defaultCheque, {serial: secondSerial, signee: [defaultCheque.beneficiary, owner]})
+                    let increasing_serial_unsignedCheque = Object.assign({}, defaultCheque, {serial: secondSerial, signee: [defaultCheque.beneficiary, issuer]})
                     shouldSubmitCheque(increasing_serial_unsignedCheque, sender)
                   })
                   context('when the serial number stays the same', function() {
                     let secondSerial = new BN(parseInt(unsignedCheque.serial))
-                    let same_serial_unsignedCheque = Object.assign({}, defaultCheque, {serial: secondSerial, signee: [defaultCheque.beneficiary, owner]})
+                    let same_serial_unsignedCheque = Object.assign({}, defaultCheque, {serial: secondSerial, signee: [defaultCheque.beneficiary, issuer]})
                     it('reverts', async function() {
                       this.signedCheque = await signCheque(this.simpleSwap, same_serial_unsignedCheque)
                       await expectRevert(this.simpleSwap.submitCheque(
@@ -105,7 +105,7 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
                   })
                   context('when the serial number is decreasing', function() {
                     let secondSerial = new BN(parseInt(unsignedCheque.serial) + -1)
-                    let decreasing_serial_unsignedCheque = Object.assign({}, defaultCheque, {serial: secondSerial, signee: [defaultCheque.beneficiary, owner]})
+                    let decreasing_serial_unsignedCheque = Object.assign({}, defaultCheque, {serial: secondSerial, signee: [defaultCheque.beneficiary, issuer]})
                     it('reverts', async function() {
                       this.signedCheque = await signCheque(this.simpleSwap, decreasing_serial_unsignedCheque)
                       await expectRevert(this.simpleSwap.submitCheque(
@@ -122,7 +122,7 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
               })
               context('when the signee does not sign the correct fields', function() {
                 let wrongBeneficiary = constants.ZERO_ADDRESS
-                let wrong_beneficiary_unsignedCheque = Object.assign({}, defaultCheque, {beneficiary: wrongBeneficiary, signee: [defaultCheque.beneficiary, owner]})
+                let wrong_beneficiary_unsignedCheque = Object.assign({}, defaultCheque, {beneficiary: wrongBeneficiary, signee: [defaultCheque.beneficiary, issuer]})
                 it('reverts', async function() {
                   this.signedCheque = await signCheque(this.simpleSwap, wrong_beneficiary_unsignedCheque)
                   await expectRevert(this.simpleSwap.submitCheque(
@@ -136,7 +136,7 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
                 })
               })
             })
-            context('when the owner is not a signee', function() {
+            context('when the issuer is not a signee', function() {
               const wrong_signee_unsignedCheque = Object.assign({}, defaultCheque, {signee: [defaultCheque.beneficiary, defaultCheque.beneficiary]})
               it('reverts', async function() {
                 this.signedCheque = await signCheque(this.simpleSwap, wrong_signee_unsignedCheque)
@@ -147,11 +147,11 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
                   this.signedCheque.timeout,
                   this.signedCheque.signature[1],
                   this.signedCheque.signature[0], 
-                  {from: sender}), "SimpleSwap: invalid ownerSig")
+                  {from: sender}), "SimpleSwap: invalid issuerSig")
               })
             })
             context('when the beneficiary is not a signee', function() {
-              const wrong_signee_unsignedCheque = Object.assign({}, defaultCheque, {signee: [owner, owner]})
+              const wrong_signee_unsignedCheque = Object.assign({}, defaultCheque, {signee: [issuer, issuer]})
               it('reverts', async function() {
                 this.signedCheque = await signCheque(this.simpleSwap, wrong_signee_unsignedCheque)
                 await expectRevert(this.simpleSwap.submitCheque(
@@ -166,10 +166,10 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
             })
           })
           context('when the first serial is at MAX_UINT256', function() {
-            const MAX_UINT256_unsignedCheque = Object.assign({}, defaultCheque, {serial: constants.MAX_UINT256, signee: [defaultCheque.beneficiary, owner]})
+            const MAX_UINT256_unsignedCheque = Object.assign({}, defaultCheque, {serial: constants.MAX_UINT256, signee: [defaultCheque.beneficiary, issuer]})
             shouldSubmitCheque(MAX_UINT256_unsignedCheque, sender)
             // Solidity wraps integers
-            const MAX_UINT256_wrap_unsignedCheque = Object.assign({}, defaultCheque, {serial: MAX_UINT256_unsignedCheque.serial + new BN(1), signee: [defaultCheque.beneficiary, owner]})
+            const MAX_UINT256_wrap_unsignedCheque = Object.assign({}, defaultCheque, {serial: MAX_UINT256_unsignedCheque.serial + new BN(1), signee: [defaultCheque.beneficiary, issuer]})
             it('should not be possible to submit a cheque afterwards', async function() {
               this.signedCheque = await signCheque(this.simpleSwap, MAX_UINT256_wrap_unsignedCheque)
               await expectRevert(this.simpleSwap.submitCheque(
@@ -185,7 +185,7 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
         })
         context('when the serial is 0', function() {
           let serial = new BN(0)
-          const zero_serial_unsignedCheque = Object.assign({}, defaultCheque, {serial: serial, signee: [defaultCheque.beneficiary, owner]})
+          const zero_serial_unsignedCheque = Object.assign({}, defaultCheque, {serial: serial, signee: [defaultCheque.beneficiary, issuer]})
           it('reverts', async function() {
             this.signedCheque = await signCheque(this.simpleSwap, zero_serial_unsignedCheque)
             await expectRevert(this.simpleSwap.submitCheque(
@@ -232,13 +232,13 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
             expect(defaultCheque.serial).bignumber.to.be.above(new BN(0), "Serial of defaultCheque not above 0")
             context('when the first serial is below MAX_UINT256', function() {
               expect(defaultCheque.serial).bignumber.to.be.below(constants.MAX_UINT256, "Serial of defaultCheque not above 0")
-              context('when the owner is a signee', function() {
-                expect(defaultCheque.signee).to.be.equal(owner, "Signee of defaultCheque is not owner")
+              context('when the issuer is a signee', function() {
+                expect(defaultCheque.signee).to.be.equal(issuer, "Signee of defaultCheque is not issuer")
                 context('when the signee signs the correct fields', function() {
                   let unsignedCheque = Object.assign({}, defaultCheque)
                   context('when we send one cheque', function() {
                     context('when there is a liquidBalance to cover the cheque', function() {
-                      shouldDeposit(unsignedCheque.amount + new BN(1), owner)
+                      shouldDeposit(unsignedCheque.amount + new BN(1), issuer)
                       shouldSubmitChequeBeneficiary(unsignedCheque, sender)
                     })
                     context('when there is no liquidBalance to cover the cheque', function() {
@@ -287,11 +287,11 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
                       this.signedCheque.serial, 
                       this.signedCheque.amount, 
                       this.signedCheque.timeout,
-                      this.signedCheque.signature, {from: sender}), "SimpleSwap: invalid ownerSig")
+                      this.signedCheque.signature, {from: sender}), "SimpleSwap: invalid issuerSig")
                   })
                 })
               })
-              context('when the owner is not the signee', function() {
+              context('when the issuer is not the signee', function() {
                 let signee = alice
                 const wrong_signee_unsignedCheque = Object.assign({}, defaultCheque, {signee: signee})
                 it('reverts', async function() {
@@ -300,7 +300,7 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
                     this.signedCheque.serial, 
                     this.signedCheque.amount, 
                     this.signedCheque.timeout,
-                    this.signedCheque.signature, {from: sender}), "SimpleSwap: invalid ownerSig")
+                    this.signedCheque.signature, {from: sender}), "SimpleSwap: invalid issuerSig")
                 })
               })
             })
@@ -337,10 +337,10 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
         })
       }
     })
-    describe('submitChequeOwner', function() {
-      if(enabledTests.submitChequeOwner) {
-        context('when the sender is the owner', function() {
-          let sender = owner
+    describe('submitChequeissuer', function() {
+      if(enabledTests.submitChequeissuer) {
+        context('when the sender is the issuer', function() {
+          let sender = issuer
           context('when the first serial is higher than 0', function() {
             expect(defaultCheque.serial).bignumber.to.be.above(new BN(0), "Serial of defaultCheque not above 0")
             context('when the first serial is below MAX_UINT256', function() {
@@ -351,26 +351,26 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
                 context('when the signee signs the correct fields', function() {
                   context('when we send one cheque', function() {
                     context('when there is a liquidBalance to cover the cheque', function() {
-                      shouldDeposit(unsignedCheque.amount + new BN(1), owner)
-                      shouldSubmitChequeOwner(unsignedCheque, sender)
+                      shouldDeposit(unsignedCheque.amount + new BN(1), issuer)
+                      shouldSubmitChequeissuer(unsignedCheque, sender)
                     })
                     context('when there is no liquidBalance to cover the cheque', function() {
-                      shouldSubmitChequeOwner(unsignedCheque, sender)  
+                      shouldSubmitChequeissuer(unsignedCheque, sender)  
                     })
                   })
                   context('when we send more than one cheque', async function() {
-                    shouldSubmitChequeOwner(unsignedCheque, sender)
+                    shouldSubmitChequeissuer(unsignedCheque, sender)
                     context('when the serial number is increasing', function() {
                       let secondSerial = new BN(parseInt(unsignedCheque.serial) + 1)
                       let increasing_serial_unsignedCheque = Object.assign({}, defaultCheque, {serial: secondSerial, signee: defaultCheque.beneficiary})
-                      shouldSubmitChequeOwner(increasing_serial_unsignedCheque, sender)
+                      shouldSubmitChequeissuer(increasing_serial_unsignedCheque, sender)
                     })
                     context('when the serial number stays the same', function() {
                       let secondSerial = new BN(parseInt(unsignedCheque.serial))
                       let same_serial_unsignedCheque = Object.assign({}, defaultCheque, {serial: secondSerial, signee: defaultCheque.beneficiary})
                       it('reverts', async function() {
                         this.signedCheque = await signCheque(this.simpleSwap, same_serial_unsignedCheque)
-                        await expectRevert(this.simpleSwap.submitChequeOwner(
+                        await expectRevert(this.simpleSwap.submitChequeissuer(
                           this.signedCheque.beneficiary,
                           this.signedCheque.serial, 
                           this.signedCheque.amount, 
@@ -383,7 +383,7 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
                       let decreasing_serial_unsignedCheque = Object.assign({}, defaultCheque, {serial: secondSerial, signee: defaultCheque.beneficiary})
                       it('reverts', async function() {
                         this.signedCheque = await signCheque(this.simpleSwap, decreasing_serial_unsignedCheque)
-                        await expectRevert(this.simpleSwap.submitChequeOwner(
+                        await expectRevert(this.simpleSwap.submitChequeissuer(
                           this.signedCheque.beneficiary,
                           this.signedCheque.serial, 
                           this.signedCheque.amount, 
@@ -398,7 +398,7 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
                   let wrong_beneficiary_unsignedCheque = Object.assign({}, defaultCheque, {beneficiary: wrongBeneficiary, signee: defaultCheque.beneficiary})
                   it('reverts', async function() {
                     this.signedCheque = await signCheque(this.simpleSwap, wrong_beneficiary_unsignedCheque)
-                    await expectRevert(this.simpleSwap.submitChequeOwner(
+                    await expectRevert(this.simpleSwap.submitChequeissuer(
                       this.signedCheque.beneficiary,
                       this.signedCheque.serial, 
                       this.signedCheque.amount, 
@@ -412,7 +412,7 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
                 const wrong_signee_unsignedCheque = Object.assign({}, defaultCheque, {signee: signee})
                 it('reverts', async function() {
                   this.signedCheque = await signCheque(this.simpleSwap, wrong_signee_unsignedCheque)
-                  await expectRevert(this.simpleSwap.submitChequeOwner(
+                  await expectRevert(this.simpleSwap.submitChequeissuer(
                     this.signedCheque.beneficiary,
                     this.signedCheque.serial, 
                     this.signedCheque.amount, 
@@ -423,12 +423,12 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
             })
             context('when the first serial is at MAX_UINT256', function() {
               const MAX_UINT256_unsignedCheque = Object.assign({}, defaultCheque, {serial: constants.MAX_UINT256, signee: defaultCheque.beneficiary})
-              shouldSubmitChequeOwner(MAX_UINT256_unsignedCheque, owner)
+              shouldSubmitChequeissuer(MAX_UINT256_unsignedCheque, issuer)
               // Solidity wraps integers
               const MAX_UINT256_wrap_unsignedCheque = Object.assign({}, defaultCheque, {serial: MAX_UINT256_unsignedCheque.serial + new BN(1), signee: defaultCheque.beneficiary})
               it('should not be possible to submit a cheque afterwards', async function() {
                 this.signedCheque = await signCheque(this.simpleSwap, MAX_UINT256_wrap_unsignedCheque)
-                await expectRevert(this.simpleSwap.submitChequeOwner(
+                await expectRevert(this.simpleSwap.submitChequeissuer(
                   this.signedCheque.beneficiary,
                   this.signedCheque.serial, 
                   this.signedCheque.amount, 
@@ -442,7 +442,7 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
             const zero_serial_unsignedCheque = Object.assign({}, defaultCheque, {serial: serial, signee: defaultCheque.beneficiary})
             it('reverts', async function() {
               this.signedCheque = await signCheque(this.simpleSwap, zero_serial_unsignedCheque)
-              await expectRevert(this.simpleSwap.submitChequeOwner(
+              await expectRevert(this.simpleSwap.submitChequeissuer(
                 this.signedCheque.beneficiary,
                 this.signedCheque.serial, 
                 this.signedCheque.amount, 
@@ -451,19 +451,19 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
             })
           })         
         })
-        context('when the sender is not the owner', function() {
+        context('when the sender is not the issuer', function() {
           //TODO: reverts
         })
       }
-      function shouldSubmitChequeOwner(unsignedCheque, sender) {
+      function shouldSubmitChequeissuer(unsignedCheque, sender) {
         beforeEach(async function() {
           let lastCheque = await this.simpleSwap.cheques(unsignedCheque.beneficiary)
           expect(unsignedCheque.serial).bignumber.is.above(new BN(0), "serial is not positive")
           expect(unsignedCheque.amount).bignumber.to.be.above(new BN(0), "amount is not positive")
-          expect(owner).to.equal(sender, "owner is not the sender")
+          expect(issuer).to.equal(sender, "issuer is not the sender")
           expect(unsignedCheque.serial).bignumber.is.above(lastCheque.serial, "serial is not above the serial of the last submitted cheque")   
           this.signedCheque = await signCheque(this.simpleSwap, unsignedCheque)
-          const { logs } = await this.simpleSwap.submitChequeOwner(this.signedCheque.beneficiary, this.signedCheque.serial, this.signedCheque.amount, this.signedCheque.timeout, this.signedCheque.signature, {from: sender})
+          const { logs } = await this.simpleSwap.submitChequeissuer(this.signedCheque.beneficiary, this.signedCheque.serial, this.signedCheque.amount, this.signedCheque.timeout, this.signedCheque.signature, {from: sender})
           this.logs = logs
         })
         context('uses _submitChequeInternal', function() {
@@ -475,10 +475,10 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
       if(enabledTests.increaseHardDeposit) {
         let amount = new BN(50)
         let beneficiary = bob
-        context('when the sender is the owner', function() {
-          let sender = owner
+        context('when the sender is the issuer', function() {
+          let sender = issuer
           context('when the totalHardDeposit is below the swap balance', function() {
-            shouldDeposit(amount.muln(2), owner)
+            shouldDeposit(amount.muln(2), issuer)
             describe('when there is no prior deposit', function() {
               shouldIncreaseHardDeposit(sender, amount)
             })
@@ -526,13 +526,13 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
             })
           }
         })
-        context('when the sender is not the owner', function() {
+        context('when the sender is not the issuer', function() {
           let sender = bob
           it('reverts', async function() {
             await expectRevert(this.simpleSwap.increaseHardDeposit(
               bob,
               new BN(amount),
-              { from: sender }), "SimpleSwap: not owner")
+              { from: sender }), "SimpleSwap: not issuer")
           })
         })
       }
@@ -540,7 +540,7 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
     describe('cashCheque', function() {
       let cheque = defaultCheque
       context('when there is sufficient balance in the chequebook', function() {
-        shouldDeposit(defaultCheque.amount, owner)
+        shouldDeposit(defaultCheque.amount, issuer)
         context('when the beneficiary has submitted a cheque', function() {
           shouldSubmitChequeBeneficiary(cheque, cheque.beneficiary)
           context('when sufficient time has passed', function() {
@@ -580,7 +580,7 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
     describe('prepareDecreaseHardDeposit', function() {
       let amount = new BN(50)
       let beneficiary = bob
-      context('when the sender is the owner', function() {
+      context('when the sender is the issuer', function() {
         context('when the hard deposit is high enough', function() {
           context('when no custom decreaseTimeout is set', function() {
             decreaseHardDeposit()
@@ -592,9 +592,9 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
               await this.simpleSwap.setCustomHardDepositDecreaseTimeout(
                 beneficiary,
                 decreaseTimeout, 
-                await sign(data, owner),
+                await sign(data, issuer),
                 await sign(data, beneficiary), {
-                  from: owner
+                  from: issuer
                 })
             })
             decreaseHardDeposit()
@@ -608,7 +608,7 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
               let { logs } = await this.simpleSwap.prepareDecreaseHardDeposit(
                 beneficiary,
                 amount, {
-                  from: owner
+                  from: issuer
                 }
               )
 
@@ -641,19 +641,19 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
             await expectRevert(this.simpleSwap.prepareDecreaseHardDeposit(
               beneficiary,
               amount, {
-                from: owner
+                from: issuer
             }), "SimpleSwap: hard deposit not sufficient")
           })
 
         })
       })
-      context('when the sender is not the owner', function() {
+      context('when the sender is not the issuer', function() {
         let sender = bob
         it('reverts', async function() {
           await expectRevert(this.simpleSwap.prepareDecreaseHardDeposit(
             beneficiary,
             amount,
-            { from: sender }), "SimpleSwap: not owner")
+            { from: sender }), "SimpleSwap: not issuer")
         })
       })
     })
@@ -669,7 +669,7 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
           let { logs } = await this.simpleSwap.setCustomHardDepositDecreaseTimeout(
             beneficiary,
             decreaseTimeout,
-            await sign(this.data, owner),
+            await sign(this.data, issuer),
             await sign(this.data, beneficiary)
           )
 
@@ -687,7 +687,7 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
           })
         })
       })
-      context('when ownerSig invalid', function() {
+      context('when issuerSig invalid', function() {
         it('reverts', async function() {
           await expectRevert.unspecified(this.simpleSwap.setCustomHardDepositDecreaseTimeout(
             beneficiary,
@@ -702,7 +702,7 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
           await expectRevert.unspecified(this.simpleSwap.setCustomHardDepositDecreaseTimeout(
             beneficiary,
             decreaseTimeout,
-            await sign(this.data, owner),
+            await sign(this.data, issuer),
             '0x'
           ))
         })
@@ -746,7 +746,7 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
         })
         it('reverts', async function() {
           await expectRevert(
-            this.simpleSwap.decreaseHardDeposit(beneficiary, { from: owner }),
+            this.simpleSwap.decreaseHardDeposit(beneficiary, { from: issuer }),
             "SimpleSwap: deposit not yet timed out"
           )
         })
@@ -755,7 +755,7 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
       context('when no decrease prepared', async function() {
         it('reverts', async function() {
           await expectRevert(
-            this.simpleSwap.decreaseHardDeposit(beneficiary, { from: owner }),
+            this.simpleSwap.decreaseHardDeposit(beneficiary, { from: issuer }),
             "SimpleSwap: deposit not yet timed out"
           )
         })
@@ -769,22 +769,22 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
         await this.simpleSwap.send(amount)
       })
 
-      context('when the sender is the owner', function() {
-        let sender = owner
+      context('when the sender is the issuer', function() {
+        let sender = issuer
         context('when the liquid balance is high enough', function() {
           beforeEach(async function() {
-            let ownerBalancePrior = await balance.current(owner)
+            let issuerBalancePrior = await balance.current(issuer)
             let { logs, receipt } = await this.simpleSwap.withdraw(
               amount,
               { from: sender }
             )
 
             this.logs = logs
-            this.expectedBalance = ownerBalancePrior.add(amount).sub(await computeCost(receipt))
+            this.expectedBalance = issuerBalancePrior.add(amount).sub(await computeCost(receipt))
           })
 
-          it('should change the owner balance correctly', async function() {
-            expect(await balance.current(owner)).bignumber.is.equal(this.expectedBalance)
+          it('should change the issuer balance correctly', async function() {
+            expect(await balance.current(issuer)).bignumber.is.equal(this.expectedBalance)
           })
         })
         context('when the liquid balance is too low', function() {
@@ -800,12 +800,12 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
         })
       })
 
-      context('when the sender is not the owner', function() {
+      context('when the sender is not the issuer', function() {
         let sender = bob
         it('reverts', async function() {
           await expectRevert(this.simpleSwap.withdraw(amount, {
             from: sender
-          }), 'SimpleSwap: not owner')
+          }), 'SimpleSwap: not issuer')
         })
       })
     })
@@ -817,7 +817,7 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
       if(enabledTests.cashChequeBeneficiary) {
         let cheque = defaultCheque
         context('when there is sufficient balance in the chequebook', function() {
-          shouldDeposit(defaultCheque.amount, owner)
+          shouldDeposit(defaultCheque.amount, issuer)
           context('when the beneficiary has submitted a cheque', function() {
             shouldSubmitChequeBeneficiary(cheque, cheque.beneficiary)
             context('when sufficient time has passed', function() {

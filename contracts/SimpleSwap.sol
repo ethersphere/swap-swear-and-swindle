@@ -28,7 +28,7 @@ contract SimpleSwap {
   struct HardDeposit {
     uint amount; /* hard deposit amount allocated */
     uint decreaseAmount; /* decreaseAmount substranced from amount when decrease is requested */
-    uint decreaseTimeout; /* owner has to wait decreaseTimeout seconds after decrease is requested to decrease hardDeposit */
+    uint decreaseTimeout; /* issuer has to wait decreaseTimeout seconds after decrease is requested to decrease hardDeposit */
     uint canBeDecreasedAt; /* point in time after which harddeposit can be decreased*/
   }
   /* structure to keep track of the latest cheque for one beneficiary */
@@ -45,14 +45,14 @@ contract SimpleSwap {
   /* sum of all hard deposits */
   uint public totalHardDeposit;
 
-  /* owner of the contract, set at construction */
-  address payable public owner;
+  /* issuer of the contract, set at construction */
+  address payable public issuer;
 
-  /// @notice constructor, allows setting the owner (needed for "setup wallet as payment")
-  constructor(address payable _owner, uint defaultHardDepositTimeoutDuration) public payable {
+  /// @notice constructor, allows setting the issuer (needed for "setup wallet as payment")
+  constructor(address payable _issuer, uint defaultHardDepositTimeoutDuration) public payable {
     // DEFAULT_HARDDEPOSIT_TIMOUTE_DURATION will be one day or a whatever non-zero argument given as an argument to the constructor
     DEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT = defaultHardDepositTimeoutDuration == 0 ? 1 days : defaultHardDepositTimeoutDuration;
-    owner = _owner;
+    issuer = _issuer;
     if(msg.value > 0) {
       emit Deposit(msg.sender, msg.value);
     }
@@ -85,14 +85,14 @@ contract SimpleSwap {
     emit ChequeSubmitted(beneficiary, serial, amount, cashTimeout);
   }
 
-  /// @notice submit a cheque by the owner
+  /// @notice submit a cheque by the issuer
   /// @param beneficiary the beneficiary of the cheque
   /// @param serial the serial number of the cheque
   /// @param amount the (cumulative) amount of the cheque
   /// @param cashTimeout the check can be cashed cashTimeout seconds in the future
-  /// @param beneficiarySig signature of the owner
-  function submitChequeOwner(address beneficiary, uint serial, uint amount, uint cashTimeout, bytes memory beneficiarySig) public {
-    require(msg.sender == owner, "SimpleSwap: not owner");
+  /// @param beneficiarySig signature of the issuer
+  function submitChequeissuer(address beneficiary, uint serial, uint amount, uint cashTimeout, bytes memory beneficiarySig) public {
+    require(msg.sender == issuer, "SimpleSwap: not issuer");
     /* verify signature of the beneficiary */
     require(beneficiary == recover(chequeHash(address(this), beneficiary, serial, amount, cashTimeout), beneficiarySig),
      "SimpleSwap: invalid beneficiarySig");
@@ -104,12 +104,12 @@ contract SimpleSwap {
   /// @param serial the serial number of the cheque
   /// @param amount the (cumulative) amount of the cheque
   /// @param cashTimeout the check can be cashed cashTimeout seconds in the future
-  /// @param ownerSig signature of the owner
-  function submitChequeBeneficiary(uint serial, uint amount, uint cashTimeout, bytes memory ownerSig) public {
-    /* verify signature of the owner */
-    //emit LogAddress(recover(chequeHash(address(this), msg.sender, serial, amount, cashTimeout), ownerSig));
-    require(owner == recover(chequeHash(address(this), msg.sender, serial, amount, cashTimeout), ownerSig),
-     "SimpleSwap: invalid ownerSig");
+  /// @param issuerSig signature of the issuer
+  function submitChequeBeneficiary(uint serial, uint amount, uint cashTimeout, bytes memory issuerSig) public {
+    /* verify signature of the issuer */
+    //emit LogAddress(recover(chequeHash(address(this), msg.sender, serial, amount, cashTimeout), issuerSig));
+    require(issuer == recover(chequeHash(address(this), msg.sender, serial, amount, cashTimeout), issuerSig),
+     "SimpleSwap: invalid issuerSig");
     /* update the cheque data */
     _submitChequeInternal(msg.sender, serial, amount, cashTimeout);
   }
@@ -119,12 +119,12 @@ contract SimpleSwap {
   /// @param serial the serial number of the cheque
   /// @param amount the (cumulative) amount of the cheque
   /// @param cashTimeout the check can be cashed cashTimeout seconds in the future
-  /// @param ownerSig signature of the owner
+  /// @param issuerSig signature of the issuer
   /// @param beneficarySig signature of the beneficiary
-  function submitCheque(address beneficiary, uint serial, uint amount, uint cashTimeout, bytes memory ownerSig, bytes memory beneficarySig) public {
-    /* verify signature of the owner */
-    require(owner == recover(chequeHash(address(this), beneficiary, serial, amount, cashTimeout), ownerSig),
-    "SimpleSwap: invalid ownerSig");
+  function submitCheque(address beneficiary, uint serial, uint amount, uint cashTimeout, bytes memory issuerSig, bytes memory beneficarySig) public {
+    /* verify signature of the issuer */
+    require(issuer == recover(chequeHash(address(this), beneficiary, serial, amount, cashTimeout), issuerSig),
+    "SimpleSwap: invalid issuerSig");
     /* verify signature of the beneficiary */
     require(beneficiary == recover(chequeHash(address(this), beneficiary, serial, amount, cashTimeout), beneficarySig),
     "SimpleSwap: invalid beneficiarySig");
@@ -182,7 +182,7 @@ contract SimpleSwap {
   /// @param beneficiary beneficiary whose hard deposit should be decreased
   /// @param decreaseAmount amount that the deposit is supposed to be decreased by
   function prepareDecreaseHardDeposit(address beneficiary, uint decreaseAmount) public {
-    require(msg.sender == owner, "SimpleSwap: not owner");
+    require(msg.sender == issuer, "SimpleSwap: not issuer");
     HardDeposit storage hardDeposit = hardDeposits[beneficiary];
     /* cannot decrease it by more than the deposit */
     require(decreaseAmount <= hardDeposit.amount, "SimpleSwap: hard deposit not sufficient");
@@ -215,7 +215,7 @@ contract SimpleSwap {
   /// @param beneficiary beneficiary whose hard deposit should be decreased
   /// @param amount the new hard deposit
   function increaseHardDeposit(address beneficiary, uint amount) public {
-    require(msg.sender == owner, "SimpleSwap: not owner");
+    require(msg.sender == issuer, "SimpleSwap: not issuer");
     /* ensure hard deposits don't exceed the global balance */
     require(totalHardDeposit.add(amount) <= address(this).balance, "SimpleSwap: hard deposit cannot be more than balance ");
 
@@ -232,10 +232,10 @@ contract SimpleSwap {
   function setCustomHardDepositDecreaseTimeout(
     address beneficiary,
     uint decreaseTimeout,
-    bytes memory ownerSig,
+    bytes memory issuerSig,
     bytes memory beneficiarySig
   ) public {
-    require(owner == recover(keccak256(abi.encode(address(this), beneficiary, decreaseTimeout)), ownerSig));
+    require(issuer == recover(keccak256(abi.encode(address(this), beneficiary, decreaseTimeout)), issuerSig));
     require(beneficiary == recover(keccak256(abi.encode(address(this), beneficiary, decreaseTimeout)), beneficiarySig));
     hardDeposits[beneficiary].decreaseTimeout = decreaseTimeout;
     emit HardDepositDecreaseTimeoutChanged(beneficiary, hardDeposits[beneficiary].decreaseTimeout);
@@ -244,11 +244,11 @@ contract SimpleSwap {
   /// @notice withdraw ether
   /// @param amount amount to withdraw
   function withdraw(uint amount) public {
-    /* only owner can do this */
-    require(msg.sender == owner, "SimpleSwap: not owner");
+    /* only issuer can do this */
+    require(msg.sender == issuer, "SimpleSwap: not issuer");
     /* ensure we don't take anything from the hard deposit */
     require(amount <= liquidBalance(), "SimpleSwap: liquidBalance not sufficient");
-    owner.transfer(amount);
+    issuer.transfer(amount);
   }
 
   /// @notice deposit ether
