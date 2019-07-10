@@ -546,9 +546,6 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
           context('when sufficient time has passed', function() {
             before(function() {time.increase(new BN(86400))})
             const sender = alice
-           // console.log(cheque.amount)
-            //const calleePayout = cheque.amount.muln(2)
-            //console.log(calleePayout.div(10))
             it('is here', function() {
 
             })
@@ -828,8 +825,9 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
                 time.increase(new BN(86400))
                 this.currentBeneficiaryBalance = await balance.current(cheque.beneficiary)
                 this.currentCheque = await this.simpleSwap.cheques(cheque.beneficiary)
-                const { logs } = await this.simpleSwap.cashChequeBeneficiary(cheque.beneficiary, cheque.amount, {from: cheque.beneficiary})
+                const { logs, receipt } = await this.simpleSwap.cashChequeBeneficiary(cheque.beneficiary, cheque.amount, {from: cheque.beneficiary})
                 this.logs = logs
+                this.receipt = receipt
               })
               _shouldCashChequeInternal(cheque.beneficiary, cheque.beneficiary, defaultCheque.amount, new BN(0))
   
@@ -847,11 +845,9 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
       expect((await this.simpleSwap.cheques(benefciaryPrincipal)).paidOut).bignumber.to.be.equal(this.currentCheque.paidOut.add(amount).add(calleepayout), "Did not update paidOut")
     })
     it('should transfer the correct amount to the beneficiaryAgent', async function() {
-      //TODO: substract gas costs
-      expect(await balance.current(beneficiaryAgent)).bignumber.to.be.equal(this.currentBeneficiaryBalance.add(amount).sub(calleepayout))
+      expect(await balance.current(beneficiaryAgent)).bignumber.to.be.equal(this.currentBeneficiaryBalance.add(amount).sub(calleepayout).sub(await computeCost(this.receipt)))
     })
     it('should emit a ChequeCashed event', function() {
-      console.log(this.currentCheque)
       expectEvent.inLogs(this.logs, "ChequeCashed", {
         beneficiaryPrincipal: benefciaryPrincipal,
         beneficiaryAgent: beneficiaryAgent,
