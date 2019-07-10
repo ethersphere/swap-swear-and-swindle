@@ -822,7 +822,7 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
             shouldSubmitChequeBeneficiary(cheque, cheque.beneficiary)
             context('when sufficient time has passed', function() {
               beforeEach(async function() {
-                time.increase(new BN(86400))
+                await time.increase(new BN(86400))
                 this.currentBeneficiaryBalance = await balance.current(cheque.beneficiary)
                 this.currentCheque = await this.simpleSwap.cheques(cheque.beneficiary)
                 const { logs, receipt } = await this.simpleSwap.cashChequeBeneficiary(cheque.beneficiary, cheque.amount, {from: cheque.beneficiary})
