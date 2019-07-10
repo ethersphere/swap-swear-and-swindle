@@ -545,9 +545,9 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
           context('when sufficient time has passed', function() {
             before(function() {time.increase(new BN(86400))})
             const sender = alice
-            console.log(cheque.amount)
-            const calleePayout = cheque.amount.muln(2)
-            console.log(calleePayout.div(10))
+           // console.log(cheque.amount)
+            //const calleePayout = cheque.amount.muln(2)
+            //console.log(calleePayout.div(10))
             it('is here', function() {
 
             })
