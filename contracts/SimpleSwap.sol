@@ -166,7 +166,7 @@ contract SimpleSwap {
     uint256 calleePayout
   ) public {
     require(now <= expiry, "SimpleSwap: beneficiarySig expired");
-    require(beneficiaryPrincipal == recover(keccak256(abi.encodePacked(address(this), msg.sender, beneficiaryAgent, expiry, calleePayout)), beneficiarySig), 
+    require(beneficiaryPrincipal == recover(keccak256(abi.encodePacked(address(this), msg.sender, requestPayout, beneficiaryAgent, expiry, calleePayout)), beneficiarySig), 
       "SimpleSwap: invalid beneficiarySig");
     _cashChequeInternal(beneficiaryPrincipal, beneficiaryAgent, requestPayout, calleePayout);
     msg.sender.transfer(calleePayout);
