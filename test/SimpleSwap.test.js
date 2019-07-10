@@ -16,7 +16,7 @@ const SimpleSwap = artifacts.require('SimpleSwap')
 contract('SimpleSwap', function([owner, alice, bob]) {
 
   beforeEach(async function() {
-    this.simpleSwap = await SimpleSwap.new(owner, 1000)
+    this.simpleSwap = await SimpleSwap.new(owner, 0)
   })
 
   shouldBehaveLikeSimpleSwap([owner, alice, bob])
