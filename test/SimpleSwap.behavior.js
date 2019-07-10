@@ -14,14 +14,14 @@ const { computeCost } = require("./testutils");
 
 
 enabledTests = {
-  owner: false,
-  deposit: false,
-  submitCheque: false,
-  submitChequeBeneficiary: false,
-  submitChequeOwner: false,
-  increaseHardDeposit: false,
+  owner: true,
+  deposit: true,
+  submitCheque: true,
+  submitChequeBeneficiary: true,
+  submitChequeOwner: true,
+  increaseHardDeposit: true,
   cashCheque: true,
-  cashChequeBeneficiary: false
+  cashChequeBeneficiary: true
 
 }
 
