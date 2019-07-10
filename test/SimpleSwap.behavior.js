@@ -9,7 +9,8 @@ const {
 
 const { expect } = require('chai');
 
-const { signCheque } = require("./swutils");
+const { signCheque, sign } = require("./swutils");
+const { computeCost } = require("./testutils");
 
 
 enabledTests = {
@@ -554,6 +555,265 @@ function shouldBehaveLikeSimpleSwap([owner, alice, bob]) {
           })
         })
       })
+    })
+    describe('liquidBalanceFor', function() {
+      let beneficiary = bob
+      let amount = new BN(50)
+      beforeEach(async function() {
+        await this.simpleSwap.send(amount)
+      })
+
+      context('when no hard deposits', function() {
+        it('should equal the liquid balance', async function() {
+          expect(await this.simpleSwap.liquidBalanceFor(beneficiary)).bignumber.equal(await this.simpleSwap.liquidBalance())
+        })
+      })
+
+      context('when hard deposits', function() {
+        let hardDeposit = new BN(10)
+        beforeEach(async function() {
+          await this.simpleSwap.increaseHardDeposit(beneficiary, hardDeposit)
+          await this.simpleSwap.increaseHardDeposit(alice, hardDeposit)
+        })
+        it('should be higher than the liquid balance', async function() {
+          expect(await this.simpleSwap.liquidBalanceFor(beneficiary)).bignumber.equal((await this.simpleSwap.liquidBalance()).add(hardDeposit))
+        })
+      })
+    })
+    describe('prepareDecreaseHardDeposit', function() {
+      let amount = new BN(50)
+      let beneficiary = bob
+      context('when the sender is the owner', function() {
+        context('when the hard deposit is high enough', function() {
+          context('when no custom decreaseTimeout is set', function() {
+            decreaseHardDeposit()
+          })
+          context('when a custom decreaseTimeout is set', function() {
+            let decreaseTimeout = new BN(100)
+            beforeEach(async function() {
+              const data = web3.utils.keccak256(web3.eth.abi.encodeParameters(['address', 'address', 'uint256'], [this.simpleSwap.address, beneficiary, decreaseTimeout.toString()]))              
+              await this.simpleSwap.setCustomHardDepositDecreaseTimeout(
+                beneficiary,
+                decreaseTimeout, 
+                await sign(data, owner),
+                await sign(data, beneficiary), {
+                  from: owner
+                })
+            })
+            decreaseHardDeposit()
+          })
+          
+          function decreaseHardDeposit() {
+            beforeEach(async function() {
+              await this.simpleSwap.send(amount)
+              await this.simpleSwap.increaseHardDeposit(beneficiary, amount)
+
+              let { logs } = await this.simpleSwap.prepareDecreaseHardDeposit(
+                beneficiary,
+                amount, {
+                  from: owner
+                }
+              )
+
+              this.logs = logs
+              this.timeout = (await this.simpleSwap.hardDeposits(beneficiary))[2]
+            })
+
+            it('should fire the HardDepositDecreasePrepared event', function() {
+              expectEvent.inLogs(this.logs, 'HardDepositDecreasePrepared', {
+                beneficiary,
+                decreaseAmount: amount
+              })
+            })
+
+            it('should set the decreaseAmount', async function() {
+              expect((await this.simpleSwap.hardDeposits(beneficiary))[1]).bignumber.is.equal(amount)
+            })
+
+            it('should set the canBeDecreasedAt', async function() {
+              expect((await this.simpleSwap.hardDeposits(beneficiary))[3]).bignumber.is.gte((await time.latest()).add(this.timeout))
+            })
+          }
+        })
+        context('when the hard deposit is not high enough', function() {
+          beforeEach(async function() {
+            await this.simpleSwap.send(amount)
+            await this.simpleSwap.increaseHardDeposit(beneficiary, amount.divn(2))
+          })
+          it('reverts', async function() {
+            await expectRevert(this.simpleSwap.prepareDecreaseHardDeposit(
+              beneficiary,
+              amount, {
+                from: owner
+            }), "SimpleSwap: hard deposit not sufficient")
+          })
+
+        })
+      })
+      context('when the sender is not the owner', function() {
+        let sender = bob
+        it('reverts', async function() {
+          await expectRevert(this.simpleSwap.prepareDecreaseHardDeposit(
+            beneficiary,
+            amount,
+            { from: sender }), "SimpleSwap: not owner")
+        })
+      })
+    })
+
+    describe('setCustomHardDepositDecreaseTimeout', function() {
+      let beneficiary = bob
+      let decreaseTimeout = new BN(10)
+      beforeEach(function() {
+        this.data = web3.utils.keccak256(web3.eth.abi.encodeParameters(['address', 'address', 'uint256'], [this.simpleSwap.address, beneficiary, decreaseTimeout.toString()]))
+      })
+      describe('when both signature are valid', function() {
+        beforeEach(async function() {
+          let { logs } = await this.simpleSwap.setCustomHardDepositDecreaseTimeout(
+            beneficiary,
+            decreaseTimeout,
+            await sign(this.data, owner),
+            await sign(this.data, beneficiary)
+          )
+
+          this.logs = logs
+        })
+
+        it('should set the decreaseTimeout', async function() {
+          expect((await this.simpleSwap.hardDeposits(beneficiary))[2]).bignumber.is.equal(decreaseTimeout)
+        })
+
+        it('should fire the HardDepositDecreaseTimeoutChanged', async function() {
+          expectEvent.inLogs(this.logs, 'HardDepositDecreaseTimeoutChanged', {
+            beneficiary,
+            decreaseTimeout
+          })
+        })
+      })
+      context('when ownerSig invalid', function() {
+        it('reverts', async function() {
+          await expectRevert.unspecified(this.simpleSwap.setCustomHardDepositDecreaseTimeout(
+            beneficiary,
+            decreaseTimeout,
+            '0x',
+            await sign(this.data, beneficiary)
+          ))
+        })
+      })
+      context('when beneficiarySig invalid', function() {
+        it('reverts', async function() {
+          await expectRevert.unspecified(this.simpleSwap.setCustomHardDepositDecreaseTimeout(
+            beneficiary,
+            decreaseTimeout,
+            await sign(this.data, owner),
+            '0x'
+          ))
+        })
+      })
+    })
+
+    describe('decreaseHardDeposit', function() {
+      let beneficiary = bob
+      let amount = new BN(500)
+      let decrease = new BN(400)
+      beforeEach(async function() {
+        await this.simpleSwap.send(amount)
+        await this.simpleSwap.increaseHardDeposit(beneficiary, amount)
+      })
+      context('when decrease is ready', function() {
+        context('when there is enough hard deposit left', function() {
+          beforeEach(async function() {
+            await this.simpleSwap.prepareDecreaseHardDeposit(beneficiary, decrease)
+            await time.increase(await this.simpleSwap.DEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT())            
+            let { logs } = await this.simpleSwap.decreaseHardDeposit(beneficiary)
+            this.logs = logs
+          })
+
+          it('should fire the HardDepositAmountChanged event', async function() {
+            expectEvent.inLogs(this.logs, 'HardDepositAmountChanged', {
+              beneficiary,
+              amount: amount.sub(decrease)
+            })
+          })
+
+          it('should set the new amount', async function() {
+            expect((await this.simpleSwap.hardDeposits(beneficiary))[0]).bignumber.is.equal(amount.sub(decrease))
+          })
+        })
+        // TODO: when there is not enough left
+      })
+
+      context('when timeout not yet expired', function() {
+        beforeEach(async function() {
+          await this.simpleSwap.prepareDecreaseHardDeposit(beneficiary, amount)
+        })
+        it('reverts', async function() {
+          await expectRevert(
+            this.simpleSwap.decreaseHardDeposit(beneficiary, { from: owner }),
+            "SimpleSwap: deposit not yet timed out"
+          )
+        })
+      })
+
+      context('when no decrease prepared', async function() {
+        it('reverts', async function() {
+          await expectRevert(
+            this.simpleSwap.decreaseHardDeposit(beneficiary, { from: owner }),
+            "SimpleSwap: deposit not yet timed out"
+          )
+        })
+      })
+    })
+
+    describe('withdraw', function() {
+      let amount = new BN(100)
+
+      beforeEach(async function() {
+        await this.simpleSwap.send(amount)
+      })
+
+      context('when the sender is the owner', function() {
+        let sender = owner
+        context('when the liquid balance is high enough', function() {
+          beforeEach(async function() {
+            let ownerBalancePrior = await balance.current(owner)
+            let { logs, receipt } = await this.simpleSwap.withdraw(
+              amount,
+              { from: sender }
+            )
+
+            this.logs = logs
+            this.expectedBalance = ownerBalancePrior.add(amount).sub(await computeCost(receipt))
+          })
+
+          it('should change the owner balance correctly', async function() {
+            expect(await balance.current(owner)).bignumber.is.equal(this.expectedBalance)
+          })
+        })
+        context('when the liquid balance is too low', function() {
+          beforeEach(async function() {
+            await this.simpleSwap.increaseHardDeposit(bob, new BN(1), { from: sender })
+          })
+
+          it('reverts', async function() {
+            await expectRevert(this.simpleSwap.withdraw(amount, {
+              from: sender
+            }), "SimpleSwap: liquidBalance not sufficient")
+          })
+        })
+      })
+
+      context('when the sender is not the owner', function() {
+        let sender = bob
+        it('reverts', async function() {
+          await expectRevert(this.simpleSwap.withdraw(amount, {
+            from: sender
+          }), 'SimpleSwap: not owner')
+        })
+      })
+    })
+
+    describe('cashcheque', function() {
 
     })
     describe('cashChequeBeneficiary', function() {
