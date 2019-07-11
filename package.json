@@ -20,7 +20,8 @@
     "truffle": "^5.0.24"
   },
   "scripts": {
-    "test": "./node_modules/.bin/truffle test"
+    "test": "./node_modules/.bin/truffle test",
+    "abigen": "solc openzeppelin-solidity=$(pwd)/node_modules/openzeppelin-solidity --allow-paths node_modules/openzeppelin-solidity/contracts --combined-json=bin,abi,userdoc,devdoc,metadata contracts/SimpleSwap.sol | tee output.json && abigen -pkg contract -out simpleswap.go --combined-json output.json && rm output.json"
   },
   "keywords": [],
   "author": "",

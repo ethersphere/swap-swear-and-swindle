@@ -9,6 +9,16 @@ Contracts for Swap, Swear and Swindle.
 To run the tests first install `truffle`, then run `npm install` to set everything up.
 Then run the tests with `truffle test`.
 
+## Go-bindings
+### solc
+i.e. sudo snap install solc --edge
+### abigen
+go get -u github.com/ethereum/go-ethereum 
+go install $GOPATH/src/github.com/ethereum/go-ethereum/cmd/abigen
+npm run abigen
+### generate
+npm build
+
 ## Overview
 
 ## Swap
