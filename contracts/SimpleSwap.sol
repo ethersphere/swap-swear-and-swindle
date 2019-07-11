@@ -51,7 +51,7 @@ contract SimpleSwap {
   /// @notice constructor, allows setting the issuer (needed for "setup wallet as payment")
   constructor(address payable _issuer, uint defaultHardDepositTimeoutDuration) public payable {
     // DEFAULT_HARDDEPOSIT_TIMOUTE_DURATION will be one day or a whatever non-zero argument given as an argument to the constructor
-    DEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT = defaultHardDepositTimeoutDuration == 0 ? 1 days : defaultHardDepositTimeoutDuration;
+    DEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT = defaultHardDepositTimeoutDuration;
     issuer = _issuer;
     if(msg.value > 0) {
       emit Deposit(msg.sender, msg.value);
