@@ -232,10 +232,9 @@ contract SimpleSwap {
   function setCustomHardDepositDecreaseTimeout(
     address beneficiary,
     uint decreaseTimeout,
-    bytes memory issuerSig,
     bytes memory beneficiarySig
   ) public {
-    require(issuer == recover(keccak256(abi.encode(address(this), beneficiary, decreaseTimeout)), issuerSig));
+    require(msg.sender == issuer, "SimpleSwap: not issuer");
     require(beneficiary == recover(keccak256(abi.encode(address(this), beneficiary, decreaseTimeout)), beneficiarySig));
     hardDeposits[beneficiary].decreaseTimeout = decreaseTimeout;
     emit HardDepositDecreaseTimeoutChanged(beneficiary, hardDeposits[beneficiary].decreaseTimeout);
