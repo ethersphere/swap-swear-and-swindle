@@ -263,6 +263,6 @@ contract SimpleSwap {
 
   function chequeHash(address swap, address beneficiary, uint serial, uint amount, uint cashTimeout)
   public pure returns (bytes32) {
-    return keccak256(abi.encodePacked(swap, serial, beneficiary, amount, cashTimeout));
+    return keccak256(abi.encodePacked(swap, beneficiary, serial, amount, cashTimeout));
   }
 }
