@@ -27,8 +27,8 @@ async function signCheque(swap, cheque) {
 
   if(cheque.signee.length == 2) {
     cheque.signature = []
-    cheque.signature[0] = await sign(hash, cheque.signee[0])
-    cheque.signature[1] = await sign(hash, cheque.signee[1])
+    cheque.signature.issuer = await sign(hash, cheque.signee[0])
+    cheque.signature.beneficiary = await sign(hash, cheque.signee[1])
   } else {
     cheque.signature = await sign(hash, cheque.signee)
   }
