@@ -44,7 +44,15 @@ function submitChequeInternal() {
   })
 }
 function shouldSubmitChequeIssuer(unsignedCheque, from) {
-
+  beforeEach(async function() {
+    this.preconditions = {
+      cheque: await this.simpleSwap.cheques(unsignedCheque.beneficiary)
+    }
+    this.signedCheque = await signCheque(this.simpleSwap, unsignedCheque)
+    const { logs } = await this.simpleSwap.submitChequeissuer(this.signedCheque.beneficiary, this.signedCheque.serial, this.signedCheque.amount, this.signedCheque.timeout, this.signedCheque.signature, {from: sender})
+    this.logs = logs
+  })
+  submitChequeInternal() 
 }
 function shouldNotSubmitChequeIssuer(unsignedCheque, revertMessage) {
 
@@ -52,13 +60,13 @@ function shouldNotSubmitChequeIssuer(unsignedCheque, revertMessage) {
 function shouldSubmitChequeBeneficiary(unsignedCheque, from) {
   beforeEach(async function() {
     this.preconditions = {
-      cheque = await simpleSwap.cheques(unsignedCheque.beneficiary)
+      cheque: await simpleSwap.cheques(unsignedCheque.beneficiary)
     }
     this.signedCheque = await signCheque(this.simpleSwap, unsignedCheque)
     const { logs } = await this.simpleSwap.submitChequeBeneficiary(this.signedCheque.serial, this.signedCheque.amount, this.signedCheque.timeout, this.signedCheque.signature, {from: sender})
     this.logs = logs
   })
-  shouldSubmitChequeInternal() 
+  submitChequeInternal() 
 }
 function shouldNotSubmitChequeBeneficiary(unsignedCheque, from, revertMessage) {
 
@@ -66,7 +74,7 @@ function shouldNotSubmitChequeBeneficiary(unsignedCheque, from, revertMessage) {
 function shouldSubmitCheque(unsignedCheque, from) {
   beforeEach(async function() {
     this.preconditions = {
-      cheque = await simpleSwap.cheques(unsignedCheque.beneficiary)
+      cheque: await simpleSwap.cheques(unsignedCheque.beneficiary)
     }
     this.signedCheque = await signCheque(this.simpleSwap, unsignedCheque)
     const { logs } = await this.simpleSwap.submitCheque(
@@ -80,7 +88,7 @@ function shouldSubmitCheque(unsignedCheque, from) {
     )
     this.logs = logs
   })
-  shouldSubmitChequeInternal() 
+  submitChequeInternal() 
 }
 function shouldNotSubmitCheque(unsignedCheque, revertMessage) {
 
@@ -123,6 +131,35 @@ function shouldNotCashCheque(beneficiaryPrincipal, beneficiaryAgent, requestPayo
 
 }
 function shouldPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, from) {
+  beforeEach(async function() {
+    await this.simpleSwap.send(amount)
+    await this.simpleSwap.increaseHardDeposit(beneficiary, amount)
+
+    let { logs } = await this.simpleSwap.prepareDecreaseHardDeposit(
+      beneficiary,
+      amount, {
+        from: issuer
+      }
+    )
+
+    this.logs = logs
+    this.timeout = (await this.simpleSwap.hardDeposits(beneficiary))[2]
+  })
+
+  it('should fire the HardDepositDecreasePrepared event', function() {
+    expectEvent.inLogs(this.logs, 'HardDepositDecreasePrepared', {
+      beneficiary,
+      decreaseAmount: amount
+    })
+  })
+
+  it('should set the decreaseAmount', async function() {
+    expect((await this.simpleSwap.hardDeposits(beneficiary))[1]).bignumber.is.equal(amount)
+  })
+
+  it('should set the canBeDecreasedAt', async function() {
+    expect((await this.simpleSwap.hardDeposits(beneficiary))[3]).bignumber.is.gte((await time.latest()).add(this.timeout))
+  })
 
 }
 function shouldNotPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, from, revertMessage) {

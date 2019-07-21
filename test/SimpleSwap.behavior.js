@@ -10,10 +10,39 @@ const {
 const { expect } = require('chai');
 
 const { computeCost } = require("./testutils");
-require('./SimpleSwap.should.js')
+const {
+  shouldReturnDEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT,
+  shouldReturnCheques,
+  shouldReturnHarddeposits,
+  shouldReturnTotalharddeposit,
+  shouldReturnIssuer,
+  shouldReturnLiquidBalance,
+  shouldReturnLiquidBalanceFor,
+  shouldSubmitChequeIssuer,
+  shouldNotSubmitChequeIssuer,
+  shouldSubmitChequeBeneficiary,
+  shouldNotSubmitChequeBeneficiary,
+  shouldSubmitCheque,
+  shouldNotSubmitCheque,
+  shouldCashChequeBeneficiary,
+  shouldNotCashChequeBeneficiary,
+  shouldCashCheque,
+  shouldNotCashCheque,
+  shouldPrepareDecreaseHardDeposit,
+  shouldNotPrepareDecreaseHardDeposit,
+  shouldDecreaseHardDeposit,
+  shouldNotDecreaseHardDeposit,
+  shouldIncreaseHardDeposit,
+  shouldNotIncreaseHardDeposit,
+  shouldSetCustomHardDepositDecreaseTimeout,
+  shouldNotSetCustomHardDepositDecreaseTimeout,
+  shouldWithdraw,
+  shouldNotWithdraw,
+  shouldDeposit
+} = require('./SimpleSwap.should.js')
 
 // switch to false if you don't want to test the particular function
-const enabledTests = {
+enabledTests = {
   DEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT: true,
   cheques: true,
   harddeposits: true,
@@ -47,32 +76,34 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
   const defaultCheque = {
     beneficiary: bob,
     serial: new BN(3),
-    amount: new BN(Math.floor(Math.random() * 100000)),
+    amount: new BN(500),
     timeout: new BN(86400),
     signee: issuer,
     signature: ""
   }
   context('as a simple swap', function() {
 
-    describe(describeFunction, 'DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT', function() {
+    describe(describeFunction + 'DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT', function() {
       if(enabledTests.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT) {
         
       }
     })
 
-    describe(describeFunction, 'cheques', function() {
+    describe(describeFunction + 'cheques', function() {
       if(enabledTests.cheques) {
-
+        it('says hello!', function() {
+          console.log('hey')
+        })
       }
     })
 
-    describe(describeFunction, 'harddeposits', function() {
+    describe(describeFunction + 'harddeposits', function() {
       if(enabledTests.harddeposits) {
 
       }
     })
 
-    describe(describeFunction, 'issuer', function() {
+    describe(describeFunction + 'issuer', function() {
       if(enabledTests.issuer) {
         it('should have a correct issuer', async function() {
           expect(await this.simpleSwap.issuer()).to.equal(issuer)          
@@ -80,13 +111,13 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
       }    
     })
 
-    describe(describeFunction, 'liquidBalance', function() {
+    describe(describeFunction + 'liquidBalance', function() {
       if(enabledTests.liquidBalance) {
 
       }
     })
 
-    describe(describeFunction, 'liquidBalanceFor', function() {
+    describe(describeFunction + 'liquidBalanceFor', function() {
       if(enabledTests.liquidBalanceFor) {
         let beneficiary = bob
         let amount = new BN(50)
@@ -113,7 +144,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
       }
     })
 
-    describe(describeFunction, 'submitChequeIssuer', function() {
+    describe(describeFunction + 'submitChequeIssuer', function() {
       if(enabledTests.submitChequeIssuer) {
         context('when the sender is the issuer', function() {
           let sender = issuer
@@ -128,18 +159,18 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
                   context('when we send one cheque', function() {
                     context('when there is a liquidBalance to cover the cheque', function() {
                       shouldDeposit(unsignedCheque.amount + new BN(1), issuer)
-                      shouldSubmitChequeissuer(unsignedCheque, sender)
+                      shouldSubmitChequeIssuer(unsignedCheque, sender)
                     })
                     context('when there is no liquidBalance to cover the cheque', function() {
-                      shouldSubmitChequeissuer(unsignedCheque, sender)  
+                      shouldSubmitChequeIssuer(unsignedCheque, sender)  
                     })
                   })
                   context('when we send more than one cheque', async function() {
-                    shouldSubmitChequeissuer(unsignedCheque, sender)
+                    shouldSubmitChequeIssuer(unsignedCheque, sender)
                     context('when the serial number is increasing', function() {
                       let secondSerial = new BN(parseInt(unsignedCheque.serial) + 1)
                       let increasing_serial_unsignedCheque = Object.assign({}, defaultCheque, {serial: secondSerial, signee: defaultCheque.beneficiary})
-                      shouldSubmitChequeissuer(increasing_serial_unsignedCheque, sender)
+                      shouldSubmitChequeIssuer(increasing_serial_unsignedCheque, sender)
                     })
                     context('when the serial number stays the same', function() {
                       let secondSerial = new BN(parseInt(unsignedCheque.serial))
@@ -199,7 +230,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
             })
             context('when the first serial is at MAX_UINT256', function() {
               const MAX_UINT256_unsignedCheque = Object.assign({}, defaultCheque, {serial: constants.MAX_UINT256, signee: defaultCheque.beneficiary})
-              shouldSubmitChequeissuer(MAX_UINT256_unsignedCheque, issuer)
+              shouldSubmitChequeIssuer(MAX_UINT256_unsignedCheque, issuer)
               // Solidity wraps integers
               const MAX_UINT256_wrap_unsignedCheque = Object.assign({}, defaultCheque, {serial: MAX_UINT256_unsignedCheque.serial + new BN(1), signee: defaultCheque.beneficiary})
               it('should not be possible to submit a cheque afterwards', async function() {
@@ -231,24 +262,9 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
           //TODO: reverts
         })
       }
-      function shouldSubmitChequeissuer(unsignedCheque, sender) {
-        beforeEach(async function() {
-          let lastCheque = await this.simpleSwap.cheques(unsignedCheque.beneficiary)
-          expect(unsignedCheque.serial).bignumber.is.above(new BN(0), "serial is not positive")
-          expect(unsignedCheque.amount).bignumber.to.be.above(new BN(0), "amount is not positive")
-          expect(issuer).to.equal(sender, "issuer is not the sender")
-          expect(unsignedCheque.serial).bignumber.is.above(lastCheque.serial, "serial is not above the serial of the last submitted cheque")   
-          this.signedCheque = await signCheque(this.simpleSwap, unsignedCheque)
-          const { logs } = await this.simpleSwap.submitChequeissuer(this.signedCheque.beneficiary, this.signedCheque.serial, this.signedCheque.amount, this.signedCheque.timeout, this.signedCheque.signature, {from: sender})
-          this.logs = logs
-        })
-        context('uses _submitChequeInternal', function() {
-          _shouldSubmitChequeInternal() 
-        })
-      }
     })
 
-    describe(describeFunction, 'submitChequeBeneficiary', function() {
+    describe(describeFunction + 'submitChequeBeneficiary', function() {
       if(enabledTests.submitChequeBeneficiary) {
         context('when the sender is the beneficiary', function() {
           let sender = defaultCheque.beneficiary
@@ -362,7 +378,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
       }
     })
 
-    describe(describeFunction, 'submitCheque', function() {
+    describe(describeFunction + 'submitCheque', function() {
       if(enabledTests.submitCheque) {
         context('when the sender is the issuer', function() {
           submitChequeBySender(issuer)
@@ -513,7 +529,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
       }
     })
 
-    describe(describeFunction, 'cashChequeBeneficiary', function() {
+    describe(describeFunction + 'cashChequeBeneficiary', function() {
       if(enabledTests.cashChequeBeneficiary) {
         let cheque = defaultCheque
         context('when there is sufficient balance in the chequebook', function() {
@@ -529,7 +545,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
                 this.logs = logs
                 this.receipt = receipt
               })
-              _shouldCashChequeInternal(cheque.beneficiary, cheque.beneficiary, defaultCheque.amount, new BN(0))
+             // _shouldCashChequeInternal(cheque.beneficiary, cheque.beneficiary, defaultCheque.amount, new BN(0))
   
             })
           })
@@ -537,7 +553,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
       }
     })
 
-    describe(describeFunction, 'cashCheque', function() {
+    describe(describeFunction + 'cashCheque', function() {
       if(enabledTests.cashCheque) {
         let cheque = defaultCheque
         context('when there is sufficient balance in the chequebook', function() {
@@ -556,14 +572,14 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
       }
     })
 
-    describe(describeFunction, 'prepareDecreaseHardDeposit', function() {
+    describe(describeFunction + 'prepareDecreaseHardDeposit', function() {
       if(enabledTests.prepareDecreaseHardDeposit) {
         let amount = new BN(50)
         let beneficiary = bob
         context('when the sender is the issuer', function() {
           context('when the hard deposit is high enough', function() {
             context('when no custom decreaseTimeout is set', function() {
-              decreaseHardDeposit()
+              shouldDecreaseHardDeposit()
             })
             context('when a custom decreaseTimeout is set', function() {
               let decreaseTimeout = new BN(100)
@@ -576,7 +592,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
                     from: issuer
                   })
               })
-              decreaseHardDeposit()
+              shouldDecreaseHardDeposit()
             })
           })
           context('when the hard deposit is not high enough', function() {
@@ -606,7 +622,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
       }
     })
 
-    describe(describeFunction, 'decreaseHardDeposit', function() {
+    describe(describeFunction + 'decreaseHardDeposit', function() {
       if(enabledTests.decreaseHardDeposit) {
       let beneficiary = bob
       let amount = new BN(500)
@@ -662,7 +678,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
       }
     })
 
-    describe(describeFunction, 'increaseHardDeposit', function() {
+    describe(describeFunction + 'increaseHardDeposit', function() {
       if(enabledTests.increaseHardDeposit) {
         let amount = new BN(50)
         let beneficiary = bob
@@ -729,7 +745,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
       }
     })
 
-    describe(describeFunction, 'setCustomHardDepositDecreaseTimeout', function() {
+    describe(describeFunction + 'setCustomHardDepositDecreaseTimeout', function() {
       if(enabledTests.setCustomHardDepositDecreaseTimeout) {
         let beneficiary = bob
         let decreaseTimeout = new BN(10)
@@ -785,7 +801,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
       }
     })
 
-    describe(describeFunction, 'withdraw', function() {
+    describe(describeFunction + 'withdraw', function() {
       if(enabledTests.withdraw) {
         let amount = new BN(100)
         beforeEach(async function() {
@@ -834,7 +850,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
       }
     })
 
-    describe(describeFunction, 'deposit', function() {
+    describe(describeFunction + 'deposit', function() {
       if(enabledTests.deposit) {  
         shouldDeposit(new BN(1), issuer)
       }
