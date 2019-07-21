@@ -157,6 +157,13 @@ contract SimpleSwap {
       emit ChequeBounced();
     }
   }
+
+  /// @notice attempt to cash latest chequebeneficiary
+  /// @param beneficiaryAgent agent (of the beneficiary) who receives the payment (i.e. other chequebook contract or the beneficiary)
+  /// @param requestPayout amount requested to pay out
+  function cashChequeBeneficiary(address payable beneficiaryAgent, uint requestPayout) public {
+    _cashChequeInternal(msg.sender, beneficiaryAgent, requestPayout, 0);
+  }
   function cashCheque(
     address beneficiaryPrincipal,
     address payable beneficiaryAgent,
@@ -170,12 +177,6 @@ contract SimpleSwap {
       "SimpleSwap: invalid beneficiarySig");
     _cashChequeInternal(beneficiaryPrincipal, beneficiaryAgent, requestPayout, calleePayout);
     msg.sender.transfer(calleePayout);
-  }
-  /// @notice attempt to cash latest chequebeneficiary
-  /// @param beneficiaryAgent agent (of the beneficiary) who receives the payment (i.e. other chequebook contract or the beneficiary)
-  /// @param requestPayout amount requested to pay out
-  function cashChequeBeneficiary(address payable beneficiaryAgent, uint requestPayout) public {
-    _cashChequeInternal(msg.sender, beneficiaryAgent, requestPayout, 0);
   }
 
   /// @notice prepare to decrease the hard deposit
