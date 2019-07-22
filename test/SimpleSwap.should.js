@@ -74,16 +74,16 @@ function shouldSubmitChequeIssuer(unsignedCheque, from) {
   submitChequeInternal() 
 }
 
-function shouldNotSubmitChequeIssuer(unsignedCheque, from, revertMessage) {
+function shouldNotSubmitChequeIssuer(toSignCheque, functionParams, from, revertMessage) {
   beforeEach(async function() {
-    this.signedCheque = await signCheque(this.simpleSwap, unsignedCheque)
+    this.signedCheque = await signCheque(this.simpleSwap, toSignCheque)
   })
   it('reverts', async function() {
     await expectRevert(this.simpleSwap.submitChequeissuer(
-      this.signedCheque.beneficiary,
-      this.signedCheque.serial, 
-      this.signedCheque.amount, 
-      this.signedCheque.timeout,
+      functionParams.beneficiary,
+      functionParams.serial, 
+      functionParams.amount, 
+      functionParams.timeout,
       this.signedCheque.signature, {from: from}), revertMessage)
   })
 }
@@ -99,15 +99,15 @@ function shouldSubmitChequeBeneficiary(unsignedCheque, from) {
   })
   submitChequeInternal() 
 }
-function shouldNotSubmitChequeBeneficiary(unsignedCheque, from, revertMessage) {
+function shouldNotSubmitChequeBeneficiary(toSignCheque, functionParams, from, revertMessage) {
   beforeEach(async function() {
-    this.signedCheque = await signCheque(this.simpleSwap, unsignedCheque)
+    this.signedCheque = await signCheque(this.simpleSwap, toSignCheque)
   })
   it('reverts', async function() {
     await expectRevert(this.simpleSwap.submitChequeBeneficiary(
-      this.signedCheque.serial, 
-      this.signedCheque.amount, 
-      this.signedCheque.timeout,
+      functionParams.serial, 
+      functionParams.amount, 
+      functionParams.timeout,
       this.signedCheque.signature, {from: from}), revertMessage)
   })
 
@@ -131,16 +131,16 @@ function shouldSubmitCheque(unsignedCheque, from) {
   })
   submitChequeInternal() 
 }
-function shouldNotSubmitCheque(unsignedCheque, from, revertMessage) {
+function shouldNotSubmitCheque(unsignedCheque, functionParams, from, revertMessage) {
   beforeEach(async function() {
     this.signedCheque = await signCheque(this.simpleSwap, unsignedCheque)
   })
   it('reverts', async function() {
     await expectRevert(this.simpleSwap.submitCheque(
-      this.signedCheque.beneficiary, 
-      this.signedCheque.serial, 
-      this.signedCheque.amount, 
-      this.signedCheque.timeout, 
+      functionParams.beneficiary, 
+      functionParams.serial, 
+      functionParams.amount, 
+      functionParams.timeout, 
       this.signedCheque.signature.issuer, 
       this.signedCheque.signature.beneficiary, {from: from}), revertMessage)
   })

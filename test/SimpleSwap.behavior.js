@@ -180,25 +180,25 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
                     context('when the serial number stays the same', function() {
                       let secondSerial = new BN(parseInt(unsignedCheque.serial))
                       let same_serial_unsignedCheque = Object.assign({}, defaultCheque, {serial: secondSerial, signee: defaultCheque.beneficiary})
-                      shouldNotSubmitChequeIssuer(same_serial_unsignedCheque, sender, "SimpleSwap: invalid serial")
+                      shouldNotSubmitChequeIssuer(same_serial_unsignedCheque, same_serial_unsignedCheque, sender, "SimpleSwap: invalid serial")
                     })
                     context('when the serial number is decreasing', function() {
                       let secondSerial = new BN(parseInt(unsignedCheque.serial) + -1)
                       let decreasing_serial_unsignedCheque = Object.assign({}, defaultCheque, {serial: secondSerial, signee: defaultCheque.beneficiary})
-                      shouldNotSubmitChequeIssuer(decreasing_serial_unsignedCheque, sender, "SimpleSwap: invalid serial")
+                      shouldNotSubmitChequeIssuer(decreasing_serial_unsignedCheque, decreasing_serial_unsignedCheque, sender, "SimpleSwap: invalid serial")
                     })
                   })
                 })
                 context('when the signee does not sign the correct fields', function() {
                   let wrongBeneficiary = constants.ZERO_ADDRESS
                   let wrong_beneficiary_unsignedCheque = Object.assign({}, defaultCheque, {beneficiary: wrongBeneficiary, signee: defaultCheque.beneficiary})
-                  shouldNotSubmitChequeIssuer(wrong_beneficiary_unsignedCheque, sender, "SimpleSwap: invalid beneficiarySig")
+                  shouldNotSubmitChequeIssuer(wrong_beneficiary_unsignedCheque, defaultCheque, sender, "SimpleSwap: invalid beneficiarySig")
                 })
               })
               context('when the beneficiary is not the signee', function() {
                 let signee = alice
                 const wrong_signee_unsignedCheque = Object.assign({}, defaultCheque, {signee: signee})
-                shouldNotSubmitChequeIssuer(wrong_signee_unsignedCheque, sender, "SimpleSwap: invalid beneficiarySig")
+                shouldNotSubmitChequeIssuer(wrong_signee_unsignedCheque, wrong_signee_unsignedCheque, sender, "SimpleSwap: invalid beneficiarySig")
               })
             })
             context('when the first serial is at MAX_UINT256', function() {
@@ -208,7 +208,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
                 describe(describeTest + 'shouldNotSubmitChequeIssuer', function() {
                   const MAX_UINT256_wrap_unsignedCheque = Object.assign({}, defaultCheque, {serial: MAX_UINT256_unsignedCheque.serial.add(new BN(1)), signee: defaultCheque.beneficiary})
                   //it: should not be possible to submit a cheque afterwards
-                  shouldNotSubmitChequeIssuer(MAX_UINT256_wrap_unsignedCheque, sender, "SimpleSwap: invalid serial")
+                  shouldNotSubmitChequeIssuer(MAX_UINT256_wrap_unsignedCheque, MAX_UINT256_wrap_unsignedCheque, sender, "SimpleSwap: invalid serial")
     
 
                 })
@@ -218,7 +218,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
           context('when the serial is 0', function() {
             let serial = new BN(0)
             const zero_serial_unsignedCheque = Object.assign({}, defaultCheque, {serial: serial, signee: defaultCheque.beneficiary})
-            shouldNotSubmitChequeIssuer(zero_serial_unsignedCheque, sender, "SimpleSwap: invalid serial")
+            shouldNotSubmitChequeIssuer(zero_serial_unsignedCheque, zero_serial_unsignedCheque, sender, "SimpleSwap: invalid serial")
           })         
         })
         context('when the sender is not the issuer', function() {
@@ -262,25 +262,26 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
                     context('when the serial number stays the same', function() {
                       let secondSerial = new BN(parseInt(unsignedCheque.serial))
                       let same_serial_unsignedCheque = Object.assign({}, defaultCheque, {serial: secondSerial})
-                      shouldNotSubmitChequeBeneficiary(same_serial_unsignedCheque, sender, "SimpleSwap: invalid serial")
+                      shouldNotSubmitChequeBeneficiary(same_serial_unsignedCheque, same_serial_unsignedCheque, sender, "SimpleSwap: invalid serial")
                     })
                     context('when the serial number is decreasing', function() {
                       let secondSerial = new BN(parseInt(unsignedCheque.serial) + -1)
                       let decreasing_serial_unsignedCheque = Object.assign({}, defaultCheque, {serial: secondSerial})
-                      shouldNotSubmitChequeBeneficiary(decreasing_serial_unsignedCheque, sender, "SimpleSwap: invalid serial")
+                      shouldNotSubmitChequeBeneficiary(decreasing_serial_unsignedCheque, decreasing_serial_unsignedCheque, sender, "SimpleSwap: invalid serial")
                     })
                   })
                 })
                 context('when the signee does not sign the correct fields', function() {
                   let wrongBeneficiary = constants.ZERO_ADDRESS
                   let wrong_beneficiary_unsignedCheque = Object.assign({}, defaultCheque, {beneficiary: wrongBeneficiary})
-                  shouldNotSubmitChequeBeneficiary(wrong_beneficiary_unsignedCheque, sender, "SimpleSwap: invalid issuerSig")
+                  const function_params = defaultCheque
+                  shouldNotSubmitChequeBeneficiary(wrong_beneficiary_unsignedCheque, function_params, sender, "SimpleSwap: invalid issuerSig")
                 })
               })
               context('when the issuer is not the signee', function() {
                 let signee = alice
                 const wrong_signee_unsignedCheque = Object.assign({}, defaultCheque, {signee: signee})
-                shouldNotSubmitChequeBeneficiary(wrong_signee_unsignedCheque, sender, "SimpleSwap: invalid issuerSig")
+                shouldNotSubmitChequeBeneficiary(wrong_signee_unsignedCheque, wrong_signee_unsignedCheque, sender, "SimpleSwap: invalid issuerSig")
               })
             })
             context('when the first serial is at MAX_UINT256', function () {
@@ -290,7 +291,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
                 describe(describeTest + 'shouldNotSubmitChequeBeneficiary', function () {
                   // Solidity wraps integers
                   const MAX_UINT256_wrap_unsignedCheque = Object.assign({}, defaultCheque, { serial: MAX_UINT256_unsignedCheque.serial.add(new BN(1)) })
-                  shouldNotSubmitChequeBeneficiary(MAX_UINT256_wrap_unsignedCheque, sender, "SimpleSwap: invalid serial")
+                  shouldNotSubmitChequeBeneficiary(MAX_UINT256_wrap_unsignedCheque, MAX_UINT256_wrap_unsignedCheque, sender, "SimpleSwap: invalid serial")
                 })
               })
             })
@@ -298,7 +299,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
           context('when the serial is 0', function() {
             let serial = new BN(0)
             const zero_serial_unsignedCheque = Object.assign({}, defaultCheque, {serial: serial})
-            shouldNotSubmitChequeBeneficiary(zero_serial_unsignedCheque, sender, "SimpleSwap: invalid serial")
+            shouldNotSubmitChequeBeneficiary(zero_serial_unsignedCheque, zero_serial_unsignedCheque, sender, "SimpleSwap: invalid serial")
           })         
         })
         context('when the sender is not the beneficiary', function() {
@@ -342,36 +343,36 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
                     context('when the serial number stays the same', function() {
                       let secondSerial = new BN(parseInt(unsignedCheque.serial))
                       let same_serial_unsignedCheque = Object.assign({}, defaultCheque, {serial: secondSerial, signee: signees})
-                      shouldNotSubmitCheque(same_serial_unsignedCheque, sender, "SimpleSwap: invalid serial")
+                      shouldNotSubmitCheque(same_serial_unsignedCheque, same_serial_unsignedCheque, sender, "SimpleSwap: invalid serial")
                     })
                     context('when the serial number is decreasing', function() {
                       let secondSerial = new BN(parseInt(unsignedCheque.serial) + -1)
                       let decreasing_serial_unsignedCheque = Object.assign({}, defaultCheque, {serial: secondSerial, signee: signees})
-                      shouldNotSubmitCheque(decreasing_serial_unsignedCheque, sender, "SimpleSwap: invalid serial")
+                      shouldNotSubmitCheque(decreasing_serial_unsignedCheque, decreasing_serial_unsignedCheque, sender, "SimpleSwap: invalid serial")
                     })
                   })
                 })
                 context("when the signees don't not sign the correct fields", function() {
                   let wrongBeneficiary = constants.ZERO_ADDRESS
                   let wrong_beneficiary_unsignedCheque = Object.assign({}, defaultCheque, {beneficiary: wrongBeneficiary, signee: signees})
-                   //TODO: this one reverts, but that is because due to refactoring we now have signing and sending in one => has to change
-                  shouldNotSubmitCheque(wrong_beneficiary_unsignedCheque, sender, "SimpleSwap: invalid issuerSig")
+                  const functionParams = defaultCheque
+                  shouldNotSubmitCheque(wrong_beneficiary_unsignedCheque, functionParams, sender, "SimpleSwap: invalid issuerSig")
                 })
               })
               context('when the issuer is not the signee', function() {
                 let signees = [alice, defaultCheque.beneficiary]
                 const wrong_signee_unsignedCheque = Object.assign({}, defaultCheque, {signee: signees})
-                shouldNotSubmitCheque(wrong_signee_unsignedCheque, sender, "SimpleSwap: invalid issuerSig")
+                shouldNotSubmitCheque(wrong_signee_unsignedCheque, wrong_signee_unsignedCheque, sender, "SimpleSwap: invalid issuerSig")
               })
               context('when the beneficiary is not the signee', function() {
                 let signees = [issuer, alice]
                 const wrong_signee_unsignedCheque = Object.assign({}, defaultCheque, {signee: signees})
-                shouldNotSubmitCheque(wrong_signee_unsignedCheque, sender, "SimpleSwap: invalid beneficiarySig")
+                shouldNotSubmitCheque(wrong_signee_unsignedCheque, wrong_signee_unsignedCheque, sender, "SimpleSwap: invalid beneficiarySig")
               })
               context('when neither the issuer nor the beneficiary are a signee', function() {
                 let signees = [alice, alice]
                 const wrong_signee_unsignedCheque = Object.assign({}, defaultCheque, {signee: signees})
-                shouldNotSubmitCheque(wrong_signee_unsignedCheque, sender, "SimpleSwap: invalid issuerSig")
+                shouldNotSubmitCheque(wrong_signee_unsignedCheque, wrong_signee_unsignedCheque, sender, "SimpleSwap: invalid issuerSig")
               })
             })
             context('when the first serial is at MAX_UINT256', function () {
@@ -382,7 +383,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
                 describe(describeTest + 'shouldNotSubmitCheque', function () {
                   // Solidity wraps integers
                   const MAX_UINT256_wrap_unsignedCheque = Object.assign({}, defaultCheque, { serial: MAX_UINT256_unsignedCheque.serial.add(new BN(1)), signee: signees })
-                  shouldNotSubmitCheque(MAX_UINT256_wrap_unsignedCheque, sender, "SimpleSwap: invalid serial")
+                  shouldNotSubmitCheque(MAX_UINT256_wrap_unsignedCheque, MAX_UINT256_wrap_unsignedCheque, sender, "SimpleSwap: invalid serial")
                 })
               })
             })
@@ -391,7 +392,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
             const signees = [ issuer, defaultCheque.beneficiary ]
             let serial = new BN(0)
             const zero_serial_unsignedCheque = Object.assign({}, defaultCheque, {serial: serial, signee: signees})
-            shouldNotSubmitCheque(zero_serial_unsignedCheque, sender, "SimpleSwap: invalid serial")
+            shouldNotSubmitCheque(zero_serial_unsignedCheque, zero_serial_unsignedCheque, sender, "SimpleSwap: invalid serial")
           })         
         })
         context('when the sender is the beneficiary', function() {
@@ -579,7 +580,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
             })
           })
           function shouldIncreaseHardDeposit(sender, amount) {
-            beforeEach(async function() {
+            beforeEach(async function() {1
               this.previousTotalHardDeposit = await this.simpleSwap.totalHardDeposit()
               this.previousHardDeposit = (await this.simpleSwap.hardDeposits(beneficiary))[0]
               let { logs } = await this.simpleSwap.increaseHardDeposit(
@@ -724,36 +725,10 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
       }
     })
 
-<<<<<<< HEAD
-    describe('cashcheque', function() {
 
-    })
-    describe('cashChequeBeneficiary', function() {
-      if(enabledTests.cashChequeBeneficiary) {
-        let cheque = defaultCheque
-        context('when there is sufficient balance in the chequebook', function() {
-          shouldDeposit(defaultCheque.amount, issuer)
-          context('when the beneficiary has submitted a cheque', function() {
-            shouldSubmitChequeBeneficiary(cheque, cheque.beneficiary)
-            context('when sufficient time has passed', function() {
-              beforeEach(async function() {
-                await time.increase(new BN(86400))
-                this.currentBeneficiaryBalance = await balance.current(cheque.beneficiary)
-                this.currentCheque = await this.simpleSwap.cheques(cheque.beneficiary)
-                const { logs, receipt } = await this.simpleSwap.cashChequeBeneficiary(cheque.beneficiary, cheque.amount, {from: cheque.beneficiary})
-                this.logs = logs
-                this.receipt = receipt
-              })
-              _shouldCashChequeInternal(cheque.beneficiary, cheque.beneficiary, defaultCheque.amount, new BN(0))
-  
-            })
-          })
-        }) 
-=======
     describe(describeFunction + 'deposit', function() {
       if(enabledTests.deposit) {  
         shouldDeposit(new BN(1), issuer)
->>>>>>> new_unit_tests_refactor
       }
     })
   })
