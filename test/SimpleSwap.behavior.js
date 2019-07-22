@@ -106,9 +106,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
 
     describe(describeFunction + 'issuer', function() {
       if(enabledTests.issuer) {
-        it('should have a correct issuer', async function() {
-          expect(await this.simpleSwap.issuer()).to.equal(issuer)          
-        })
+        shouldReturnIssuer(issuer)
       }    
     })
 

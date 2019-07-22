@@ -29,6 +29,9 @@ function shouldReturnTotalharddeposit(expectedHardDeposit) {
 }
 
 function shouldReturnIssuer(expectedIssuer) {
+  it('should return the expected issuer', async function() {
+    expect(await this.simpleSwap.issuer()).to.be.equal(expectedIssuer)
+  })
 
 }
 
