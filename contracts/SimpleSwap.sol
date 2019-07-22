@@ -221,10 +221,10 @@ contract SimpleSwap {
 
     HardDeposit storage hardDeposit = hardDeposits[beneficiary];
     hardDeposit.amount = hardDeposit.amount.add(amount);
-    // we don't explicitely set timeoutDuration, as zero means using the DEFAULT_HARDDEPOSIT_TIMEOUT_DURATION
+    // we don't explicitely set decreaseTimeout, as zero means using the DEFAULT_HARDDEPOSIT_TIMEOUT_DURATION
     totalHardDeposit = totalHardDeposit.add(amount);
     /* disable any pending decrease */
-    hardDeposit.decreaseTimeout = 0;
+    hardDeposit.canBeDecreasedAt = 0;
     emit HardDepositAmountChanged(beneficiary, hardDeposit.amount);
   }
 
