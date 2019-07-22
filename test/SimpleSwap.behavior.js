@@ -112,9 +112,44 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
       }    
     })
 
-    describe(describeFunction + 'liquidBalance', function() {
-      if(enabledTests.liquidBalance) {
-
+    describe(describeFunction + 'liquidBalance', function () {
+      if (enabledTests.liquidBalance) {
+        context('when there is some balance', function () {
+          describe(describePreCondition + 'shouldDeposit', function () {
+            const depositAmount = new BN(50)
+            shouldDeposit(depositAmount, issuer)
+            context('when there are harddeposits', function () {
+              describe('when the harddeposits equal the depositAmount', function () {
+                describe(describePreCondition + 'shouldIncreaseHardDeposit', function () {
+                  const hardDeposit = depositAmount
+                  shouldIncreaseHardDeposit(defaultCheque.beneficiary, hardDeposit, issuer)
+                  describe(describeTest + 'liquidBalance', function () {
+                    shouldReturnLiquidBalance(depositAmount.sub(hardDeposit))
+                  })
+                })
+                describe('when the harddeposits are lower than the depositAmount', function () {
+                  describe(describePreCondition + 'shouldIncreaseHardDeposit', function () {
+                    const hardDeposit = depositAmount.sub(new BN(40))
+                    shouldIncreaseHardDeposit(defaultCheque.beneficiary, hardDeposit, issuer)
+                    describe(describeTest + 'shouldReturnLiquidBalance', function () {
+                      shouldReturnLiquidBalance(depositAmount.sub(hardDeposit))
+                    })
+                  })
+                })
+              })
+              context('when there are no harddeposits', function () {
+                describe(describeTest + 'shouldReturnLiquidBalance', function () {
+                  shouldReturnLiquidBalance(depositAmount)
+                })
+              })
+            })
+          })
+          context('when there is no balance', function () {
+            describe(describeTest + 'shouldReturnLiquidBalance', function () {
+              shouldReturnLiquidBalance(new BN(0))
+            })
+          })
+        })
       }
     })
 
@@ -736,7 +771,6 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
         })
       }
     })
-
 
     describe(describeFunction + 'deposit', function() {
       if(enabledTests.deposit) {  

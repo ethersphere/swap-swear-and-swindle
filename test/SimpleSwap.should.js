@@ -33,7 +33,9 @@ function shouldReturnIssuer(expectedIssuer) {
 }
 
 function shouldReturnLiquidBalance(expectedLiquidBalance) {
-
+  it('should return the expected liquidBalance', async function() {
+    expect(await this.simpleSwap.liquidBalance()).bignumber.to.equal(expectedLiquidBalance)
+  })
 }
 
 function shouldReturnLiquidBalanceFor(beneficiary, expectedLiquidBalance) {
@@ -226,37 +228,53 @@ function shouldNotDecreaseHardDeposit(beneficiary, from, revertMessage) {
 
 }
 function shouldIncreaseHardDeposit(beneficiary, amount, from) {
-  beforeEach(async function() {
+  beforeEach(async function () {
     this.preconditions = {
+      balance: await balance.current(this.simpleSwap.address),
       liquidBalance: await this.simpleSwap.liquidBalance(),
       liquidBalanceFor: await this.simpleSwap.liquidBalanceFor(beneficiary),
       totalHardDeposit: await this.simpleSwap.totalHardDeposit(),
+      hardDepositFor: await this.simpleSwap.hardDeposits(beneficiary),
     }
-
-    const { logs } = this.simpleSwap.increaseHardDeposit(beneficiary, amount ,{from: from})
+    const { logs } = this.simpleSwap.increaseHardDeposit(beneficiary, amount, { from: from })
     this.logs = logs
-    this.postConditions = {
+    this.postconditions = {
+      balance: await balance.current(this.simpleSwap.address),
       liquidBalance: await this.simpleSwap.liquidBalance(),
       liquidBalanceFor: await this.simpleSwap.liquidBalanceFor(beneficiary),
       totalHardDeposit: await this.simpleSwap.totalHardDeposit(),
+      hardDepositFor: await this.simpleSwap.hardDeposits(beneficiary)
     }
-
-    it('should increase the liquidBalance', function() {
-      expect(this.postConditions.liquidBalance).bignumber.to.be.equal(this.preconditions.liquidBalance.add(amount))
-    })
-
-    it('should increase the liquidBalanceFor', function() {
-      expect(this.postConditions.liquidBalanceFor).bignumber.to.be.equal(this.preconditions.liquidBalanceFor.add(amount))
-    })
-
-    it('should increase the balance', function() {
-      expect(this.postConditions.liquidBalance).bignumber.to.be.equal(this.preconditions.liquidBalance.add(amount))
-    })
-
-    it('should not affect the totalHardDeposit', function() {
-      expect(this.postConditions.totalHardDeposit).bignumber.to.be.equal(this.preconditions.totalHardDeposit)
-    })
   })
+
+  it('should decrease the liquidBalance', function () {
+    expect(this.postconditions.liquidBalance).bignumber.to.be.equal(this.preconditions.liquidBalance.sub(amount))
+  })
+
+  it('should not affect the liquidBalanceFor', function () {
+    expect(this.postconditions.liquidBalanceFor).bignumber.to.be.equal(this.preconditions.liquidBalanceFor)
+  })
+
+  it('should not affect the balance', function () {
+    expect(this.postconditions.balance).bignumber.to.be.equal(this.preconditions.balance)
+  })
+
+  it('should increase the totalHardDeposit', function () {
+    expect(this.postconditions.totalHardDeposit).bignumber.to.be.equal(this.preconditions.totalHardDeposit.add(amount))
+  })
+
+  it('should increase the harddepositFor', function() {
+    expect(this.postconditions.hardDepositFor.amount).bignumber.to.be.equal(this.preconditions.hardDepositFor.amount.add(amount))
+  })
+
+  it('should set the decreaseTimeout to the default value', function() {
+    expect(this.postconditions.hardDepositFor.decreaseTimeout).bignumber.to.be.equal(new BN(0))
+  })
+
+  it('should set canBeDecreasedAt to zero', function() {
+    expect(this.postconditions.hardDepositFor.decreaseTimeout).bignumber.to.be.equal(new BN(0))
+  })
+
 }
 function shouldNotIncreaseHardDeposit(beneficiary, amount, from, revertMessage) {
 
