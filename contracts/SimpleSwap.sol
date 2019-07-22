@@ -91,7 +91,7 @@ contract SimpleSwap {
   /// @param amount the (cumulative) amount of the cheque
   /// @param cashTimeout the check can be cashed cashTimeout seconds in the future
   /// @param beneficiarySig signature of the issuer
-  function submitChequeissuer(address beneficiary, uint serial, uint amount, uint cashTimeout, bytes memory beneficiarySig) public {
+  function submitChequeIssuer(address beneficiary, uint serial, uint amount, uint cashTimeout, bytes memory beneficiarySig) public {
     require(msg.sender == issuer, "SimpleSwap: not issuer");
     /* verify signature of the beneficiary */
     require(beneficiary == recover(chequeHash(address(this), beneficiary, serial, amount, cashTimeout), beneficiarySig),

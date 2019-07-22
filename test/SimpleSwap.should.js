@@ -13,10 +13,10 @@ const { signCheque } = require("./swutils");
 const { expect } = require('chai');
 
 function shouldReturnDEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT(expected) {
+  //TODO: figure out why this does not work (words[1] is empty item)
   it('should return the expected DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT', async function() {
-    console.log(await this.simpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT(), expected)
-
-    expect(await this.simpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT()).bignumer.to.be.equal(expected)
+    console.log((await this.simpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT()).words, expected.words)
+    expect(await this.simpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT()).bignumber.to.be.equal(expected)
   })
 }
 
@@ -79,23 +79,23 @@ function shouldSubmitChequeIssuer(unsignedCheque, from) {
       cheque: await this.simpleSwap.cheques(unsignedCheque.beneficiary)
     }
     this.signedCheque = await signCheque(this.simpleSwap, unsignedCheque)
-    const { logs } = await this.simpleSwap.submitChequeissuer(this.signedCheque.beneficiary, this.signedCheque.serial, this.signedCheque.amount, this.signedCheque.timeout, this.signedCheque.signature, {from: from})
+    const { logs } = await this.simpleSwap.submitChequeIssuer(this.signedCheque.beneficiary, this.signedCheque.serial, this.signedCheque.amount, this.signedCheque.timeout, this.signedCheque.signature, {from: from})
     this.logs = logs
   })
   submitChequeInternal() 
 }
 
-function shouldNotSubmitChequeIssuer(toSignCheque, functionParams, from, revertMessage) {
+function shouldNotSubmitChequeIssuer(toSignCheque, functionParams, from, value, revertMessage) {
   beforeEach(async function() {
     this.signedCheque = await signCheque(this.simpleSwap, toSignCheque)
   })
   it('reverts', async function() {
-    await expectRevert(this.simpleSwap.submitChequeissuer(
+    await expectRevert(this.simpleSwap.submitChequeIssuer(
       functionParams.beneficiary,
       functionParams.serial, 
       functionParams.amount, 
       functionParams.timeout,
-      this.signedCheque.signature, {from: from}), revertMessage)
+      this.signedCheque.signature, {from: from, value: value}), revertMessage)
   })
 }
 
@@ -110,7 +110,7 @@ function shouldSubmitChequeBeneficiary(unsignedCheque, from) {
   })
   submitChequeInternal() 
 }
-function shouldNotSubmitChequeBeneficiary(toSignCheque, functionParams, from, revertMessage) {
+function shouldNotSubmitChequeBeneficiary(toSignCheque, functionParams, from, value, revertMessage) {
   beforeEach(async function() {
     this.signedCheque = await signCheque(this.simpleSwap, toSignCheque)
   })
@@ -119,7 +119,7 @@ function shouldNotSubmitChequeBeneficiary(toSignCheque, functionParams, from, re
       functionParams.serial, 
       functionParams.amount, 
       functionParams.timeout,
-      this.signedCheque.signature, {from: from}), revertMessage)
+      this.signedCheque.signature, {from: from, value: value}), revertMessage)
   })
 
 }
@@ -142,7 +142,7 @@ function shouldSubmitCheque(unsignedCheque, from) {
   })
   submitChequeInternal() 
 }
-function shouldNotSubmitCheque(unsignedCheque, functionParams, from, revertMessage) {
+function shouldNotSubmitCheque(unsignedCheque, functionParams, from, value, revertMessage) {
   beforeEach(async function() {
     this.signedCheque = await signCheque(this.simpleSwap, unsignedCheque)
   })
@@ -153,7 +153,7 @@ function shouldNotSubmitCheque(unsignedCheque, functionParams, from, revertMessa
       functionParams.amount, 
       functionParams.timeout, 
       this.signedCheque.signature.issuer, 
-      this.signedCheque.signature.beneficiary, {from: from}), revertMessage)
+      this.signedCheque.signature.beneficiary, {from: from, value: value}), revertMessage)
   })
 }
 function cashChequeInternal(beneficiaryPrincipal, beneficiaryAgent, requestPayout, beneficiarySig, expiry, calleePayout, from) {
@@ -184,13 +184,13 @@ function cashChequeInternal(beneficiaryPrincipal, beneficiaryAgent, requestPayou
 function shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, from) {
 
 }
-function shouldNotCashChequeBeneficiary(beneficiaryAgent, requestPayout, from, revertMessage) {
+function shouldNotCashChequeBeneficiary(beneficiaryAgent, requestPayout, from, value, revertMessage) {
 
 }
 function shouldCashCheque(beneficiaryPrincipal, beneficiaryAgent, requestPayout, beneficiarySig, expiry, calleePayout, from) {
 
 }
-function shouldNotCashCheque(beneficiaryPrincipal, beneficiaryAgent, requestPayout, beneficiarySig, expiry, calleePayout, from, revertMessage) {
+function shouldNotCashCheque(beneficiaryPrincipal, beneficiaryAgent, requestPayout, value,  beneficiarySig, expiry, calleePayout, from, revertMessage) {
 
 }
 function shouldPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, from) {
@@ -225,13 +225,13 @@ function shouldPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, from) {
   })
 
 }
-function shouldNotPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, from, revertMessage) {
+function shouldNotPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, from, value, revertMessage) {
 
 }
 function shouldDecreaseHardDeposit(beneficiary, from) {
 
 }
-function shouldNotDecreaseHardDeposit(beneficiary, from, revertMessage) {
+function shouldNotDecreaseHardDeposit(beneficiary, from, value, revertMessage) {
 
 }
 function shouldIncreaseHardDeposit(beneficiary, amount, from) {
@@ -282,21 +282,23 @@ function shouldIncreaseHardDeposit(beneficiary, amount, from) {
     expect(this.postconditions.hardDepositFor.decreaseTimeout).bignumber.to.be.equal(new BN(0))
   })
 
+
+
 }
-function shouldNotIncreaseHardDeposit(beneficiary, amount, from, revertMessage) {
+function shouldNotIncreaseHardDeposit(beneficiary, amount, from, value, revertMessage) {
 
 }
 function shouldSetCustomHardDepositDecreaseTimeout(beneficiary, decreaseTimeout, beneficiarySig, from) {
 
 }
-function shouldNotSetCustomHardDepositDecreaseTimeout(beneficiary, decreaseTimeout, beneficiarySig, from, revertMessage) {
+function shouldNotSetCustomHardDepositDecreaseTimeout(beneficiary, decreaseTimeout, beneficiarySig, from,value, revertMessage) {
 
 }
 
 function shouldWithdraw(amount, from) {
 
 }
-function shouldNotWithdraw(amount, from, revertMessage) {
+function shouldNotWithdraw(amount, from, value, revertMessage) {
 
 }
 
