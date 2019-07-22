@@ -12,8 +12,12 @@ const { signCheque } = require("./swutils");
 
 const { expect } = require('chai');
 
-function shouldReturnDEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT() {
+function shouldReturnDEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT(expected) {
+  it('should return the expected DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT', async function() {
+    console.log(await this.simpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT(), expected)
 
+    expect(await this.simpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT()).bignumer.to.be.equal(expected)
+  })
 }
 
 function shouldReturnCheques(beneficiary, expectedSerial, expectedAmount, expectedPaidOut, expectedCashTimeout) {

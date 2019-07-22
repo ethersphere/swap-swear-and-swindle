@@ -75,7 +75,7 @@ const describeTest = 'TEST: '
 // @param issuer the issuer of the checkbook
 // @param alice a counterparty of the checkbook 
 // @param bob a counterparty of the checkbook
-function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
+function shouldBehaveLikeSimpleSwap([issuer, alice, bob], DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT) {
   const defaultCheque = {
     beneficiary: bob,
     serial: new BN(3),
@@ -88,7 +88,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
 
     describe(describeFunction + 'DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT', function() {
       if(enabledTests.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT) {
-        
+        shouldReturnDEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT(DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT)
       }
     })
 
