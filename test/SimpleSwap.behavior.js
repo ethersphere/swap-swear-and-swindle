@@ -118,29 +118,41 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob]) {
       }
     })
 
-    describe(describeFunction + 'liquidBalanceFor', function() {
-      if(enabledTests.liquidBalanceFor) {
-        let beneficiary = bob
-        let amount = new BN(50)
-        beforeEach(async function() {
-          await this.simpleSwap.send(amount)
-        })
-  
-        context('when no hard deposits', function() {
-          it('should equal the liquid balance', async function() {
-            expect(await this.simpleSwap.liquidBalanceFor(beneficiary)).bignumber.equal(await this.simpleSwap.liquidBalance())
+    describe(describeFunction + 'liquidBalanceFor', function () {
+      if (enabledTests.liquidBalanceFor) {
+        const beneficiary = bob
+        const depositAmount = new BN(50)
+        context('when there is some balance', function () {
+          describe(describePreCondition + 'shoulDeposit', function () {
+            shouldDeposit(depositAmount, issuer)
+            context('when there are no hard deposits', function () {
+              describe(describeTest + 'shouldReturnLiquidBalanceFor', function() {
+                shouldReturnLiquidBalanceFor(beneficiary, depositAmount)
+              })
+            })
+            context('when there are no hard deposits', function () {
+              const hardDeposit = new BN(10)
+              describe('when these hard deposits are assigned to the beneficiary', function() {
+                describe(describePreCondition + 'shouldIncreaseHardDeposit', function() {
+                  shouldIncreaseHardDeposit(beneficiary, hardDeposit, issuer)
+                  describe(describeTest + 'shouldReturnLiquidBalanceFor', function() {
+                    shouldReturnLiquidBalanceFor(beneficiary, depositAmount)
+                  })
+                })
+              })
+              describe('when these hard deposits are assigned to somebody else', function() {
+                describe(describePreCondition + 'shouldIncreaseHardDeposit', function() {
+                  shouldIncreaseHardDeposit(alice, hardDeposit, issuer)
+                  describe(describeTest + 'shouldReturnLiquidBalanceFor', function() {
+                    shouldReturnLiquidBalanceFor(beneficiary, depositAmount.sub(hardDeposit))
+                  })
+                })
+              })
+            })
           })
         })
-  
-        context('when hard deposits', function() {
-          let hardDeposit = new BN(10)
-          beforeEach(async function() {
-            await this.simpleSwap.increaseHardDeposit(beneficiary, hardDeposit)
-            await this.simpleSwap.increaseHardDeposit(alice, hardDeposit)
-          })
-          it('should be higher than the liquid balance', async function() {
-            expect(await this.simpleSwap.liquidBalanceFor(beneficiary)).bignumber.equal((await this.simpleSwap.liquidBalance()).add(hardDeposit))
-          })
+        describe('when there is no balance', function() {
+          shouldReturnLiquidBalanceFor(beneficiary, new BN(0))
         })
       }
     })

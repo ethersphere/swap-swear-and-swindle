@@ -37,7 +37,9 @@ function shouldReturnLiquidBalance(expectedLiquidBalance) {
 }
 
 function shouldReturnLiquidBalanceFor(beneficiary, expectedLiquidBalance) {
-
+  it('should return the expected liquidBalance', async function() {
+    expect(await this.simpleSwap.liquidBalanceFor(beneficiary)).bignumber.to.equal(expectedLiquidBalance)
+  })
 }
 
 function submitChequeInternal() {
@@ -224,7 +226,37 @@ function shouldNotDecreaseHardDeposit(beneficiary, from, revertMessage) {
 
 }
 function shouldIncreaseHardDeposit(beneficiary, amount, from) {
+  beforeEach(async function() {
+    this.preconditions = {
+      liquidBalance: await this.simpleSwap.liquidBalance(),
+      liquidBalanceFor: await this.simpleSwap.liquidBalanceFor(beneficiary),
+      totalHardDeposit: await this.simpleSwap.totalHardDeposit(),
+    }
 
+    const { logs } = this.simpleSwap.increaseHardDeposit(beneficiary, amount ,{from: from})
+    this.logs = logs
+    this.postConditions = {
+      liquidBalance: await this.simpleSwap.liquidBalance(),
+      liquidBalanceFor: await this.simpleSwap.liquidBalanceFor(beneficiary),
+      totalHardDeposit: await this.simpleSwap.totalHardDeposit(),
+    }
+
+    it('should increase the liquidBalance', function() {
+      expect(this.postConditions.liquidBalance).bignumber.to.be.equal(this.preconditions.liquidBalance.add(amount))
+    })
+
+    it('should increase the liquidBalanceFor', function() {
+      expect(this.postConditions.liquidBalanceFor).bignumber.to.be.equal(this.preconditions.liquidBalanceFor.add(amount))
+    })
+
+    it('should increase the balance', function() {
+      expect(this.postConditions.liquidBalance).bignumber.to.be.equal(this.preconditions.liquidBalance.add(amount))
+    })
+
+    it('should not affect the totalHardDeposit', function() {
+      expect(this.postConditions.totalHardDeposit).bignumber.to.be.equal(this.preconditions.totalHardDeposit)
+    })
+  })
 }
 function shouldNotIncreaseHardDeposit(beneficiary, amount, from, revertMessage) {
 
