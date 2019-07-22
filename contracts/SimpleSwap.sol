@@ -23,7 +23,7 @@ contract SimpleSwap {
   event HardDepositDecreasePrepared(address indexed beneficiary, uint decreaseAmount);
   event HardDepositDecreaseTimeoutChanged(address indexed beneficiary, uint decreaseTimeout);
 
-  uint public DEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT;
+  uint public DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT;
   /* structure to keep track of the hard deposits (on-chain guarantee of solvency) per beneficiary*/
   struct HardDeposit {
     uint amount; /* hard deposit amount allocated */
@@ -51,7 +51,7 @@ contract SimpleSwap {
   /// @notice constructor, allows setting the issuer (needed for "setup wallet as payment")
   constructor(address payable _issuer, uint defaultHardDepositTimeoutDuration) public payable {
     // DEFAULT_HARDDEPOSIT_TIMOUTE_DURATION will be one day or a whatever non-zero argument given as an argument to the constructor
-    DEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT = defaultHardDepositTimeoutDuration;
+    DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT = defaultHardDepositTimeoutDuration;
     issuer = _issuer;
     if(msg.value > 0) {
       emit Deposit(msg.sender, msg.value);
@@ -158,12 +158,6 @@ contract SimpleSwap {
     }
   }
 
-  /// @notice attempt to cash latest chequebeneficiary
-  /// @param beneficiaryAgent agent (of the beneficiary) who receives the payment (i.e. other chequebook contract or the beneficiary)
-  /// @param requestPayout amount requested to pay out
-  function cashChequeBeneficiary(address payable beneficiaryAgent, uint requestPayout) public {
-    _cashChequeInternal(msg.sender, beneficiaryAgent, requestPayout, 0);
-  }
   function cashCheque(
     address beneficiaryPrincipal,
     address payable beneficiaryAgent,
@@ -178,6 +172,12 @@ contract SimpleSwap {
     _cashChequeInternal(beneficiaryPrincipal, beneficiaryAgent, requestPayout, calleePayout);
     msg.sender.transfer(calleePayout);
   }
+  /// @notice attempt to cash latest chequebeneficiary
+  /// @param beneficiaryAgent agent (of the beneficiary) who receives the payment (i.e. other chequebook contract or the beneficiary)
+  /// @param requestPayout amount requested to pay out
+  function cashChequeBeneficiary(address payable beneficiaryAgent, uint requestPayout) public {
+    _cashChequeInternal(msg.sender, beneficiaryAgent, requestPayout, 0);
+  }
 
   /// @notice prepare to decrease the hard deposit
   /// @param beneficiary beneficiary whose hard deposit should be decreased
@@ -187,8 +187,8 @@ contract SimpleSwap {
     HardDeposit storage hardDeposit = hardDeposits[beneficiary];
     /* cannot decrease it by more than the deposit */
     require(decreaseAmount <= hardDeposit.amount, "SimpleSwap: hard deposit not sufficient");
-    // if hardDeposit.decreaseTimeout was never set, we DEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT. Otherwise we use the one which was set.
-    uint decreaseTimeout = hardDeposit.decreaseTimeout == 0 ? DEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT : hardDeposit.decreaseTimeout;
+    // if hardDeposit.decreaseTimeout was never set, we DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT. Otherwise we use the one which was set.
+    uint decreaseTimeout = hardDeposit.decreaseTimeout == 0 ? DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT : hardDeposit.decreaseTimeout;
     hardDeposit.canBeDecreasedAt = now + decreaseTimeout;
     hardDeposit.decreaseAmount = decreaseAmount;
     emit HardDepositDecreasePrepared(beneficiary, decreaseAmount);
