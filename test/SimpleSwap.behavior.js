@@ -46,7 +46,7 @@ const {
 
 // switch to false if you don't want to test the particular function
 enabledTests = {
-  DEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT: true,
+  DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT: true,
   cheques: true,
   harddeposits: true,
   totalharddeposit: true,
@@ -85,7 +85,6 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob], DEFAULT_HARDDEPOSIT_DE
     signature: ""
   }
   context('as a simple swap', function () {
-
     describe(describeFunction + 'DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT', function () {
       if (enabledTests.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT) {
         shouldReturnDEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT(DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT)
@@ -599,6 +598,10 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob], DEFAULT_HARDDEPOSIT_DE
       }
     })
 
+    describe(describeFunction + 'cashChequeBeneficiary', function() {
+      
+    })
+
     describe(describeFunction + 'prepareDecreaseHardDeposit', function () {
       if (enabledTests.prepareDecreaseHardDeposit) {
         let amount = new BN(50)
@@ -662,7 +665,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob], DEFAULT_HARDDEPOSIT_DE
           context('when there is enough hard deposit left', function () {
             beforeEach(async function () {
               await this.simpleSwap.prepareDecreaseHardDeposit(beneficiary, decrease)
-              await time.increase(await this.simpleSwap.DEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT())
+              await time.increase(await this.simpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT())
               let { logs } = await this.simpleSwap.decreaseHardDeposit(beneficiary)
               this.logs = logs
             })
