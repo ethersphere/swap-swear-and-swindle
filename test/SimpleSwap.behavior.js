@@ -599,7 +599,76 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob], DEFAULT_HARDDEPOSIT_DE
     })
 
     describe(describeFunction + 'cashChequeBeneficiary', function() {
-      
+      if(enabledTests.cashChequeBeneficiary) {
+        context("when we don't send value along", function() {
+          const value = new BN(0)
+          context('when the sender is the beneficiary', function() {
+            const sender = defaultCheque.beneficiary
+            context('when we submit the cheque beforeHand', function() {
+              //precondition
+              context('when we have not cashed a cheque before', function() {
+                context('when we have waited more timeoutDuration', function() {
+                  const waitTime = defaultCheque.timeout.add(1)
+                  //wait
+                  context('when the requestPayout is equal to the submitted value', function() {
+                    const requestPayout = defaultCheque.amount
+                    context('when there is some balance', function() {
+                      context('when the balance is bigger than the requestPayout', function() {
+                        const depositAmount = new BN(50)
+                        context('when there are hardDeposits', function() {
+                          context('when the hardDeposit is more the requestPayout', function() {
+                            const hardDeposit = requestPayout.add(1)
+                            //precondition
+                            //test
+                          })
+                          context('when the hardDeposit equals the requestPayout', function() {
+                            const hardDeposit = requestPayout
+                            //precondition
+                            //test
+                          })
+                          context('when the hardDeposit is less than the requestPayout', function() {
+                            const hardDeposit = requestPayout.sub(1)
+                            //preCondition
+                            //test
+                          })
+                        })
+                      })
+                      context('when the balance equals the requestPayout', function() {
+                        // preCondition
+                        //test
+                      })
+                    })
+                  })
+                  context('when the requestPayout is less than the submitted value', function() {
+                    const requestPayout = defaultCheque.amount.sub(1)
+                    //test
+                  })
+                })
+                context('when we have waited timeoutDuration', function() {
+                  const waitTime = defaultCheque.timeout
+                  //wait
+                  // test
+                })
+              })
+              context('when we have cashed a cheque before', function() {
+                // precondition
+              })
+            })
+            context("when we don't submit a cheque beforeHand", function() {
+              //fails
+            })
+          })
+          context('when the sender is not the beneficiary', function() {
+            const sender = alice
+            //fails
+          })
+        })
+        context('when we send value along', function() {
+          const sender = alice
+          const value = new BN(1)
+          // fails
+        })
+      }
     })
 
     describe(describeFunction + 'prepareDecreaseHardDeposit', function () {
