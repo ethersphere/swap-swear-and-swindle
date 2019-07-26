@@ -75,7 +75,7 @@ const describeTest = 'TEST: '
 // @param issuer the issuer of the checkbook
 // @param alice a counterparty of the checkbook 
 // @param bob a counterparty of the checkbook
-function shouldBehaveLikeSimpleSwap([issuer, alice, bob], DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT) {
+function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT) {
   const defaultCheque = {
     beneficiary: bob,
     serial: new BN(3),
@@ -581,23 +581,65 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob], DEFAULT_HARDDEPOSIT_DE
 
     describe(describeFunction + 'cashCheque', function () {
       if (enabledTests.cashCheque) {
-        let cheque = defaultCheque
-        context('when there is sufficient balance in the chequebook', function () {
-          shouldDeposit(defaultCheque.amount, issuer)
-          context('when the beneficiary has submitted a cheque', function () {
-            shouldSubmitChequeBeneficiary(cheque, cheque.beneficiary)
-            context('when sufficient time has passed', function () {
-              before(function () { time.increase(new BN(86400)) })
-              const sender = alice
-              it('is here', function () {
+        context("when we don't send value along", function() {
+          const value = new BN(0)
+          context('when the signature has not expired', function() {
+            context('when the expiry is in the future', function() {
+              const expiry = time.latest().add(time.duration.days(new BN(1)))
+              context('when the beneficiaryPrincipal is a signee', function() {
+                const signee = beneficiary
+                context('when the beneficiaryPrincipal signs the correct fields', function() {
+                  //shouldCashCheque should allow for signing
+                  context('when the beneficiaryPrincipal is not callee', function() {
+                    const callee = alice
+                    context('when the calleePayout is non-zero', function() {
+                      const calleePayout = new BN(1)
+                      context("when the beneficiaryAgent is not the beneficiaryPrincipal", function() {
+                        context('when the beneficiaryAgent is not the callee', function() {
+                          const beneficiaryAgent = agent
+                          // use the same preconditions as cashChequeBeneficiary
 
+                        })
+                        context('when the beneficiaryAgent is the callee', function() {
+                          const beneficiaryAgent = callee
+                        })
+                      })
+                      context('when the beneficiaryAgent is the beneficiaryPrincipal', function() {
+
+                      })
+                    })
+                    context('when the calleePayout is zero', function() {
+                      const calleePayout = new BN(0)
+                    })
+                  })
+                  context('when the beneficiary is the callee', function() {
+                    const callee = defaultCheque.beneficiary
+                  })
+                })
+                context('when the beneficiary does not sign the correct fields', function() {
+                  //shouldNotCashCheque should allow for signing 
+                  // shouldNotCashCheque should allow for sending different fields to sign and submit
+                })
+              })
+              context('when the beneficiary is not a signee', function() {
+                const signee = alice
               })
             })
+            context('when expiry is now', function() {
+              const expiry = time.latest()
+            })
           })
+          context('when the signature has expired', function() {
+            const expiry = time.latest().sub(time.duration.days(new BN(1)))
+          })
+        })
+        context('when we send value along', function() {
+          const value = new BN(1)
         })
       }
     })
 
+    //TODO: when the beneficiaryAgent equals the sender
     describe(describeFunction + 'cashChequeBeneficiary', function() {
       if(enabledTests.cashChequeBeneficiary) {
         context("when we don't send value along", function() {
