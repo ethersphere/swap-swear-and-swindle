@@ -16,8 +16,8 @@ const { computeCost } = require("./testutils");
 const {
   shouldReturnDEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT,
   shouldReturnCheques,
-  shouldReturnHarddeposits,
-  shouldReturnTotalharddeposit,
+  shouldReturnhardDeposits,
+  shouldReturntotalHardDeposit,
   shouldReturnIssuer,
   shouldReturnLiquidBalance,
   shouldReturnLiquidBalanceFor,
@@ -31,14 +31,14 @@ const {
   shouldNotCashChequeBeneficiary,
   shouldCashCheque,
   shouldNotCashCheque,
-  shouldPrepareDecreaseHardDeposit,
-  shouldNotPrepareDecreaseHardDeposit,
+  shouldPrepareDecreasehardDeposit,
+  shouldNotPrepareDecreasehardDeposit,
   shouldDecreaseHardDeposit,
-  shouldNotDecreaseHardDeposit,
+  shouldNotDecreasehardDeposit,
   shouldIncreaseHardDeposit,
-  shouldNotIncreaseHardDeposit,
-  shouldSetCustomHardDepositDecreaseTimeout,
-  shouldNotSetCustomHardDepositDecreaseTimeout,
+  shouldNotincreaseHardDeposit,
+  shouldSetCustomhardDepositDecreaseTimeout,
+  shouldNotSetCustomhardDepositDecreaseTimeout,
   shouldWithdraw,
   shouldNotWithdraw,
   shouldDeposit
@@ -46,23 +46,23 @@ const {
 
 // switch to false if you don't want to test the particular function
 enabledTests = {
-  DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT: true,
-  cheques: true,
-  harddeposits: true,
-  totalharddeposit: true,
-  issuer: true,
-  liquidBalance: true,
-  liquidBalanceFor: true,
-  submitChequeIssuer: true,
-  submitChequeBeneficiary: true,
-  submitCheque: true,
-  cashChequeBeneficiary: true,
+  DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT: false,
+  cheques: false,
+  hardDeposits: false,
+  totalHardDeposit: false,
+  issuer: false,
+  liquidBalance: false,
+  liquidBalanceFor: false,
+  submitChequeIssuer: false,
+  submitChequeBeneficiary: false,
+  submitCheque: false,
+  cashChequeBeneficiary: false,
   cashCheque: true,
-  prepareDecreaseHardDeposit: true,
-  decreaseHardDeposit: true,
-  increaseHardDeposit: true,
-  setCustomHardDepositDecreaseTimeout: true,
-  withdraw: true
+  prepareDecreaseHardDeposit: false,
+  decreaseHardDeposit: false,
+  increaseHardDeposit: false,
+  setCustomhardDepositDecreaseTimeout: false,
+  withdraw: false
 }
 
 // constants to make the test-log more readable
@@ -71,7 +71,7 @@ const describePreCondition = 'PRE-CONDITION: '
 const describeTest = 'TEST: '
 
 // @param balance total ether deposited in checkbook
-// @param liquidBalance totalDeposit - harddeposits
+// @param liquidBalance totalDeposit - hardDeposits
 // @param issuer the issuer of the checkbook
 // @param alice a counterparty of the checkbook 
 // @param bob a counterparty of the checkbook
@@ -97,8 +97,8 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
       }
     })
 
-    describe(describeFunction + 'harddeposits', function () {
-      if (enabledTests.harddeposits) {
+    describe(describeFunction + 'hardDeposits', function () {
+      if (enabledTests.hardDeposits) {
         //TODO
       }
     })
@@ -115,8 +115,8 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
           describe(describePreCondition + 'shouldDeposit', function () {
             const depositAmount = new BN(50)
             shouldDeposit(depositAmount, issuer)
-            context('when there are harddeposits', function () {
-              describe('when the harddeposits equal the depositAmount', function () {
+            context('when there are hardDeposits', function () {
+              describe('when the hardDeposits equal the depositAmount', function () {
                 describe(describePreCondition + 'shouldIncreaseHardDeposit', function () {
                   const hardDeposit = depositAmount
                   shouldIncreaseHardDeposit(defaultCheque.beneficiary, hardDeposit, issuer)
@@ -124,7 +124,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                     shouldReturnLiquidBalance(depositAmount.sub(hardDeposit))
                   })
                 })
-                describe('when the harddeposits are lower than the depositAmount', function () {
+                describe('when the hardDeposits are lower than the depositAmount', function () {
                   describe(describePreCondition + 'shouldIncreaseHardDeposit', function () {
                     const hardDeposit = depositAmount.sub(new BN(40))
                     shouldIncreaseHardDeposit(defaultCheque.beneficiary, hardDeposit, issuer)
@@ -134,7 +134,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                   })
                 })
               })
-              context('when there are no harddeposits', function () {
+              context('when there are no hardDeposits', function () {
                 describe(describeTest + 'shouldReturnLiquidBalance', function () {
                   shouldReturnLiquidBalance(depositAmount)
                 })
@@ -454,7 +454,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                       })
                     })
                     context('when there is no liquidBalance to cover the cheque', function () {
-                      describe(describeTest + 'shouldSubmitCheque', function() {
+                      describe(describeTest + 'shouldSubmitCheque', function () {
                         const sender = alice
                         shouldSubmitCheque(unsignedCheque, sender)
                       })
@@ -464,21 +464,21 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                     const sender = alice
                     shouldSubmitCheque(unsignedCheque, sender)
                     context('when the serial number is increasing', function () {
-                      describe(describeTest + 'shouldSubmitCheque', function() {
+                      describe(describeTest + 'shouldSubmitCheque', function () {
                         const secondSerial = new BN(parseInt(unsignedCheque.serial) + 1)
                         const increasing_serial_unsignedCheque = Object.assign({}, defaultCheque, { serial: secondSerial, signee: signees })
                         shouldSubmitCheque(increasing_serial_unsignedCheque, sender)
                       })
                     })
                     context('when the serial number stays the same', function () {
-                      describe(describeTest + 'shouldNotSubmitCheque', function() {
+                      describe(describeTest + 'shouldNotSubmitCheque', function () {
                         const secondSerial = new BN(parseInt(unsignedCheque.serial))
                         const same_serial_unsignedCheque = Object.assign({}, defaultCheque, { serial: secondSerial, signee: signees })
                         shouldNotSubmitCheque(same_serial_unsignedCheque, same_serial_unsignedCheque, sender, value, "SimpleSwap: invalid serial")
                       })
                     })
                     context('when the serial number is decreasing', function () {
-                      describe(describeTest + 'shouldNotSubmitCheque', function() {
+                      describe(describeTest + 'shouldNotSubmitCheque', function () {
                         const secondSerial = new BN(parseInt(unsignedCheque.serial) + -1)
                         const decreasing_serial_unsignedCheque = Object.assign({}, defaultCheque, { serial: secondSerial, signee: signees })
                         shouldNotSubmitCheque(decreasing_serial_unsignedCheque, decreasing_serial_unsignedCheque, sender, value, "SimpleSwap: invalid serial")
@@ -487,7 +487,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                   })
                 })
                 context("when the signees don't not sign the correct fields", function () {
-                  describe(describeTest + 'shouldNotSubmitCheque', function() {
+                  describe(describeTest + 'shouldNotSubmitCheque', function () {
                     const sender = alice
                     const wrongBeneficiary = constants.ZERO_ADDRESS
                     const wrong_beneficiary_unsignedCheque = Object.assign({}, defaultCheque, { beneficiary: wrongBeneficiary, signee: signees })
@@ -497,7 +497,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                 })
               })
               context('when the issuer is not the signee', function () {
-                describe(describeTest + 'shouldNotSubmitCheque', function() {
+                describe(describeTest + 'shouldNotSubmitCheque', function () {
                   const sender = alice
                   const signees = [alice, defaultCheque.beneficiary]
                   const wrong_signee_unsignedCheque = Object.assign({}, defaultCheque, { signee: signees })
@@ -505,7 +505,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                 })
               })
               context('when the beneficiary is not the signee', function () {
-                describe(describeTest + 'shouldNotSubmitCheque', function() {
+                describe(describeTest + 'shouldNotSubmitCheque', function () {
                   const sender = alice
                   const signees = [issuer, alice]
                   const wrong_signee_unsignedCheque = Object.assign({}, defaultCheque, { signee: signees })
@@ -513,7 +513,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                 })
               })
               context('when neither the issuer nor the beneficiary are a signee', function () {
-                describe(describeTest + 'shouldNotSubmitCheque', function() {
+                describe(describeTest + 'shouldNotSubmitCheque', function () {
                   const sender = alice
                   const signees = [alice, alice]
                   const wrong_signee_unsignedCheque = Object.assign({}, defaultCheque, { signee: signees })
@@ -781,8 +781,8 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
               this.logs = logs
             })
 
-            it('should fire the HardDepositAmountChanged event', async function () {
-              expectEvent.inLogs(this.logs, 'HardDepositAmountChanged', {
+            it('should fire the hardDepositAmountChanged event', async function () {
+              expectEvent.inLogs(this.logs, 'hardDepositAmountChanged', {
                 beneficiary,
                 amount: amount.sub(decrease)
               })
@@ -847,8 +847,8 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
           })
           function shouldIncreaseHardDeposit(sender, amount) {
             beforeEach(async function () {
-              this.previousTotalHardDeposit = await this.simpleSwap.totalHardDeposit()
-              this.previousHardDeposit = (await this.simpleSwap.hardDeposits(beneficiary))[0]
+              this.previoustotalHardDeposit = await this.simpleSwap.totalHardDeposit()
+              this.previoushardDeposit = (await this.simpleSwap.hardDeposits(beneficiary))[0]
               let { logs } = await this.simpleSwap.increaseHardDeposit(
                 beneficiary,
                 amount,
@@ -857,17 +857,17 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
               this.logs = logs
             })
 
-            it('should fire the HardDepositAmountChanged event', async function () {
-              expectEvent.inLogs(this.logs, 'HardDepositAmountChanged', {
+            it('should fire the hardDepositAmountChanged event', async function () {
+              expectEvent.inLogs(this.logs, 'hardDepositAmountChanged', {
                 beneficiary,
-                amount: this.previousHardDeposit.add(amount)
+                amount: this.previoushardDeposit.add(amount)
               })
             })
             it('increases the totalHardDeposit', async function () {
-              expect(await this.simpleSwap.totalHardDeposit()).bignumber.is.equal(this.previousTotalHardDeposit.add(amount))
+              expect(await this.simpleSwap.totalHardDeposit()).bignumber.is.equal(this.previoustotalHardDeposit.add(amount))
             })
             it('increases the hardDeposit amount', async function () {
-              expect((await this.simpleSwap.hardDeposits(beneficiary))[0]).bignumber.is.equal(this.previousHardDeposit.add(amount))
+              expect((await this.simpleSwap.hardDeposits(beneficiary))[0]).bignumber.is.equal(this.previoushardDeposit.add(amount))
             })
             it('reset the canBeDecreasedAt  value', async function () {
               expect((await this.simpleSwap.hardDeposits(beneficiary))[3]).bignumber.is.equal(new BN(0))
@@ -886,8 +886,8 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
       }
     })
 
-    describe(describeFunction + 'setCustomHardDepositDecreaseTimeout', function () {
-      if (enabledTests.setCustomHardDepositDecreaseTimeout) {
+    describe(describeFunction + 'setCustomhardDepositDecreaseTimeout', function () {
+      if (enabledTests.setCustomhardDepositDecreaseTimeout) {
         let beneficiary = bob
         let decreaseTimeout = new BN(10)
         beforeEach(function () {
@@ -910,8 +910,8 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
               expect((await this.simpleSwap.hardDeposits(beneficiary))[2]).bignumber.is.equal(decreaseTimeout)
             })
 
-            it('should fire the HardDepositDecreaseTimeoutChanged', async function () {
-              expectEvent.inLogs(this.logs, 'HardDepositDecreaseTimeoutChanged', {
+            it('should fire the hardDepositDecreaseTimeoutChanged', async function () {
+              expectEvent.inLogs(this.logs, 'hardDepositDecreaseTimeoutChanged', {
                 beneficiary,
                 decreaseTimeout
               })

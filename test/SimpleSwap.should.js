@@ -8,7 +8,9 @@ const {
 } = require("openzeppelin-test-helpers");
 
 
-const { signCheque } = require("./swutils");
+const { signCheque, signCashOut } = require("./swutils");
+const { computeCost } = require("./testutils");
+
 
 const { expect } = require('chai');
 
@@ -26,7 +28,7 @@ function shouldReturnHarddeposits(beneficiary, expectedAmount, expectedDecreaseT
 
 }
 
-function shouldReturnTotalharddeposit(expectedHardDeposit) {
+function shouldReturnTotalhardDeposit(expectedHardDeposit) {
 
 }
 
@@ -164,48 +166,51 @@ function shouldNotSubmitCheque(unsignedCheque, functionParams, from, value, reve
   })
 }
 function cashChequeInternal(beneficiaryPrincipal, beneficiaryAgent, requestPayout, calleePayout, from) {
-  let totalPayout 
-  // if the requested payout is less than the liquidBalance available for beneficiary
-  if(requestPayout.lt(this.preconditions.liquidBalanceFor)) {
-    // full amount requested can be paid out
-    totalPayout = requestPayout
-  } else {
-    // partial amount requested can be paid out (the liquid balance available to the node)
-    totalPayout = liquidBalanceFor
-  }
+
+  beforeEach(async function() {
+    //if the requested payout is less than the liquidBalance available for beneficiary
+    if(requestPayout.lt(this.preconditions.liquidBalanceFor)) {
+      // full amount requested can be paid out
+      this.totalPayout = requestPayout
+    } else {
+      // partial amount requested can be paid out (the liquid balance available to the node)
+      this.totalPayout = this.preconditions.liquidBalanceFor
+    }
+  })
+  
   it('should update the totalHardDeposit and hardDepositFor ', function() {
     let expectedDecreaseHardDeposit
-    // if the harddeposits can cover the totalPayout
-    if(totalPayout.lt(this.preconditions.hardDepositFor)) {
-      // harddeposit decreases by totalPayout
-      expectedDecreaseHardDeposit = totalPayout
+    // if the hardDeposits can cover the totalPayout
+    if(this.totalPayout.lt(this.preconditions.hardDepositFor.amount)) {
+      // hardDeposit decreases by totalPayout
+      expectedDecreaseHardDeposit = this.totalPayout
     } else {
-      // harddeposit decreases by the full amount (and rest is from global liquid balance)
-      expectedDecreaseHardDeposit = this.preconditions.hardDepositFor
+      // hardDeposit decreases by the full amount (and rest is from global liquid balance)
+      expectedDecreaseHardDeposit = this.preconditions.hardDepositFor.amount
     }
     // totalHarddeposit
     expect(this.postconditions.totalHardDeposit).bignumber.to.be.equal(this.preconditions.totalHardDeposit.sub(expectedDecreaseHardDeposit))    
     // hardDepositFor
-    expect(this.postconditions.hardDepositFor).bignumber.to.be.equal(this.preconditions.hardDepositFor.sub(expectedDecreaseHardDeposit))    
+    expect(this.postconditions.hardDepositFor.amount).bignumber.to.be.equal(this.preconditions.hardDepositFor.amount.sub(expectedDecreaseHardDeposit))    
   })
   
   it('should update paidOut', async function() {
-    expect(this.postconditions.cheque.paidOut).bignumber.to.be.equal(this.preconditions.cheque.paidOut.add(totalPayout))
+    expect(this.postconditions.cheque.paidOut).bignumber.to.be.equal(this.preconditions.cheque.paidOut.add(this.totalPayout))
   })
 
   it('should transfer the correct amount to the beneficiaryAgent', async function() {
     let beneficiaryAgentTransactionCosts
     // if the beneficiary agent equal the sender
     if(beneficiaryAgent == from) {
-      // the beneficiaryAgent bears the transaction costs
+      // the beneficiaryAgent pays the transaction costs
       beneficiaryAgentTransactionCosts = await computeCost(this.receipt)
     } else {
       // somebody else pays for the transaction costs
       beneficiaryAgentTransactionCosts = new BN(0)
     }
     expect(this.postconditions.beneficiaryAgentBalance).bignumber.to.be.equal(
-      this.postconditions.beneficiaryAgentBalance
-        .add(totalPayout)
+      this.preconditions.beneficiaryAgentBalance
+        .add(this.totalPayout)
         .sub(calleePayout)
         .sub(beneficiaryAgentTransactionCosts)
       )
@@ -216,7 +221,7 @@ function cashChequeInternal(beneficiaryPrincipal, beneficiaryAgent, requestPayou
     // if the beneficiary agent equal the sender
     if(beneficiaryAgent == from) {
       // the callee gets the totalPayout
-      expectedAmountCallee = totalPayout.sub(expectedCalleeTransactionCosts)
+      expectedAmountCallee = this.totalPayout.sub(expectedCalleeTransactionCosts)
     }   else {
       // the callee get's a part of the totalPayout
       expectedAmountCallee = calleePayout.sub(expectedCalleeTransactionCosts)
@@ -229,25 +234,28 @@ function cashChequeInternal(beneficiaryPrincipal, beneficiaryAgent, requestPayou
       beneficiaryAgent: beneficiaryAgent,
       callee: from,
       serial: this.postconditions.cheque.serial,
-      totalPayout: totalPayout,
+      totalPayout: this.totalPayout,
       requestPayout: requestPayout,
       calleePayout: calleePayout
     })
   })
-  if(totalPayout < requestPayout) {
-    it('should emit a ChequeBounced event', function() {
+  it('should only emit a chequeBounced event when insufficient funds', function() {
+    if(this.totalPayout < requestPayout) {
       expectEvent.inLogs(this.logs, "ChequeBounced", {})
-    })
-  }
+    } else {
+      const events = this.logs.filter(e => e.event === 'ChequeBounced');
+      expect(events.length > 0).to.equal(false, `There is a ChequeBounced event`)
+    }
+  })
 }
 function shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, from) {
   beforeEach(async function() {
     this.preconditions = {
       calleeBalance: await balance.current(from),
       beneficiaryAgentBalance: await balance.current(beneficiaryAgent),
-      beneficiaryPrincipalBalance: calleeBalance,
-      totalHarddeposit: await this.simpleSwap.totalHardDeposit(),
-      hardDepositFor: await this.simpleSwap.hardDepositFor(from),
+      beneficiaryPrincipalBalance: await balance.current(from),
+      totalHardDeposit: await this.simpleSwap.totalHardDeposit(),
+      hardDepositFor: await this.simpleSwap.hardDeposits(from),
       liquidBalance: await this.simpleSwap.liquidBalance(),
       liquidBalanceFor: await this.simpleSwap.liquidBalanceFor(from),
       chequebookBalance: await balance.current(this.simpleSwap.address),
@@ -255,16 +263,16 @@ function shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, from) {
       cheque: await this.simpleSwap.cheques(from)
     }
   
-    const { logs, receipt } = this.simpleSwap.cashChequeBeneficiary(beneficiaryAgent, requestPayout, {from: from})
+    const { logs, receipt } = await this.simpleSwap.cashChequeBeneficiary(beneficiaryAgent, requestPayout, {from: from})
     this.logs = logs
     this.receipt = receipt
   
     this.postconditions = {
       calleeBalance: await balance.current(from),
       beneficiaryAgentBalance: await balance.current(beneficiaryAgent),
-      beneficiaryPrincipalBalance: calleeBalance,
-      totalHarddeposit: await this.simpleSwap.totalHardDeposit(),
-      hardDepositFor: await this.simpleSwap.hardDepositFor(from),
+      beneficiaryPrincipalBalance: await balance.current(from),
+      totalHardDeposit: await this.simpleSwap.totalHardDeposit(),
+      hardDepositFor: await this.simpleSwap.hardDeposits(from),
       liquidBalance: await this.simpleSwap.liquidBalance(),
       liquidBalanceFor: await this.simpleSwap.liquidBalanceFor(from),
       chequebookBalance: await balance.current(this.simpleSwap.address),
@@ -272,17 +280,71 @@ function shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, from) {
       cheque: await this.simpleSwap.cheques(from)
     }
   })
-  cashChequeInternal(from, beneficiaryAgent, requestPayout, 0, from)
+  cashChequeInternal(from, beneficiaryAgent, requestPayout, new BN(0), from)
 }
 function shouldNotCashChequeBeneficiary(beneficiaryAgent, requestPayout, from, value, revertMessage) {
-
+  it('reverts', async function() {
+    await expectRevert(this.simpleSwap.cashChequeBeneficiary(
+      beneficiaryAgent,
+      requestPayout,
+     {from: from, value: value}), 
+     revertMessage
+    )
+  })
 }
-function shouldCashCheque(beneficiaryPrincipal, beneficiaryAgent, requestPayout, beneficiarySig, expiry, calleePayout, from) {
-
+function shouldCashCheque(beneficiaryPrincipal, beneficiaryAgent, requestPayout, expiry, calleePayout, from) {
+  beforeEach(async function() {
+    const beneficiarySig = await signCashOut(this.simpleSwap, from, requestPayout, beneficiaryAgent, expiry, calleePayout, beneficiaryPrincipal)    
+    this.preconditions = {
+      calleeBalance: await balance.current(from),
+      beneficiaryAgentBalance: await balance.current(beneficiaryAgent),
+      beneficiaryPrincipalBalance: await balance.current(from),
+      totalHardDeposit: await this.simpleSwap.totalHardDeposit(),
+      hardDepositFor: await this.simpleSwap.hardDeposits(from),
+      liquidBalance: await this.simpleSwap.liquidBalance(),
+      liquidBalanceFor: await this.simpleSwap.liquidBalanceFor(from),
+      chequebookBalance: await balance.current(this.simpleSwap.address),
+      beneficiaryBalance: await balance.current(beneficiaryAgent),
+      cheque: await this.simpleSwap.cheques(from)
+    }
+  
+    const { logs, receipt } = await this.simpleSwap.cashCheque(beneficiaryPrincipal, beneficiaryAgent, requestPayout, beneficiarySig, expiry, calleePayout, {from: from})
+    this.logs = logs
+    this.receipt = receipt
+  
+    this.postconditions = {
+      calleeBalance: await balance.current(from),
+      beneficiaryAgentBalance: await balance.current(beneficiaryAgent),
+      beneficiaryPrincipalBalance: await balance.current(from),
+      totalHardDeposit: await this.simpleSwap.totalHardDeposit(),
+      hardDepositFor: await this.simpleSwap.hardDeposits(from),
+      liquidBalance: await this.simpleSwap.liquidBalance(),
+      liquidBalanceFor: await this.simpleSwap.liquidBalanceFor(from),
+      chequebookBalance: await balance.current(this.simpleSwap.address),
+      beneficiaryBalance: await balance.current(beneficiaryAgent),
+      cheque: await this.simpleSwap.cheques(from)
+    }
+  })
+  cashChequeInternal(beneficiaryPrincipal, beneficiaryAgent, requestPayout, calleePayout, from)
 }
-function shouldNotCashCheque(beneficiaryPrincipal, beneficiaryAgent, requestPayout, value,  beneficiarySig, expiry, calleePayout, from, revertMessage) {
-
+function shouldNotCashCheque(toSignFields, toSubmitFields, value, from, revertMessage) {
+  beforeEach(async function() {
+    this.beneficiarySig = await signCashOut(this.simpleSwap, from, toSignFields.requestPayout, toSignFields.beneficiaryAgent, toSignFields.expiry, toSignFields.calleePayout, toSignFields.beneficiaryPrincipal)    
+  })
+  it('reverts', async function() {
+    await expectRevert(this.simpleSwap.cashCheque(
+      toSubmitFields.beneficiaryPrincipal, 
+      toSubmitFields.beneficiaryAgent, 
+      toSubmitFields.requestPayout, 
+      this.beneficiarySig, 
+      toSubmitFields.expiry, 
+      toSubmitFields.calleePayout, 
+      {from: from, value: value}), 
+      revertMessage
+    )
+  })
 }
+
 function shouldPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, from) {
   beforeEach(async function() {
     await this.simpleSwap.send(amount)
@@ -290,9 +352,8 @@ function shouldPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, from) {
 
     let { logs } = await this.simpleSwap.prepareDecreaseHardDeposit(
       beneficiary,
-      amount, {
-        from: issuer
-      }
+      amount, 
+      {from: issuer}
     )
 
     this.logs = logs
@@ -360,7 +421,7 @@ function shouldIncreaseHardDeposit(beneficiary, amount, from) {
     expect(this.postconditions.totalHardDeposit).bignumber.to.be.equal(this.preconditions.totalHardDeposit.add(amount))
   })
 
-  it('should increase the harddepositFor', function() {
+  it('should increase the hardDepositFor', function() {
     expect(this.postconditions.hardDepositFor.amount).bignumber.to.be.equal(this.preconditions.hardDepositFor.amount.add(amount))
   })
 
@@ -423,7 +484,7 @@ module.exports = {
   shouldReturnDEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT,
   shouldReturnCheques,
   shouldReturnHarddeposits,
-  shouldReturnTotalharddeposit,
+  shouldReturnTotalhardDeposit,
   shouldReturnIssuer,
   shouldReturnLiquidBalance,
   shouldReturnLiquidBalanceFor,

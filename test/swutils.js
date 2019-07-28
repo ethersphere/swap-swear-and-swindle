@@ -35,7 +35,20 @@ async function signCheque(swap, cheque) {
   return cheque
 }
 
+async function signCashOut(swap, sender, requestPayout, beneficiaryAgent, expiry, calleePayout, signee) {
+  const hash = await swap.cashOutHash(
+    swap.address,
+    sender,
+    requestPayout,
+    beneficiaryAgent,
+    expiry,
+    calleePayout
+  )
+  return await sign(hash, signee)
+}
+
 module.exports = {
+  signCashOut,
   signCheque,
   sign
 };

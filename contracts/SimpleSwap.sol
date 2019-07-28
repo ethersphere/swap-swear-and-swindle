@@ -167,8 +167,14 @@ contract SimpleSwap {
     uint256 calleePayout
   ) public {
     require(now <= expiry, "SimpleSwap: beneficiarySig expired");
-    require(beneficiaryPrincipal == recover(keccak256(abi.encodePacked(address(this), msg.sender, requestPayout, beneficiaryAgent, expiry, calleePayout)), beneficiarySig), 
-      "SimpleSwap: invalid beneficiarySig");
+    require(beneficiaryPrincipal == recover(cashOutHash(
+      address(this),
+      msg.sender,
+      requestPayout,
+      beneficiaryAgent,
+      expiry,
+      calleePayout
+      ), beneficiarySig), "SimpleSwap: invalid beneficiarySig");
     _cashChequeInternal(beneficiaryPrincipal, beneficiaryAgent, requestPayout, calleePayout);
     msg.sender.transfer(calleePayout);
   }
@@ -266,4 +272,11 @@ contract SimpleSwap {
   public pure returns (bytes32) {
     return keccak256(abi.encodePacked(swap, beneficiary, serial, amount, cashTimeout));
   }
+
+  function cashOutHash(address swap, address sender, uint requestPayout, address beneficiaryAgent, uint expiry, uint calleePayout)
+  public pure returns (bytes32) {
+    return keccak256(abi.encodePacked(swap, sender, requestPayout, beneficiaryAgent, expiry, calleePayout));
+  }
 }
+
+
