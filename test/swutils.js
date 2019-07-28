@@ -44,6 +44,7 @@ async function signCashOut(swap, sender, requestPayout, beneficiaryAgent, expiry
     expiry,
     calleePayout
   )
+
   return await sign(hash, signee)
 }
 

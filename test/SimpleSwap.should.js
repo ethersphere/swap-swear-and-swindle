@@ -292,44 +292,43 @@ function shouldNotCashChequeBeneficiary(beneficiaryAgent, requestPayout, from, v
     )
   })
 }
-function shouldCashCheque(beneficiaryPrincipal, beneficiaryAgent, requestPayout, expiry, calleePayout, from) {
+function shouldCashCheque(beneficiaryPrincipal, beneficiaryAgent, requestPayout, calleePayout, from) {
   beforeEach(async function() {
-    const beneficiarySig = await signCashOut(this.simpleSwap, from, requestPayout, beneficiaryAgent, expiry, calleePayout, beneficiaryPrincipal)    
+    const beneficiarySig = await signCashOut(this.simpleSwap, from, requestPayout, beneficiaryAgent, this.expiry, calleePayout, beneficiaryPrincipal)    
     this.preconditions = {
       calleeBalance: await balance.current(from),
       beneficiaryAgentBalance: await balance.current(beneficiaryAgent),
-      beneficiaryPrincipalBalance: await balance.current(from),
+      beneficiaryPrincipalBalance: await balance.current(beneficiaryPrincipal),
       totalHardDeposit: await this.simpleSwap.totalHardDeposit(),
-      hardDepositFor: await this.simpleSwap.hardDeposits(from),
+      hardDepositFor: await this.simpleSwap.hardDeposits(beneficiaryPrincipal),
       liquidBalance: await this.simpleSwap.liquidBalance(),
-      liquidBalanceFor: await this.simpleSwap.liquidBalanceFor(from),
+      liquidBalanceFor: await this.simpleSwap.liquidBalanceFor(beneficiaryPrincipal),
       chequebookBalance: await balance.current(this.simpleSwap.address),
       beneficiaryBalance: await balance.current(beneficiaryAgent),
-      cheque: await this.simpleSwap.cheques(from)
+      cheque: await this.simpleSwap.cheques(beneficiaryPrincipal)
     }
-  
-    const { logs, receipt } = await this.simpleSwap.cashCheque(beneficiaryPrincipal, beneficiaryAgent, requestPayout, beneficiarySig, expiry, calleePayout, {from: from})
+    const { logs, receipt } = await this.simpleSwap.cashCheque(beneficiaryPrincipal, beneficiaryAgent, requestPayout, beneficiarySig, this.expiry, calleePayout, {from: from})
     this.logs = logs
     this.receipt = receipt
   
     this.postconditions = {
       calleeBalance: await balance.current(from),
       beneficiaryAgentBalance: await balance.current(beneficiaryAgent),
-      beneficiaryPrincipalBalance: await balance.current(from),
+      beneficiaryPrincipalBalance: await balance.current(beneficiaryPrincipal),
       totalHardDeposit: await this.simpleSwap.totalHardDeposit(),
-      hardDepositFor: await this.simpleSwap.hardDeposits(from),
+      hardDepositFor: await this.simpleSwap.hardDeposits(beneficiaryPrincipal),
       liquidBalance: await this.simpleSwap.liquidBalance(),
-      liquidBalanceFor: await this.simpleSwap.liquidBalanceFor(from),
+      liquidBalanceFor: await this.simpleSwap.liquidBalanceFor(beneficiaryPrincipal),
       chequebookBalance: await balance.current(this.simpleSwap.address),
       beneficiaryBalance: await balance.current(beneficiaryAgent),
-      cheque: await this.simpleSwap.cheques(from)
+      cheque: await this.simpleSwap.cheques(beneficiaryPrincipal)
     }
   })
   cashChequeInternal(beneficiaryPrincipal, beneficiaryAgent, requestPayout, calleePayout, from)
 }
-function shouldNotCashCheque(toSignFields, toSubmitFields, value, from, revertMessage) {
+function shouldNotCashCheque(toSignFields, toSubmitFields, value, from, signee, revertMessage) {
   beforeEach(async function() {
-    this.beneficiarySig = await signCashOut(this.simpleSwap, from, toSignFields.requestPayout, toSignFields.beneficiaryAgent, toSignFields.expiry, toSignFields.calleePayout, toSignFields.beneficiaryPrincipal)    
+    this.beneficiarySig = await signCashOut(this.simpleSwap, from, toSignFields.requestPayout, toSignFields.beneficiaryAgent, this.expiry, toSignFields.calleePayout, signee)    
   })
   it('reverts', async function() {
     await expectRevert(this.simpleSwap.cashCheque(
@@ -337,14 +336,13 @@ function shouldNotCashCheque(toSignFields, toSubmitFields, value, from, revertMe
       toSubmitFields.beneficiaryAgent, 
       toSubmitFields.requestPayout, 
       this.beneficiarySig, 
-      toSubmitFields.expiry, 
+      this.expiry, 
       toSubmitFields.calleePayout, 
       {from: from, value: value}), 
       revertMessage
     )
   })
 }
-
 function shouldPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, from) {
   beforeEach(async function() {
     await this.simpleSwap.send(amount)

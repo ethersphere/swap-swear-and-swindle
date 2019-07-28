@@ -46,23 +46,23 @@ const {
 
 // switch to false if you don't want to test the particular function
 enabledTests = {
-  DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT: false,
-  cheques: false,
-  hardDeposits: false,
-  totalHardDeposit: false,
-  issuer: false,
-  liquidBalance: false,
-  liquidBalanceFor: false,
-  submitChequeIssuer: false,
-  submitChequeBeneficiary: false,
-  submitCheque: false,
-  cashChequeBeneficiary: false,
+  DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT: true,
+  cheques: true,
+  hardDeposits: true,
+  totalHardDeposit: true,
+  issuer: true,
+  liquidBalance: true,
+  liquidBalanceFor: true,
+  submitChequeIssuer: true,
+  submitChequeBeneficiary: true,
+  submitCheque: true,
+  cashChequeBeneficiary: true,
   cashCheque: true,
-  prepareDecreaseHardDeposit: false,
-  decreaseHardDeposit: false,
-  increaseHardDeposit: false,
-  setCustomhardDepositDecreaseTimeout: false,
-  withdraw: false
+  prepareDecreaseHardDeposit: true,
+  decreaseHardDeposit: true,
+  increaseHardDeposit: true,
+  setCustomhardDepositDecreaseTimeout: true,
+  withdraw: true
 }
 
 // constants to make the test-log more readable
@@ -555,160 +555,503 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
       }
     })
 
-    describe(describeFunction + 'cashChequeBeneficiary', function () {
-      if (enabledTests.cashChequeBeneficiary) {
-        let cheque = defaultCheque
-        context('when there is sufficient balance in the chequebook', function () {
-          shouldDeposit(defaultCheque.amount, issuer)
-          context('when the beneficiary has submitted a cheque', function () {
-            shouldSubmitChequeBeneficiary(cheque, cheque.beneficiary)
-            context('when sufficient time has passed', function () {
-              beforeEach(async function () {
-                time.increase(new BN(86400))
-                this.currentBeneficiaryBalance = await balance.current(cheque.beneficiary)
-                this.currentCheque = await this.simpleSwap.cheques(cheque.beneficiary)
-                const { logs, receipt } = await this.simpleSwap.cashChequeBeneficiary(cheque.beneficiary, cheque.amount, { from: cheque.beneficiary })
-                this.logs = logs
-                this.receipt = receipt
-              })
-              // _shouldCashChequeInternal(cheque.beneficiary, cheque.beneficiary, defaultCheque.amount, new BN(0))
-
-            })
-          })
-        })
-      }
-    })
-
     describe(describeFunction + 'cashCheque', function () {
       if (enabledTests.cashCheque) {
-        context("when we don't send value along", function() {
+        context("when we don't send value along", function () {
           const value = new BN(0)
-          context('when the signature has not expired', function() {
-            context('when the expiry is in the future', function() {
-              const expiry = time.latest().add(time.duration.days(new BN(1)))
-              context('when the beneficiaryPrincipal is a signee', function() {
-                const signee = beneficiary
-                context('when the beneficiaryPrincipal signs the correct fields', function() {
-                  //shouldCashCheque should allow for signing
-                  context('when the beneficiaryPrincipal is not callee', function() {
-                    const callee = alice
-                    context('when the calleePayout is non-zero', function() {
-                      const calleePayout = new BN(1)
-                      context("when the beneficiaryAgent is not the beneficiaryPrincipal", function() {
-                        context('when the beneficiaryAgent is not the callee', function() {
-                          const beneficiaryAgent = agent
-                          // use the same preconditions as cashChequeBeneficiary
-
-                        })
-                        context('when the beneficiaryAgent is the callee', function() {
-                          const beneficiaryAgent = callee
-                        })
-                      })
-                      context('when the beneficiaryAgent is the beneficiaryPrincipal', function() {
-
-                      })
-                    })
-                    context('when the calleePayout is zero', function() {
-                      const calleePayout = new BN(0)
-                    })
-                  })
-                  context('when the beneficiary is the callee', function() {
-                    const callee = defaultCheque.beneficiary
-                  })
-                })
-                context('when the beneficiary does not sign the correct fields', function() {
-                  //shouldNotCashCheque should allow for signing 
-                  // shouldNotCashCheque should allow for sending different fields to sign and submit
-                })
+          context('when the signature has not expired', function () {
+            context('when the expiry is in the future', function () {
+              beforeEach(async function () {
+                this.expiry = (await time.latest()).add(time.duration.years(1))
               })
-              context('when the beneficiary is not a signee', function() {
-                const signee = alice
+              context('when the calleePayout is non-zero', function () {
+                const calleePayout = new BN(1)
+                context('when the beneficiaryPrincipal is a signee', function () {
+                  const signee = defaultCheque.beneficiary
+                  context('when the beneficiaryPrincipal signs the correct fields', function () {
+                    context('when the beneficiaryPrincipal and beneficiaryAgent are not the sender', function () {
+                      const sender = alice
+                      context("when the beneficiaryAgent is not the beneficiaryPrincipal", function () {
+                        const beneficiaryAgent = agent
+                        context('when we submit the cheque beforeHand', function () {
+                          describe(describePreCondition + 'shouldSubmitChequeBeneficiary', function () {
+                            shouldSubmitChequeBeneficiary(defaultCheque, defaultCheque.beneficiary)
+                            context('when we have not cashed a cheque before', function () {
+                              context('when we have waited more than timeoutDuration', function () {
+                                const waitTime = defaultCheque.timeout.add(new BN(100))
+                                beforeEach(async function () {
+                                  await time.increase(waitTime)
+                                })
+                                context('when the requestPayout is equal to the submitted value', function () {
+                                  const requestPayout = defaultCheque.amount
+                                  context('when there is some balance', function () {
+                                    context('when the balance is bigger than the requestPayout', function () {
+                                      describe(describePreCondition + 'shouldDeposit', function () {
+                                        const depositAmount = requestPayout.add(new BN(50))
+                                        shouldDeposit(depositAmount, issuer)
+                                        context('when there are hardDeposits', function () {
+                                          describe('when the hardDeposits are assigned to the beneficiaryPrincipal', function () {
+                                            const hardDepositReceiver = defaultCheque.beneficiary
+                                            context('when the hardDeposit is more the requestPayout', function () {
+                                              const hardDeposit = requestPayout.add(new BN(1))
+                                              describe(describePreCondition + 'shouldIncreaseHardDeposit', function () {
+                                                shouldIncreaseHardDeposit(hardDepositReceiver, hardDeposit, issuer)
+                                                describe(describeTest + 'shouldCashCheque', function () {
+                                                  shouldCashCheque(defaultCheque.beneficiary, beneficiaryAgent, requestPayout, calleePayout, sender)
+                                                })
+                                              })
+                                            })
+                                            context('when the hardDeposit equals the requestPayout', function () {
+                                              const hardDeposit = requestPayout
+                                              describe(describePreCondition + 'shouldIncreaseHardDeposit', function () {
+                                                shouldIncreaseHardDeposit(hardDepositReceiver, hardDeposit, issuer)
+                                                describe(describeTest + 'shouldCashCheque', function () {
+                                                  shouldCashCheque(defaultCheque.beneficiary, beneficiaryAgent, requestPayout, calleePayout, sender)
+                                                })
+                                              })
+                                            })
+                                            context('when the hardDeposit is less than the requestPayout', function () {
+                                              const hardDeposit = requestPayout.sub(new BN(1))
+                                              describe(describePreCondition + 'shouldIncreaseHardDeposit', function () {
+                                                shouldIncreaseHardDeposit(hardDepositReceiver, hardDeposit, issuer)
+                                                describe(describeTest + 'shouldCashCheque', function () {
+                                                  shouldCashCheque(defaultCheque.beneficiary, beneficiaryAgent, requestPayout, calleePayout, sender)
+                                                })
+                                              })
+                                            })
+                                          })
+                                          describe('when the hardDeposits are assigned to somebody else', function () {
+                                            const hardDepositReceiver = alice
+                                            const hardDeposit = requestPayout.add(new BN(1))
+                                            describe(describePreCondition + 'shouldIncreaseHardDeposit', function () {
+                                              shouldIncreaseHardDeposit(hardDepositReceiver, hardDeposit, issuer)
+                                              describe(describeTest + 'shouldCashCheque', function () {
+                                                shouldCashCheque(defaultCheque.beneficiary, beneficiaryAgent, requestPayout, calleePayout, sender)
+                                              })
+                                            })
+                                          })
+                                        })
+                                      })
+                                    })
+                                    context('when the balance equals the requestPayout', function () {
+                                      describe(describePreCondition + 'shouldDeposit', function () {
+                                        const depositAmount = requestPayout
+                                        shouldDeposit(depositAmount, issuer)
+                                        describe(describeTest + 'shouldCashCheque', function () {
+
+                                          shouldCashCheque(defaultCheque.beneficiary, beneficiaryAgent, requestPayout, calleePayout, sender)
+                                        })
+                                      })
+                                    })
+                                  })
+                                  context('when there is no balance', function () {
+                                    describe(describeTest + 'shouldNotCashCheque', function () {
+                                      const toSignFields = {
+                                        requestPayout,
+                                        beneficiaryAgent,
+                                        calleePayout,
+                                      }
+                                      const toSubmitFields = Object.assign({}, toSignFields, { beneficiaryPrincipal: defaultCheque.beneficiary })
+                                      shouldNotCashCheque(toSignFields, toSubmitFields, value, sender, signee, "SimpleSwap: cannot pay callee")
+                                    })
+                                  })
+                                })
+                                context('when the requestPayout is less than the submitted value', function () {
+                                  describe(describePreCondition + 'shouldDeposit', function () {
+                                    shouldDeposit(defaultCheque.amount, issuer)
+                                    const requestPayout = defaultCheque.amount.sub(new BN(1))
+                                    describe(describeTest + 'shouldCashCheque', function () {
+                                      shouldCashCheque(defaultCheque.beneficiary, beneficiaryAgent, requestPayout, calleePayout, sender)
+                                    })
+                                  })
+                                })
+                              })
+                            })
+                            context('when we have waited timeoutDuration', function () {
+                              const waitTime = defaultCheque.timeout
+                              const requestPayout = defaultCheque.amount
+                              beforeEach(async function () {
+                                await time.increase(waitTime)
+                              })
+                              describe(describePreCondition + 'shouldDeposit', function () {
+                                shouldDeposit(defaultCheque.amount, issuer)
+                                describe(describeTest + 'shouldCashCheque', function () {
+                                  shouldCashCheque(defaultCheque.beneficiary, beneficiaryAgent, requestPayout, calleePayout, sender)
+                                })
+                              })
+                            })
+                            context('when we have cashed a cheque before', function () {
+                              describe('when we have cashed the partial amount before', function () {
+                                const waitTime = defaultCheque.timeout.add(new BN(100))
+                                beforeEach(async function () {
+                                  await time.increase(waitTime)
+                                })
+                                describe(describePreCondition + 'shouldDeposit', function () {
+                                  shouldDeposit(defaultCheque.amount, issuer)
+                                  describe(describePreCondition + 'shouldCashChequeBeneficiary', function () {
+                                    const requestPayout = defaultCheque.amount.div(new BN(2))
+                                    shouldCashCheque(defaultCheque.beneficiary, beneficiaryAgent, requestPayout, calleePayout, sender)
+                                    describe(describeTest + 'shouldCashCheque', function () {
+                                      shouldCashCheque(defaultCheque.beneficiary, beneficiaryAgent, requestPayout, calleePayout, sender)
+                                    })
+                                  })
+                                })
+                              })
+                              describe('when we have cashed the full amount before', function () {
+                                const waitTime = defaultCheque.timeout.add(new BN(100))
+                                beforeEach(async function () {
+                                  await time.increase(waitTime)
+                                })
+                                describe(describePreCondition + 'shouldDeposit', function () {
+                                  shouldDeposit(defaultCheque.amount, issuer)
+                                  describe(describePreCondition + 'shouldCashCheque', function () {
+                                    const requestPayout = defaultCheque.amount
+                                    shouldCashCheque(defaultCheque.beneficiary, beneficiaryAgent, requestPayout, calleePayout, sender)
+                                    describe(describeTest + 'shouldNotCashCheque', function () {
+                                      const toSignFields = {
+                                        requestPayout,
+                                        beneficiaryAgent,
+                                        calleePayout,
+                                      }
+                                      const toSubmitFields = Object.assign({}, toSignFields, { beneficiaryPrincipal: defaultCheque.beneficiary })
+                                      shouldNotCashCheque(toSignFields, toSubmitFields, value, sender, signee, "SimpleSwap: not enough balance owed")
+                                    })
+                                  })
+                                })
+                              })
+                            })
+                          })
+                        })
+                        context("when we don't submit a cheque beforeHand", function () {
+                          const requestPayout = defaultCheque.timeout.add(new BN(1))
+                          describe(describeTest + 'shouldNotCashCheque', function () {
+                            const toSignFields = {
+                              requestPayout,
+                              beneficiaryAgent,
+                              calleePayout,
+                            }
+                            const toSubmitFields = Object.assign({}, toSignFields, { beneficiaryPrincipal: defaultCheque.beneficiary })
+                            shouldNotCashCheque(toSignFields, toSubmitFields, value, sender, signee, "SimpleSwap: not enough balance owed")
+                          })
+                        })
+                      })
+                      context('when the beneficiaryAgent is the beneficiaryPrincipal', function () {
+                        const beneficiaryAgent = defaultCheque.beneficiary
+                        describe(describePreCondition + 'shouldDeposit', function () {
+                          shouldDeposit(defaultCheque.amount, issuer)
+                          describe(describePreCondition + 'shouldSubmitChequeBeneficiary', function () {
+                            shouldSubmitChequeBeneficiary(defaultCheque, defaultCheque.beneficiary)
+                            describe(describeTest + 'shouldCashCheque', function () {
+                              const waitTime = defaultCheque.timeout.add(new BN(100))
+
+                              beforeEach(async function () {
+                                await time.increase(waitTime)
+                              })
+                              shouldCashCheque(defaultCheque.beneficiary, beneficiaryAgent, defaultCheque.amount, new BN(1), alice)
+                            })
+                          })
+                        })
+                      })
+                    })
+                  })
+                  context('when the beneficiary does not sign the correct fields', function () {
+                    const sender = alice
+                    const beneficiaryAgent = defaultCheque.beneficiary
+                    describe(describePreCondition + 'shouldDeposit', function () {
+                      shouldDeposit(defaultCheque.amount, issuer)
+                      describe(describePreCondition + 'shouldSubmitChequeBeneficiary', function () {
+                        shouldSubmitChequeBeneficiary(defaultCheque, defaultCheque.beneficiary)
+
+                        describe(describeTest + 'shouldNotCashCheque', function () {
+                          const waitTime = defaultCheque.timeout.add(new BN(100))
+                          beforeEach(async function () {
+                            await time.increase(waitTime)
+                          })
+                          const toSignFields = {
+                            requestPayout: new BN(0),
+                            beneficiaryAgent,
+                            calleePayout,
+                          }
+                          const toSubmitFields = Object.assign({}, toSignFields, { beneficiaryPrincipal: defaultCheque.beneficiary, requestPayout: new BN(1) })
+                          shouldNotCashCheque(toSignFields, toSubmitFields, value, sender, signee, "SimpleSwap: invalid beneficiarySig")
+                        })
+                      })
+                    })
+                  })
+                })
+                context('when the beneficiary is not a signee', function () {
+                  const sender = alice
+                  const waitTime = defaultCheque.timeout.add(new BN(100))
+                  beforeEach(async function () {
+                    await time.increase(waitTime)
+                  })
+                  const beneficiaryAgent = defaultCheque.beneficiary
+                  describe(describePreCondition + 'shouldDeposit', function () {
+                    shouldDeposit(defaultCheque.amount, issuer)
+                    describe(describePreCondition + 'shouldSubmitChequeBeneficiary', function () {
+                      shouldSubmitChequeBeneficiary(defaultCheque, defaultCheque.beneficiary)
+                      const signee = alice
+                      describe(describeTest + 'shouldNotCashCheque', function () {
+                        const toSignFields = {
+                          requestPayout: new BN(0),
+                          beneficiaryAgent,
+                          calleePayout,
+                        }
+                        const toSubmitFields = Object.assign({}, toSignFields, { beneficiaryPrincipal: defaultCheque.beneficiary })
+                        shouldNotCashCheque(toSignFields, toSubmitFields, value, sender, signee, "SimpleSwap: invalid beneficiarySig")
+                      })
+                    })
+                  })
+                })
               })
             })
-            context('when expiry is now', function() {
-              const expiry = time.latest()
+            context('when the calleePayout is zero', function () {
+              beforeEach(async function () {
+                this.expiry = (await time.latest()).add(time.duration.years(1))
+              })
+              const calleePayout = new BN(0)
+              describe(describePreCondition + 'shouldDeposit', function () {
+                shouldDeposit(defaultCheque.amount, issuer)
+                describe(describePreCondition + 'shouldSubmitChequeBeneficiary', function () {
+                  shouldSubmitChequeBeneficiary(defaultCheque, defaultCheque.beneficiary)
+                  describe(describeTest + 'shouldCashCheque', function () {
+                    const waitTime = defaultCheque.timeout.add(new BN(100))
+
+                    beforeEach(async function () {
+                      await time.increase(waitTime)
+                    })
+                    shouldCashCheque(defaultCheque.beneficiary, agent, defaultCheque.amount, calleePayout, alice)
+                  })
+                })
+              })
             })
           })
-          context('when the signature has expired', function() {
-            const expiry = time.latest().sub(time.duration.days(new BN(1)))
+          context('when the signature has expired', async function () {
+            const beneficiaryAgent = agent
+            const calleePayout = new BN(0)
+            const sender = alice
+            const signee = defaultCheque.beneficiary
+
+            beforeEach(async function () {
+              this.expiry = (await time.latest()).sub(time.duration.days(new BN(1)))
+            })
+            describe(describePreCondition + 'shouldDeposit', function () {
+              shouldDeposit(defaultCheque.amount, issuer)
+              describe(describePreCondition + 'shouldSubmitChequeBeneficiary', function () {
+                shouldSubmitChequeBeneficiary(defaultCheque, defaultCheque.beneficiary)
+                describe(describeTest + 'shouldNotCashCheque', function () {
+                  const toSignFields = {
+                    requestPayout: new BN(0),
+                    beneficiaryAgent,
+                    calleePayout,
+                  }
+                  const toSubmitFields = Object.assign({}, toSignFields, { beneficiaryPrincipal: defaultCheque.beneficiary })
+                  shouldNotCashCheque(toSignFields, toSubmitFields, value, sender, signee, "SimpleSwap: beneficiarySig expired")
+                })
+              })
+            })
           })
         })
-        context('when we send value along', function() {
+        context('when we send value along', function () {
+          beforeEach(async function () {
+            this.expiry = (await time.latest()).sub(time.duration.days(new BN(1)))
+          })
           const value = new BN(1)
+          const beneficiaryAgent = agent
+          const calleePayout = new BN(0)
+          const sender = alice
+          const signee = defaultCheque.beneficiary
+          describe(describeTest + 'shouldNotCashCheque', function () {
+            const toSignFields = {
+              requestPayout: new BN(0),
+              beneficiaryAgent,
+              calleePayout,
+            }
+            const toSubmitFields = Object.assign({}, toSignFields, { beneficiaryPrincipal: defaultCheque.beneficiary })
+            shouldNotCashCheque(toSignFields, toSubmitFields, value, sender, signee, "revert")
+          })
         })
       }
     })
 
-    //TODO: when the beneficiaryAgent equals the sender
-    describe(describeFunction + 'cashChequeBeneficiary', function() {
-      if(enabledTests.cashChequeBeneficiary) {
-        context("when we don't send value along", function() {
+    describe(describeFunction + 'cashChequeBeneficiary', function () {
+      if (enabledTests.cashChequeBeneficiary) {
+        context("when we don't send value along", function () {
           const value = new BN(0)
-          context('when the sender is the beneficiary', function() {
+          context('when the sender is the beneficiary', function () {
             const sender = defaultCheque.beneficiary
-            context('when we submit the cheque beforeHand', function() {
-              //precondition
-              context('when we have not cashed a cheque before', function() {
-                context('when we have waited more timeoutDuration', function() {
-                  const waitTime = defaultCheque.timeout.add(1)
-                  //wait
-                  context('when the requestPayout is equal to the submitted value', function() {
-                    const requestPayout = defaultCheque.amount
-                    context('when there is some balance', function() {
-                      context('when the balance is bigger than the requestPayout', function() {
-                        const depositAmount = new BN(50)
-                        context('when there are hardDeposits', function() {
-                          context('when the hardDeposit is more the requestPayout', function() {
-                            const hardDeposit = requestPayout.add(1)
-                            //precondition
-                            //test
+            context('when we submit the cheque beforeHand', function () {
+              describe(describePreCondition + 'shouldSubmitChequeBeneficiary', function () {
+                shouldSubmitChequeBeneficiary(defaultCheque, defaultCheque.beneficiary)
+                context('when the beneficiaryAgent is not the beneficiaryPrincipal', function () {
+                  const beneficiaryAgent = agent
+                  context('when we have not cashed a cheque before', function () {
+                    context('when we have waited more than timeoutDuration', function () {
+                      const waitTime = defaultCheque.timeout.add(new BN(100))
+                      beforeEach(async function () {
+                        await time.increase(waitTime)
+                      })
+                      context('when the requestPayout is equal to the submitted value', function () {
+                        const requestPayout = defaultCheque.amount
+                        context('when there is some balance', function () {
+                          context('when the balance is bigger than the requestPayout', function () {
+                            describe(describePreCondition + 'shouldDeposit', function () {
+                              const depositAmount = requestPayout.add(new BN(50))
+                              shouldDeposit(depositAmount, issuer)
+                              context('when there are hardDeposits', function () {
+                                describe('when the hardDeposits are assigned to the sender', function () {
+                                  const hardDepositReceiver = sender
+                                  context('when the hardDeposit is more the requestPayout', function () {
+                                    const hardDeposit = requestPayout.add(new BN(1))
+                                    describe(describePreCondition + 'shouldIncreaseHardDeposit', function () {
+                                      shouldIncreaseHardDeposit(hardDepositReceiver, hardDeposit, issuer)
+                                      describe(describeTest + 'shouldCashChequeBeneficiary', function () {
+                                        shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, sender)
+                                      })
+                                    })
+                                  })
+                                  context('when the hardDeposit equals the requestPayout', function () {
+                                    const hardDeposit = requestPayout
+                                    describe(describePreCondition + 'shouldIncreaseHardDeposit', function () {
+                                      shouldIncreaseHardDeposit(hardDepositReceiver, hardDeposit, issuer)
+                                      describe(describeTest + 'shouldCashChequeBeneficiary', function () {
+                                        shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, sender)
+                                      })
+                                    })
+                                  })
+                                  context('when the hardDeposit is less than the requestPayout', function () {
+                                    const hardDeposit = requestPayout.sub(new BN(1))
+                                    describe(describePreCondition + 'shouldIncreaseHardDeposit', function () {
+                                      shouldIncreaseHardDeposit(hardDepositReceiver, hardDeposit, issuer)
+                                      describe(describeTest + 'shouldCashChequeBeneficiary', function () {
+                                        shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, sender)
+                                      })
+                                    })
+                                  })
+                                })
+                                describe('when the hardDeposits are assigned to somebody else', function () {
+                                  const hardDepositReceiver = alice
+                                  const hardDeposit = requestPayout.add(new BN(1))
+                                  describe(describePreCondition + 'shouldIncreaseHardDeposit', function () {
+                                    shouldIncreaseHardDeposit(hardDepositReceiver, hardDeposit, issuer)
+                                    describe(describeTest + 'shouldCashChequeBeneficiary', function () {
+                                      shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, sender)
+                                    })
+                                  })
+                                })
+                              })
+                            })
                           })
-                          context('when the hardDeposit equals the requestPayout', function() {
-                            const hardDeposit = requestPayout
-                            //precondition
-                            //test
+                          context('when the balance equals the requestPayout', function () {
+                            describe(describePreCondition + 'shouldDeposit', function () {
+                              const depositAmount = requestPayout
+                              shouldDeposit(depositAmount, issuer)
+                              describe(describeTest + 'shouldCashChequeBeneficiary', function () {
+                                shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, sender)
+                              })
+                            })
                           })
-                          context('when the hardDeposit is less than the requestPayout', function() {
-                            const hardDeposit = requestPayout.sub(1)
-                            //preCondition
-                            //test
+                        })
+                        context('when there is no balance', function () {
+                          describe(describeTest + 'shouldCashChequeBeneficiary', function () {
+                            shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, sender)
                           })
                         })
                       })
-                      context('when the balance equals the requestPayout', function() {
-                        // preCondition
-                        //test
+                      context('when the requestPayout is less than the submitted value', function () {
+                        const requestPayout = defaultCheque.amount.sub(new BN(1))
+                        describe(describeTest + 'shouldCashChequeBeneficiary', function () {
+                          shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, sender)
+                        })
                       })
                     })
                   })
-                  context('when the requestPayout is less than the submitted value', function() {
-                    const requestPayout = defaultCheque.amount.sub(1)
-                    //test
+                  context('when we have waited timeoutDuration', function () {
+                    const waitTime = defaultCheque.timeout
+                    const requestPayout = defaultCheque.amount
+                    beforeEach(async function () {
+                      await time.increase(waitTime)
+                    })
+                    describe(describeTest + 'shouldCashChequeBeneficiary', function () {
+                      shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, sender)
+                    })
+                  })
+                  context('when we have cashed a cheque before', function () {
+                    describe('when we have cashed the partial amount before', function () {
+                      const waitTime = defaultCheque.timeout.add(new BN(100))
+                      beforeEach(async function () {
+                        await time.increase(waitTime)
+                      })
+                      describe(describePreCondition + 'shouldCashChequeBeneficiary', function () {
+                        const requestPayout = defaultCheque.amount.div(new BN(2))
+                        shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, sender)
+                        describe(describeTest + 'shouldCashChequeBeneficiary', function () {
+                          shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, sender)
+                        })
+                      })
+                    })
+                    describe('when we have cashed the full amount before', function () {
+                      const waitTime = defaultCheque.timeout.add(new BN(100))
+                      beforeEach(async function () {
+                        await time.increase(waitTime)
+                      })
+                      describe(describePreCondition + 'shouldDeposit', function () {
+                        shouldDeposit(defaultCheque.amount, issuer)
+                        describe(describePreCondition + 'shouldCashChequeBeneficiary', function () {
+                          const requestPayout = defaultCheque.amount
+                          shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, sender)
+                          describe(describeTest + 'shouldNotCashChequeBeneficiary', function () {
+                            shouldNotCashChequeBeneficiary(beneficiaryAgent, requestPayout, sender, value, "SimpleSwap: not enough balance owed")
+                          })
+                        })
+                      })
+                    })
                   })
                 })
-                context('when we have waited timeoutDuration', function() {
-                  const waitTime = defaultCheque.timeout
-                  //wait
-                  // test
+                context('when the beneficiaryAgent is the beneficiaryPrincipal', function () {
+                  const beneficiaryAgent = defaultCheque.beneficiary
+                  const waitTime = defaultCheque.timeout.add(new BN(100))
+                  beforeEach(async function () {
+                    await time.increase(waitTime)
+                  })
+                  const requestPayout = defaultCheque.amount
+                  describe(describeTest + 'shouldCashChequeBeneficiary', function () {
+                    shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, sender)
+                  })
                 })
               })
-              context('when we have cashed a cheque before', function() {
-                // precondition
+            })
+            context("when we don't submit a cheque beforeHand", function () {
+              describe(describeTest + 'shouldNotCashChequeBeneficiary', function () {
+                shouldNotCashChequeBeneficiary(agent, defaultCheque.amount, sender, value, "SimpleSwap: not enough balance owed")
               })
             })
-            context("when we don't submit a cheque beforeHand", function() {
-              //fails
+          })
+          context('when the sender is not the beneficiary', function () {
+            const sender = alice
+            describe(describePreCondition, 'shouldDeposit', function () {
+              shouldDeposit(defaultCheque.amount, issuer)
+              describe(describePreCondition + 'shouldSubmitChequeBeneficiary', function () {
+                shouldSubmitChequeBeneficiary(defaultCheque, defaultCheque.beneficiary)
+                describe(describeTest + 'shouldNotCashChequeBeneficiary', function () {
+                  shouldNotCashChequeBeneficiary(agent, defaultCheque.amount, sender, value, "SimpleSwap: not enough balance owed")
+                })
+              })
             })
           })
-          context('when the sender is not the beneficiary', function() {
+          context('when we send value along', function () {
             const sender = alice
-            //fails
+            const value = new BN(1)
+            describe(describePreCondition + 'shouldDeposit', function () {
+              shouldDeposit(defaultCheque.amount, issuer)
+              describe(describePreCondition + 'shouldSubmitChequeBeneficiary', function () {
+                shouldSubmitChequeBeneficiary(defaultCheque, defaultCheque.beneficiary)
+                describe(describeTest + 'shouldNotCashChequeBeneficiary', function () {
+                  shouldNotCashChequeBeneficiary(agent, defaultCheque.amount, sender, value, "revert")
+                })
+              })
+            })
           })
-        })
-        context('when we send value along', function() {
-          const sender = alice
-          const value = new BN(1)
-          // fails
         })
       }
     })
@@ -781,8 +1124,8 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
               this.logs = logs
             })
 
-            it('should fire the hardDepositAmountChanged event', async function () {
-              expectEvent.inLogs(this.logs, 'hardDepositAmountChanged', {
+            it('should fire the HardDepositAmountChanged event', async function () {
+              expectEvent.inLogs(this.logs, 'HardDepositAmountChanged', {
                 beneficiary,
                 amount: amount.sub(decrease)
               })
@@ -857,8 +1200,8 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
               this.logs = logs
             })
 
-            it('should fire the hardDepositAmountChanged event', async function () {
-              expectEvent.inLogs(this.logs, 'hardDepositAmountChanged', {
+            it('should fire the HardDepositAmountChanged event', async function () {
+              expectEvent.inLogs(this.logs, 'HardDepositAmountChanged', {
                 beneficiary,
                 amount: this.previoushardDeposit.add(amount)
               })
@@ -910,8 +1253,8 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
               expect((await this.simpleSwap.hardDeposits(beneficiary))[2]).bignumber.is.equal(decreaseTimeout)
             })
 
-            it('should fire the hardDepositDecreaseTimeoutChanged', async function () {
-              expectEvent.inLogs(this.logs, 'hardDepositDecreaseTimeoutChanged', {
+            it('should fire the HardDepositDecreaseTimeoutChanged', async function () {
+              expectEvent.inLogs(this.logs, 'HardDepositDecreaseTimeoutChanged', {
                 beneficiary,
                 decreaseTimeout
               })

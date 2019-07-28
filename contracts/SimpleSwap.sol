@@ -136,13 +136,14 @@ contract SimpleSwap {
   function _cashChequeInternal(address beneficiaryPrincipal, address payable beneficiaryAgent, uint requestPayout, uint calleePayout) public {
      ChequeInfo storage cheque = cheques[beneficiaryPrincipal];
     /* grace period must have ended */
-    require(now >= cheque.cashTimeout,  "SimpleSwap: cheque not yet timed out");
+    require(now >= cheque.cashTimeout, "SimpleSwap: cheque not yet timed out");
     require(requestPayout <= cheque.amount.sub(cheque.paidOut), "SimpleSwap: not enough balance owed");
     /* ensure there is a balance to claim */
      /* calculates hard-deposit usage */
     uint hardDepositUsage = Math.min(requestPayout, hardDeposits[beneficiaryPrincipal].amount);
     /* calculates acutal payout */
     uint totalPayout = Math.min(requestPayout, liquidBalance() + hardDepositUsage);
+    require(totalPayout >= calleePayout, "SimpleSwap: cannot pay callee");
       /* if there some of the hard deposit is used update the structure */
     if(hardDepositUsage != 0) {
       hardDeposits[beneficiaryPrincipal].amount = hardDeposits[beneficiaryPrincipal].amount.sub(hardDepositUsage);
