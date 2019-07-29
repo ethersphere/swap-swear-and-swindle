@@ -48,7 +48,18 @@ async function signCashOut(swap, sender, requestPayout, beneficiaryAgent, expiry
   return await sign(hash, signee)
 }
 
+async function signCustomDecreaseTimeout(swap, beneficiary, decreaseTimeout, signee) {
+  const hash = await swap.customDecreaseTimeoutHash(
+    swap.address,
+    beneficiary,
+    decreaseTimeout
+  )
+
+  return await sign(hash, signee)
+}
+
 module.exports = {
+  signCustomDecreaseTimeout,
   signCashOut,
   signCheque,
   sign

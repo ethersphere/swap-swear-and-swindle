@@ -22,6 +22,7 @@ contract SimpleSwap {
   event HardDepositAmountChanged(address indexed beneficiary, uint amount);
   event HardDepositDecreasePrepared(address indexed beneficiary, uint decreaseAmount);
   event HardDepositDecreaseTimeoutChanged(address indexed beneficiary, uint decreaseTimeout);
+  event Withdraw(uint amount);
 
   uint public DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT;
   /* structure to keep track of the hard deposits (on-chain guarantee of solvency) per beneficiary*/
@@ -229,10 +230,10 @@ contract SimpleSwap {
 
     HardDeposit storage hardDeposit = hardDeposits[beneficiary];
     hardDeposit.amount = hardDeposit.amount.add(amount);
-    // we don't explicitely set timeoutDuration, as zero means using the DEFAULT_HARDDEPOSIT_TIMEOUT_DURATION
+    // we don't explicitely set decreaseTimeout, as zero means using the DEFAULT_HARDDEPOSIT_TIMEOUT_DURATION
     totalHardDeposit = totalHardDeposit.add(amount);
     /* disable any pending decrease */
-    hardDeposit.decreaseTimeout = 0;
+    hardDeposit.canBeDecreasedAt = 0;
     emit HardDepositAmountChanged(beneficiary, hardDeposit.amount);
   }
 
@@ -243,7 +244,7 @@ contract SimpleSwap {
     bytes memory beneficiarySig
   ) public {
     require(msg.sender == issuer, "SimpleSwap: not issuer");
-    require(beneficiary == recover(keccak256(abi.encode(address(this), beneficiary, decreaseTimeout)), beneficiarySig));
+    require(beneficiary == recover(customDecreaseTimeoutHash(address(this), beneficiary, decreaseTimeout), beneficiarySig));
     hardDeposits[beneficiary].decreaseTimeout = decreaseTimeout;
     emit HardDepositDecreaseTimeoutChanged(beneficiary, hardDeposits[beneficiary].decreaseTimeout);
   }
@@ -256,6 +257,7 @@ contract SimpleSwap {
     /* ensure we don't take anything from the hard deposit */
     require(amount <= liquidBalance(), "SimpleSwap: liquidBalance not sufficient");
     issuer.transfer(amount);
+    emit Withdraw(amount);
   }
 
   /// @notice deposit ether
@@ -278,6 +280,11 @@ contract SimpleSwap {
   public pure returns (bytes32) {
     return keccak256(abi.encodePacked(swap, sender, requestPayout, beneficiaryAgent, expiry, calleePayout));
   }
+
+  function customDecreaseTimeoutHash(address swap, address beneficiary, uint decreaseTimeout) public pure returns (bytes32) {
+    return keccak256(abi.encode(swap, beneficiary, decreaseTimeout));
+  }
+
 }
 
 

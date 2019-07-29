@@ -8,7 +8,7 @@ const {
 } = require("openzeppelin-test-helpers");
 
 
-const { signCheque, signCashOut } = require("./swutils");
+const { signCheque, signCashOut, signCustomDecreaseTimeout } = require("./swutils");
 const { computeCost } = require("./testutils");
 
 
@@ -345,25 +345,36 @@ function shouldNotCashCheque(toSignFields, toSubmitFields, value, from, signee, 
 }
 function shouldPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, from) {
   beforeEach(async function() {
-    await this.simpleSwap.send(amount)
-    await this.simpleSwap.increaseHardDeposit(beneficiary, amount)
-
-    let { logs } = await this.simpleSwap.prepareDecreaseHardDeposit(
-      beneficiary,
-      amount, 
-      {from: issuer}
-    )
-
+    const { logs } = this.simpleSwap.prepareDecreaseHardDeposit(beneficiary, decreaseAmount)
     this.logs = logs
-    this.timeout = (await this.simpleSwap.hardDeposits(beneficiary))[2]
   })
 
-  it('should fire the HardDepositDecreasePrepared event', function() {
+  it("should update the canBeDecreasedAt", async function() {
+    let expectedCanBeDecreasedAt
+    let personalDecreaseTimeout = await this.simpleSwap.hardDeposits(beneficiary)
+    // if personalDecreaseTimeout is zero
+    if(personalDecreaseTimeout == new BN(0)) {
+      // use the contract's default
+      expectedCanBeDecreasedAt = await this.simpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT
+    } else {
+      // use the value that was set
+      expectedCanBeDecreasedAt = personalDecreaseTimeout
+    }
+    expect(this.postconditions.hardDepositFor.canBeDecreasedAt).bignumber.to.be.equal((await time.latest()).add(expectedCanBeDecreasedAt))
+  })
+
+  it('should update the decreaseAmount', function() {
+    expect(this.preconditions.hardDepositFor.decreaseAmount).to.be.equal(decreaseAmount)
+  })
+
+  it('should emit a HardDepositDecreasePrepared event', function() {
     expectEvent.inLogs(this.logs, 'HardDepositDecreasePrepared', {
       beneficiary,
       decreaseAmount: amount
     })
   })
+
+  
 
   it('should set the decreaseAmount', async function() {
     expect((await this.simpleSwap.hardDeposits(beneficiary))[1]).bignumber.is.equal(amount)
@@ -375,12 +386,61 @@ function shouldPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, from) {
 
 }
 function shouldNotPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, from, value, revertMessage) {
-
+  it('reverts', async function() {
+    await expectRevert(this.simpleSwap.prepareDecreaseHardDeposit(
+      beneficiary,
+      decreaseAmount,
+      {from: from, value: value}), 
+      revertMessage
+    )
+  })
 }
 function shouldDecreaseHardDeposit(beneficiary, from) {
+  beforeEach(async function() {
+    this.preconditions = {
+      hardDeposit: await this.simpleSwap.totalHardDeposit(),
+      hardDepositFor: await this.simpleSwap.hardDeposits(beneficiary)
+    }
+
+    const { logs } = this.simpleSwap.decreaseHardDeposit(beneficiary, {from: from})
+    this.logs = logs
+    
+    this.postconditions = {
+      hardDeposit: await this.simpleSwap.totalHardDeposit(),
+      hardDepositFor: await this.simpleSwap.hardDeposits(beneficiary)
+    }
+  })
+
+  it('decreases the hardDeposit amount for the beneficiary', function() { 
+    expect(this.postconditions.hardDepositFor.amount).bignumber.to.be.equal(this.preconditions.hardDepositFor.amount.add(this.preconditions.hardDepositFor.decreaseAmount))
+  })
+
+  it('decreases the total hardDeposits', function() {
+    expect(this.postconditions.hardDeposit).bignumber.to.be.equal(this.preconditions.hardDeposit).sub(this.preconditions.hardDepositFor.decreaseAmount)
+  })
+
+  it('resets the canBeDecreased at', function() {
+    expect(this.postconditions.hardDepositFor.canBeDecreasedAt).to.be.equal(new BN(0))
+  })
+
+  it('emits a hardDepositAmountChanged event', function() {
+    expectEvent.inLogs(this.logs, 'HardDepositAmountChanged', {
+      beneficiary,
+      amount
+    })
+  })
+
+
 
 }
 function shouldNotDecreaseHardDeposit(beneficiary, from, value, revertMessage) {
+  it('reverts', async function() {
+    await expectRevert(this.simpleSwap.decreaseHardDeposit(
+      beneficiary,
+      {from: from, value: value}), 
+      revertMessage
+    )
+  })
 
 }
 function shouldIncreaseHardDeposit(beneficiary, amount, from) {
@@ -392,7 +452,7 @@ function shouldIncreaseHardDeposit(beneficiary, amount, from) {
       totalHardDeposit: await this.simpleSwap.totalHardDeposit(),
       hardDepositFor: await this.simpleSwap.hardDeposits(beneficiary),
     }
-    const { logs } = this.simpleSwap.increaseHardDeposit(beneficiary, amount, { from: from })
+    const { logs } = await this.simpleSwap.increaseHardDeposit(beneficiary, amount, { from: from })
     this.logs = logs
     this.postconditions = {
       balance: await balance.current(this.simpleSwap.address),
@@ -431,24 +491,95 @@ function shouldIncreaseHardDeposit(beneficiary, amount, from) {
     expect(this.postconditions.hardDepositFor.decreaseTimeout).bignumber.to.be.equal(new BN(0))
   })
 
-
-
+  it('emits a hardDepositAmountChanged event', function() {
+    expectEvent.inLogs(this.logs, 'HardDepositAmountChanged', {
+      beneficiary,
+      amount
+    })
+  })
 }
 function shouldNotIncreaseHardDeposit(beneficiary, amount, from, value, revertMessage) {
-
+  it('reverts', async function() {
+    await expectRevert(this.simpleSwap.increaseHardDeposit(
+      beneficiary,
+      amount,
+      {from: from, value: value}), 
+      revertMessage
+    )
+  })
 }
-function shouldSetCustomHardDepositDecreaseTimeout(beneficiary, decreaseTimeout, beneficiarySig, from) {
+function shouldSetCustomHardDepositDecreaseTimeout(beneficiary, decreaseTimeout, from) {
+  beforeEach(async function() {
+    const beneficiarySig = await signCustomDecreaseTimeout(this.simpleSwap, beneficiary, decreaseTimeout, beneficiary)
 
+    const { logs } = await this.simpleSwap.setCustomHardDepositDecreaseTimeout(beneficiary, decreaseTimeout, beneficiarySig, {from: from})
+    this.logs = logs
+
+    this.postconditions = {
+      hardDepositFor: await this.simpleSwap.hardDeposits(beneficiary)
+    }
+  })
+
+  it('should have set the decreaseTimeout', async function() {
+    expect(this.postconditions.hardDepositFor.decreaseTimeout).bignumber.to.be.equal(decreaseTimeout)
+  })
+
+  it('emits a HardDepositDecreaseTimeoutChanged event', function() {
+    expectEvent.inLogs(this.logs, 'HardDepositDecreaseTimeoutChanged', {
+      beneficiary,
+      decreaseTimeout
+    })
+  })
 }
-function shouldNotSetCustomHardDepositDecreaseTimeout(beneficiary, decreaseTimeout, beneficiarySig, from,value, revertMessage) {
+function shouldNotSetCustomHardDepositDecreaseTimeout(toSubmit, toSign, from,value, revertMessage) {
+  beforeEach(async function() {
+    this.beneficiarySig = await signCustomDecreaseTimeout(this.simpleSwap, toSign.beneficiary, toSign.decreaseTimeout)
+  })
 
+  it('reverts', async function() {
+    await expectRevert(this.simpleSwap.increaseHardDeposit(
+      toSubmit.beneficiary,
+      toSubmit.decreaseTimeout,
+      this.beneficiarySig,
+      {from: from, value: value}), 
+      revertMessage
+    )
+  })
 }
 
 function shouldWithdraw(amount, from) {
+  beforeEach(async function() {
+    this.preconditions = {
+      liquidBalance: await this.simpleSwap.liquidBalance()
+    }
+
+    const { logs } = await this.simpleSwap.withdraw(amount, {from: from})
+    this.logs = logs
+
+    this.postconditions = {
+      liquidBalance: await this.simpleSwap.liquidBalance()
+    }
+  })
+
+  it('should have updated the liquidBalance', function() {
+    expect(this.postconditions.liquidBalance).bignumber.to.be.eqaul(this.preconditions.liquidBalance.add(amount))
+  })
+
+  it('should have emitted a Withdraw event', function() {
+    expectEvent.inLogs(this.logs, 'Withdraw', {
+      amount
+    })
+  })
 
 }
 function shouldNotWithdraw(amount, from, value, revertMessage) {
-
+  it('reverts', async function() {
+    await expectRevert(this.simpleSwap.withdraw(
+      amount,
+      {from: from, value: value}), 
+      revertMessage
+    )
+  })
 }
 
 function shouldDeposit(amount, from) {
