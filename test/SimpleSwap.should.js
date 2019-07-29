@@ -345,45 +345,43 @@ function shouldNotCashCheque(toSignFields, toSubmitFields, value, from, signee, 
 }
 function shouldPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, from) {
   beforeEach(async function() {
-    const { logs } = this.simpleSwap.prepareDecreaseHardDeposit(beneficiary, decreaseAmount)
+    this.preconditions = {
+      hardDepositFor: await this.simpleSwap.hardDeposits(beneficiary)
+    }
+    const { logs } = await this.simpleSwap.prepareDecreaseHardDeposit(beneficiary, decreaseAmount , {from: from})
     this.logs = logs
+
+    this.postconditions = {
+      hardDepositFor: await this.simpleSwap.hardDeposits(beneficiary)
+    }
   })
 
   it("should update the canBeDecreasedAt", async function() {
     let expectedCanBeDecreasedAt
-    let personalDecreaseTimeout = await this.simpleSwap.hardDeposits(beneficiary)
+    let personalDecreaseTimeout = (await this.simpleSwap.hardDeposits(beneficiary)).decreaseTimeout
     // if personalDecreaseTimeout is zero
-    if(personalDecreaseTimeout == new BN(0)) {
+    if(personalDecreaseTimeout.eq(new BN(0))) {
       // use the contract's default
-      expectedCanBeDecreasedAt = await this.simpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT
+      expectedCanBeDecreasedAt = await this.simpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT()
+      console.log('default')
     } else {
       // use the value that was set
       expectedCanBeDecreasedAt = personalDecreaseTimeout
+      console.log('non-default')
     }
     expect(this.postconditions.hardDepositFor.canBeDecreasedAt).bignumber.to.be.equal((await time.latest()).add(expectedCanBeDecreasedAt))
   })
 
   it('should update the decreaseAmount', function() {
-    expect(this.preconditions.hardDepositFor.decreaseAmount).to.be.equal(decreaseAmount)
+    expect(this.postconditions.hardDepositFor.decreaseAmount).bignumber.to.be.equal(decreaseAmount)
   })
 
   it('should emit a HardDepositDecreasePrepared event', function() {
     expectEvent.inLogs(this.logs, 'HardDepositDecreasePrepared', {
       beneficiary,
-      decreaseAmount: amount
+      decreaseAmount
     })
   })
-
-  
-
-  it('should set the decreaseAmount', async function() {
-    expect((await this.simpleSwap.hardDeposits(beneficiary))[1]).bignumber.is.equal(amount)
-  })
-
-  it('should set the canBeDecreasedAt', async function() {
-    expect((await this.simpleSwap.hardDeposits(beneficiary))[3]).bignumber.is.gte((await time.latest()).add(this.timeout))
-  })
-
 }
 function shouldNotPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, from, value, revertMessage) {
   it('reverts', async function() {

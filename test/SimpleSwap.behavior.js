@@ -31,14 +31,14 @@ const {
   shouldNotCashChequeBeneficiary,
   shouldCashCheque,
   shouldNotCashCheque,
-  shouldPrepareDecreasehardDeposit,
-  shouldNotPrepareDecreasehardDeposit,
+  shouldPrepareDecreaseHardDeposit,
+  shouldNotPrepareDecreaseHardDeposit,
   shouldDecreaseHardDeposit,
-  shouldNotDecreasehardDeposit,
+  shouldNotDecreaseHardDeposit,
   shouldIncreaseHardDeposit,
   shouldNotincreaseHardDeposit,
-  shouldSetCustomhardDepositDecreaseTimeout,
-  shouldNotSetCustomhardDepositDecreaseTimeout,
+  shouldSetCustomHardDepositDecreaseTimeout,
+  shouldNotSetCustomHardDepositDecreaseTimeout,
   shouldWithdraw,
   shouldNotWithdraw,
   shouldDeposit
@@ -1058,49 +1058,77 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
 
     describe(describeFunction + 'prepareDecreaseHardDeposit', function () {
       if (enabledTests.prepareDecreaseHardDeposit) {
-        let amount = new BN(50)
-        let beneficiary = bob
-        context('when the sender is the issuer', function () {
-          context('when the hard deposit is high enough', function () {
-            context('when no custom decreaseTimeout is set', function () {
-              shouldDecreaseHardDeposit()
-            })
-            context('when a custom decreaseTimeout is set', function () {
-              let decreaseTimeout = new BN(100)
-              beforeEach(async function () {
-                const data = web3.utils.keccak256(web3.eth.abi.encodeParameters(['address', 'address', 'uint256'], [this.simpleSwap.address, beneficiary, decreaseTimeout.toString()]))
-                await this.simpleSwap.setCustomHardDepositDecreaseTimeout(
-                  beneficiary,
-                  decreaseTimeout,
-                  await sign(data, beneficiary), {
-                    from: issuer
+        const beneficiary = defaultCheque.beneficiary
+        context("when we don't send value along", function () {
+          const value = new BN(0)
+          context('when there are hardDeposits', function () {
+            const hardDepositAmount = new BN(50)
+            describe(describePreCondition + 'shouldDeposit', function () {
+              shouldDeposit(hardDepositAmount, issuer)
+              describe(describePreCondition + 'shouldIncreaseHardDeposit', function () {
+                shouldIncreaseHardDeposit(beneficiary, hardDepositAmount, issuer)
+                context('when the sender is the issuer', function () {
+                  const sender = issuer
+                  context('when the decreaseAmount is the hardDepositAmount', function () {
+                    const decreaseAmount = hardDepositAmount
+                    context('when we have set a custom decreaseTimeout', function() {
+                      describe(describePreCondition + 'shouldSetCustomHardDepositDecreaseTimeout', function() {
+                        const customTimeout = new BN(10)
+                        shouldSetCustomHardDepositDecreaseTimeout(beneficiary, customTimeout, issuer)
+                        context('when we have not set a custom decreaseTimeout', function() {
+                          describe(describeTest + 'prepareDecreaseHardDeposit', function () {
+                            shouldPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, sender)
+                          })
+                        })
+                      })
+                    })
+                    context('when we have not set a custom decreaseTimeout', function() {
+                      describe(describeTest + 'prepareDecreaseHardDeposit', function () {
+                        shouldPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, sender)
+                      })
+                    })
                   })
+                  context('when the decreaseAmount is less than the hardDepositAmount', function () {
+                    const decreaseAmount = hardDepositAmount.div(new BN(2))
+                    describe(describeTest + 'prepareDecreaseHardDeposit', function () {
+                      shouldPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, sender)
+                    })
+                  })
+                  context('when the decreaseAmount is higher than the hardDepositAmount', function () {
+                    const decreaseAmount = hardDepositAmount.add(new BN(1))
+                    const revertMessage = "SimpleSwap: hard deposit not sufficient"
+                    describe(describeTest + 'shouldNotPrepareDecreaseHardDeposit', function () {
+                      shouldNotPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, sender, value, revertMessage)
+                    })
+                  })
+                })
+                context('when the sender is the issuer', function () {
+                  const sender = alice
+                  const revertMessage = "SimpleSwap: not issuer"
+                  const decreaseAmount = hardDepositAmount
+                  describe(describeTest + 'shouldNotPrepareDecreaseHardDeposit', function () {
+                    shouldNotPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, sender, value, revertMessage)
+                  })
+                })
               })
-              shouldDecreaseHardDeposit()
+              context('when there are no hardDeposits', function () {
+                const sender = issuer
+                const revertMessage = "SimpleSwap: hard deposit not sufficient"
+                const decreaseAmount = new BN(50)
+                describe(describeTest + 'shouldNotPrepareDecreaseHardDeposit', function () {
+                  shouldNotPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, sender, value, revertMessage)
+                })
+              })
             })
-          })
-          context('when the hard deposit is not high enough', function () {
-            beforeEach(async function () {
-              await this.simpleSwap.send(amount)
-              await this.simpleSwap.increaseHardDeposit(beneficiary, amount.divn(2))
-            })
-            it('reverts', async function () {
-              await expectRevert(this.simpleSwap.prepareDecreaseHardDeposit(
-                beneficiary,
-                amount, {
-                  from: issuer
-                }), "SimpleSwap: hard deposit not sufficient")
-            })
-
           })
         })
-        context('when the sender is not the issuer', function () {
-          let sender = bob
-          it('reverts', async function () {
-            await expectRevert(this.simpleSwap.prepareDecreaseHardDeposit(
-              beneficiary,
-              amount,
-              { from: sender }), "SimpleSwap: not issuer")
+        context('when we send value along', function () {
+          const value = new BN(1)
+          const sender = issuer
+          const revertMessage = "revert"
+          const decreaseAmount = new BN(50)
+          describe(describeTest + 'shouldNotPrepareDecreaseHardDeposit', function () {
+            shouldNotPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, sender, value, revertMessage)
           })
         })
       }
