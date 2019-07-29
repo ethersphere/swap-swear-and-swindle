@@ -363,11 +363,9 @@ function shouldPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, from) {
     if(personalDecreaseTimeout.eq(new BN(0))) {
       // use the contract's default
       expectedCanBeDecreasedAt = await this.simpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT()
-      console.log('default')
     } else {
       // use the value that was set
       expectedCanBeDecreasedAt = personalDecreaseTimeout
-      console.log('non-default')
     }
     expect(this.postconditions.hardDepositFor.canBeDecreasedAt).bignumber.to.be.equal((await time.latest()).add(expectedCanBeDecreasedAt))
   })
@@ -400,7 +398,7 @@ function shouldDecreaseHardDeposit(beneficiary, from) {
       hardDepositFor: await this.simpleSwap.hardDeposits(beneficiary)
     }
 
-    const { logs } = this.simpleSwap.decreaseHardDeposit(beneficiary, {from: from})
+    const { logs } = await this.simpleSwap.decreaseHardDeposit(beneficiary, {from: from})
     this.logs = logs
     
     this.postconditions = {
@@ -410,26 +408,24 @@ function shouldDecreaseHardDeposit(beneficiary, from) {
   })
 
   it('decreases the hardDeposit amount for the beneficiary', function() { 
-    expect(this.postconditions.hardDepositFor.amount).bignumber.to.be.equal(this.preconditions.hardDepositFor.amount.add(this.preconditions.hardDepositFor.decreaseAmount))
+    expect(this.postconditions.hardDepositFor.amount).bignumber.to.be.equal(this.preconditions.hardDepositFor.amount.sub(this.preconditions.hardDepositFor.decreaseAmount))
   })
 
+ 
   it('decreases the total hardDeposits', function() {
-    expect(this.postconditions.hardDeposit).bignumber.to.be.equal(this.preconditions.hardDeposit).sub(this.preconditions.hardDepositFor.decreaseAmount)
+    expect(this.postconditions.hardDeposit).bignumber.to.be.equal(this.preconditions.hardDeposit.sub(this.preconditions.hardDepositFor.decreaseAmount))
   })
 
   it('resets the canBeDecreased at', function() {
-    expect(this.postconditions.hardDepositFor.canBeDecreasedAt).to.be.equal(new BN(0))
+    expect(this.postconditions.hardDepositFor.canBeDecreasedAt).bignumber.to.be.equal(new BN(0))
   })
 
   it('emits a hardDepositAmountChanged event', function() {
     expectEvent.inLogs(this.logs, 'HardDepositAmountChanged', {
       beneficiary,
-      amount
+      amount: this.postconditions.hardDepositFor.amount
     })
   })
-
-
-
 }
 function shouldNotDecreaseHardDeposit(beneficiary, from, value, revertMessage) {
   it('reverts', async function() {

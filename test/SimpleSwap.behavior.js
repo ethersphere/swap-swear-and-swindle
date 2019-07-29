@@ -1136,57 +1136,54 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
 
     describe(describeFunction + 'decreaseHardDeposit', function () {
       if (enabledTests.decreaseHardDeposit) {
-        let beneficiary = bob
-        let amount = new BN(500)
-        let decrease = new BN(400)
-        beforeEach(async function () {
-          await this.simpleSwap.send(amount)
-          await this.simpleSwap.increaseHardDeposit(beneficiary, amount)
-        })
-        context('when decrease is ready', function () {
-          context('when there is enough hard deposit left', function () {
-            beforeEach(async function () {
-              await this.simpleSwap.prepareDecreaseHardDeposit(beneficiary, decrease)
-              await time.increase(await this.simpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT())
-              let { logs } = await this.simpleSwap.decreaseHardDeposit(beneficiary)
-              this.logs = logs
-            })
-
-            it('should fire the HardDepositAmountChanged event', async function () {
-              expectEvent.inLogs(this.logs, 'HardDepositAmountChanged', {
-                beneficiary,
-                amount: amount.sub(decrease)
+        const beneficiary = defaultCheque.beneficiary
+        context("when we don't send value along", function() {
+          const value = new BN(0)
+          context('when the sender is the issuer', function() {
+            const sender = issuer
+            context("when we have prepared the decreaseHardDeposit", function() {
+              const hardDeposit = new BN(50)
+              describe(describePreCondition +"shouldDeposit", function() {
+                shouldDeposit(hardDeposit, issuer)
+                describe(describePreCondition + "shouldIncreaseHardDeposit", function() {
+                  shouldIncreaseHardDeposit(beneficiary, hardDeposit, issuer)
+                  describe(describePreCondition + "shouldPrepareDecreaseHardDeposit", function() {
+                    shouldPrepareDecreaseHardDeposit(beneficiary, hardDeposit, issuer)
+                    context('when we have waited more than decreaseTimeout time', function() {
+                      beforeEach(async function() {
+                        await time.increase(await this.simpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT())
+                      })
+                      describe(describeTest + 'shouldDecreaseHardDeposit', function() {
+                        shouldDecreaseHardDeposit(beneficiary, sender)
+                      })
+                    })
+                    context('when we have not waited more than decreaseTimeout time', function() {
+                      describe(describeTest + 'shouldNotDecreaseHardDeposit', function() {
+                        const revertMessage = "SimpleSwap: deposit not yet timed out"
+                        shouldNotDecreaseHardDeposit(beneficiary, sender, value, revertMessage )
+                      })
+                    })
+                  })
+                })
               })
             })
-
-            it('should set the new amount', async function () {
-              expect((await this.simpleSwap.hardDeposits(beneficiary))[0]).bignumber.is.equal(amount.sub(decrease))
+            context('when we have not prepared the decreaseHardDeposit', function() {
+              describe(describeTest + 'shouldNotDecreaseHardDeposit', function() {
+                const revertMessage = "SimpleSwap: deposit not yet timed out"
+                shouldNotDecreaseHardDeposit(beneficiary, sender, value, revertMessage )
+              })
             })
           })
-          // TODO: when there is not enough left
         })
+        context("when we send value along", function() {
+          const value = new BN(1)
+          const sender = issuer
+          describe(describeTest + 'shouldNotDecreaseHardDeposit', function() {
+            const revertMessage = "revert"
+            shouldNotDecreaseHardDeposit(beneficiary, sender, value, revertMessage)
+          })
 
-        context('when timeout not yet expired', function () {
-          beforeEach(async function () {
-            await this.simpleSwap.prepareDecreaseHardDeposit(beneficiary, amount)
-          })
-          it('reverts', async function () {
-            await expectRevert(
-              this.simpleSwap.decreaseHardDeposit(beneficiary, { from: issuer }),
-              "SimpleSwap: deposit not yet timed out"
-            )
-          })
         })
-
-        context('when no decrease prepared', async function () {
-          it('reverts', async function () {
-            await expectRevert(
-              this.simpleSwap.decreaseHardDeposit(beneficiary, { from: issuer }),
-              "SimpleSwap: deposit not yet timed out"
-            )
-          })
-        })
-
       }
     })
 
