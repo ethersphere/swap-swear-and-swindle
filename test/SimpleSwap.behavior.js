@@ -61,7 +61,7 @@ enabledTests = {
   prepareDecreaseHardDeposit: true,
   decreaseHardDeposit: true,
   increaseHardDeposit: true,
-  setCustomhardDepositDecreaseTimeout: true,
+  setCustomHardDepositDecreaseTimeout: true,
   withdraw: true
 }
 
@@ -93,14 +93,66 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
 
     describe(describeFunction + 'cheques', function () {
       if (enabledTests.cheques) {
-        //TODO
+        const beneficiary = defaultCheque.beneficiary
+        context('when no cheque was ever submitted', function () {
+          describe(describeTest + 'shouldReturnCheques', function () {
+            const expectedSerial = new BN(0)
+            const expectedAmount = new BN(0)
+            const expectedPaidOut = new BN(0)
+            const expectedCashTimeout = new BN(0)
+            shouldReturnCheques(beneficiary, expectedSerial, expectedAmount, expectedPaidOut, expectedCashTimeout)
+          })
+        })
+        context('when a cheque was submitted but not cashed', function () {
+          const toSubmitCheque = defaultCheque
+          describe(describePreCondition + 'shouldSubmitChequeBeneficiary', function () {
+            shouldSubmitChequeBeneficiary(toSubmitCheque, defaultCheque.beneficiary)
+            describe(describeTest + 'shouldReturnCheques', function () {
+              const expectedSerial = toSubmitCheque.serial
+              const expectedAmount = toSubmitCheque.amount
+              const expectedPaidOut = new BN(0)
+              const expectedCashTimeout = toSubmitCheque.timeout
+              shouldReturnCheques(beneficiary, expectedSerial, expectedAmount, expectedPaidOut, expectedCashTimeout)
+            })
+            context('when a cheque was cashed', function () {
+              describe(describePreCondition + 'shouldDeposit', function() {
+                shouldDeposit(defaultCheque.amount, issuer)
+                describe(describePreCondition + 'shouldCashChequeBeneficiary', function () {
+                  beforeEach(async function() {
+                    await time.increase(toSubmitCheque.timeout)
+                  })
+                  shouldCashChequeBeneficiary(defaultCheque.beneficiary, defaultCheque.amount, defaultCheque.beneficiary)
+                  describe(describeTest + 'shouldReturnCheques', function () {
+                    const expectedSerial = toSubmitCheque.serial
+                    const expectedAmount = toSubmitCheque.amount
+                    const expectedPaidOut = toSubmitCheque.amount
+                    const expectedCashTimeout = toSubmitCheque.timeout
+                    shouldReturnCheques(beneficiary, expectedSerial, expectedAmount, expectedPaidOut, expectedCashTimeout)
+                  })
+                })
+              })
+              
+            })
+          })
+        })
       }
     })
 
     describe(describeFunction + 'hardDeposits', function () {
       if (enabledTests.hardDeposits) {
-        //TODO
+        describe('when no hardDeposit was allocated', function() {
+          describe('when no custom decreaseTimeout was set', function() {
+            const expectedAmount = new BN(0)
+            const exptectedDecreaseAmount = new BN(0)
+            const expectedDecreaseTimout = new BN(0)
+            const exptectedCanBeDecreasedAt = new BN(0)
+          })
+        })
       }
+    })
+
+    describe(describeFunction + 'totalHardDeposits', function() {
+      //TODO
     })
 
     describe(describeFunction + 'issuer', function () {
@@ -1071,18 +1123,18 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                   const sender = issuer
                   context('when the decreaseAmount is the hardDepositAmount', function () {
                     const decreaseAmount = hardDepositAmount
-                    context('when we have set a custom decreaseTimeout', function() {
-                      describe(describePreCondition + 'shouldSetCustomHardDepositDecreaseTimeout', function() {
+                    context('when we have set a custom decreaseTimeout', function () {
+                      describe(describePreCondition + 'shouldSetCustomHardDepositDecreaseTimeout', function () {
                         const customTimeout = new BN(10)
                         shouldSetCustomHardDepositDecreaseTimeout(beneficiary, customTimeout, issuer)
-                        context('when we have not set a custom decreaseTimeout', function() {
+                        context('when we have not set a custom decreaseTimeout', function () {
                           describe(describeTest + 'prepareDecreaseHardDeposit', function () {
                             shouldPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, sender)
                           })
                         })
                       })
                     })
-                    context('when we have not set a custom decreaseTimeout', function() {
+                    context('when we have not set a custom decreaseTimeout', function () {
                       describe(describeTest + 'prepareDecreaseHardDeposit', function () {
                         shouldPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, sender)
                       })
@@ -1137,48 +1189,48 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
     describe(describeFunction + 'decreaseHardDeposit', function () {
       if (enabledTests.decreaseHardDeposit) {
         const beneficiary = defaultCheque.beneficiary
-        context("when we don't send value along", function() {
+        context("when we don't send value along", function () {
           const value = new BN(0)
-          context('when the sender is the issuer', function() {
+          context('when the sender is the issuer', function () {
             const sender = issuer
-            context("when we have prepared the decreaseHardDeposit", function() {
+            context("when we have prepared the decreaseHardDeposit", function () {
               const hardDeposit = new BN(50)
-              describe(describePreCondition +"shouldDeposit", function() {
+              describe(describePreCondition + "shouldDeposit", function () {
                 shouldDeposit(hardDeposit, issuer)
-                describe(describePreCondition + "shouldIncreaseHardDeposit", function() {
+                describe(describePreCondition + "shouldIncreaseHardDeposit", function () {
                   shouldIncreaseHardDeposit(beneficiary, hardDeposit, issuer)
-                  describe(describePreCondition + "shouldPrepareDecreaseHardDeposit", function() {
+                  describe(describePreCondition + "shouldPrepareDecreaseHardDeposit", function () {
                     shouldPrepareDecreaseHardDeposit(beneficiary, hardDeposit, issuer)
-                    context('when we have waited more than decreaseTimeout time', function() {
-                      beforeEach(async function() {
+                    context('when we have waited more than decreaseTimeout time', function () {
+                      beforeEach(async function () {
                         await time.increase(await this.simpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT())
                       })
-                      describe(describeTest + 'shouldDecreaseHardDeposit', function() {
+                      describe(describeTest + 'shouldDecreaseHardDeposit', function () {
                         shouldDecreaseHardDeposit(beneficiary, sender)
                       })
                     })
-                    context('when we have not waited more than decreaseTimeout time', function() {
-                      describe(describeTest + 'shouldNotDecreaseHardDeposit', function() {
+                    context('when we have not waited more than decreaseTimeout time', function () {
+                      describe(describeTest + 'shouldNotDecreaseHardDeposit', function () {
                         const revertMessage = "SimpleSwap: deposit not yet timed out"
-                        shouldNotDecreaseHardDeposit(beneficiary, sender, value, revertMessage )
+                        shouldNotDecreaseHardDeposit(beneficiary, sender, value, revertMessage)
                       })
                     })
                   })
                 })
               })
             })
-            context('when we have not prepared the decreaseHardDeposit', function() {
-              describe(describeTest + 'shouldNotDecreaseHardDeposit', function() {
+            context('when we have not prepared the decreaseHardDeposit', function () {
+              describe(describeTest + 'shouldNotDecreaseHardDeposit', function () {
                 const revertMessage = "SimpleSwap: deposit not yet timed out"
-                shouldNotDecreaseHardDeposit(beneficiary, sender, value, revertMessage )
+                shouldNotDecreaseHardDeposit(beneficiary, sender, value, revertMessage)
               })
             })
           })
         })
-        context("when we send value along", function() {
+        context("when we send value along", function () {
           const value = new BN(1)
           const sender = issuer
-          describe(describeTest + 'shouldNotDecreaseHardDeposit', function() {
+          describe(describeTest + 'shouldNotDecreaseHardDeposit', function () {
             const revertMessage = "revert"
             shouldNotDecreaseHardDeposit(beneficiary, sender, value, revertMessage)
           })
@@ -1191,55 +1243,55 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
       if (enabledTests.increaseHardDeposit) {
         const hardDepositIncrease = new BN(50)
         const beneficiary = defaultCheque.beneficiary
-        context("when we don't send value along", function() {
+        context("when we don't send value along", function () {
           const value = new BN(0)
-          context('when the sender is the issuer', function() {
+          context('when the sender is the issuer', function () {
             const sender = issuer
-            context('when there is more liquidBalance than the requested hardDepositIncrease', function() {
+            context('when there is more liquidBalance than the requested hardDepositIncrease', function () {
               const deposit = hardDepositIncrease.mul(new BN(2))
-              describe(describePreCondition + 'shouldDeposit', function() {
+              describe(describePreCondition + 'shouldDeposit', function () {
                 shouldDeposit(deposit, issuer)
-                context('when we have set a customHardDepositDecreaseTimeout', function() {
+                context('when we have set a customHardDepositDecreaseTimeout', function () {
                   const customHardDepositDecreaseTimeout = new BN(60)
-                  describe(describePreCondition + 'shouldSetCustomHardDepositDecreaseTimeout', function() {
+                  describe(describePreCondition + 'shouldSetCustomHardDepositDecreaseTimeout', function () {
                     shouldSetCustomHardDepositDecreaseTimeout(beneficiary, customHardDepositDecreaseTimeout, issuer)
-                    describe(describeTest + 'shouldIncreaseHardDeposit', function() {
+                    describe(describeTest + 'shouldIncreaseHardDeposit', function () {
                       shouldIncreaseHardDeposit(beneficiary, hardDepositIncrease, sender)
                     })
                   })
                 })
               })
             })
-            context('when there is as much liquidBalance as the requested hardDepositIncrease', function() {
+            context('when there is as much liquidBalance as the requested hardDepositIncrease', function () {
               const deposit = hardDepositIncrease
-              describe(describePreCondition + 'shouldDeposit', function() {
+              describe(describePreCondition + 'shouldDeposit', function () {
                 shouldDeposit(deposit, issuer)
-                describe(describeTest + 'shouldIncreaseHardDeposit', function() {
+                describe(describeTest + 'shouldIncreaseHardDeposit', function () {
                   shouldIncreaseHardDeposit(beneficiary, hardDepositIncrease, sender)
                 })
               })
             })
-            context('when the liquidBalance is less than the requested hardDepositIncrease', function() {
-              describe(describeTest + 'shouldNotIncreaseHardDeposit', function() {
+            context('when the liquidBalance is less than the requested hardDepositIncrease', function () {
+              describe(describeTest + 'shouldNotIncreaseHardDeposit', function () {
                 const revertMessage = "SimpleSwap: hard deposit cannot be more than balance"
                 shouldNotIncreaseHardDeposit(beneficiary, hardDepositIncrease, sender, value, revertMessage)
               })
             })
           })
-          context('when the sender is not the issuer', function() {
+          context('when the sender is not the issuer', function () {
             const sender = alice
-            describe(describeTest + 'shouldNotIncreaseHardDeposit', function() {
+            describe(describeTest + 'shouldNotIncreaseHardDeposit', function () {
               const revertMessage = "SimpleSwap: not issuer"
               shouldNotIncreaseHardDeposit(beneficiary, hardDepositIncrease, sender, value, revertMessage)
             })
           })
         })
-        context('when we send value along', function() {
+        context('when we send value along', function () {
           const value = new BN(1)
           const hardDepositIncrease = new BN(50)
           const beneficiary = defaultCheque.beneficiary
           const sender = issuer
-          describe(describeTest + 'shouldNotIncreaseHardDeposit', function() {
+          describe(describeTest + 'shouldNotIncreaseHardDeposit', function () {
             const revertMessage = "revert"
             shouldNotIncreaseHardDeposit(beneficiary, hardDepositIncrease, sender, value, revertMessage)
           })
@@ -1251,40 +1303,40 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
       if (enabledTests.setCustomHardDepositDecreaseTimeout) {
         const beneficiary = defaultCheque.beneficiary
         const decreaseTimeout = new BN(60)
-        context("when we don't send value along", function() {
+        context("when we don't send value along", function () {
           const value = new BN(0)
-          context('when the sender is the issuer', function() {
+          context('when the sender is the issuer', function () {
             const sender = issuer
-            context('when the beneficiary is a signee', function() {
+            context('when the beneficiary is a signee', function () {
               const signee = beneficiary
-              context('when the beneficiary signs the correct fields', function() {
-                describe(describeTest + 'shouldSetCustomHardDepositDecreaseTimeout', function() {
+              context('when the beneficiary signs the correct fields', function () {
+                describe(describeTest + 'shouldSetCustomHardDepositDecreaseTimeout', function () {
                   shouldSetCustomHardDepositDecreaseTimeout(beneficiary, decreaseTimeout, sender)
                 })
               })
-              context('when the beneficiary does not sign the correct fields', function() {
-                describe(describeTest + 'shouldNotSetCustomHardDepositDecreaseTimeout', function() {
-                  const toSubmit = {beneficiary, decreaseTimeout}
-                  const toSign = {beneficiary, decreaseTimeout: decreaseTimeout.sub(new BN(1))}
+              context('when the beneficiary does not sign the correct fields', function () {
+                describe(describeTest + 'shouldNotSetCustomHardDepositDecreaseTimeout', function () {
+                  const toSubmit = { beneficiary, decreaseTimeout }
+                  const toSign = { beneficiary, decreaseTimeout: decreaseTimeout.sub(new BN(1)) }
                   const revertMessage = "SimpleSwap: invalid beneficiarySig"
                   shouldNotSetCustomHardDepositDecreaseTimeout(toSubmit, toSign, signee, sender, value, revertMessage)
                 })
               })
             })
-            context('when the beneficiary is not a signee', function() {
+            context('when the beneficiary is not a signee', function () {
               const signee = alice
-              describe(describeTest + 'shouldNotSetCustomHardDepositDecreaseTimeout', function() {
-                const toSubmit = {beneficiary, decreaseTimeout}
+              describe(describeTest + 'shouldNotSetCustomHardDepositDecreaseTimeout', function () {
+                const toSubmit = { beneficiary, decreaseTimeout }
                 const toSign = toSubmit
                 const revertMessage = "SimpleSwap: invalid beneficiarySig"
                 shouldNotSetCustomHardDepositDecreaseTimeout(toSubmit, toSign, signee, sender, value, revertMessage)
               })
             })
           })
-          context('when the sender is not the issuer', function() {
+          context('when the sender is not the issuer', function () {
             const sender = alice
-            describe(describeTest + 'shouldNotSetCustomHardDepositDecreaseTimeout', function() {
-              const toSubmit = {beneficiary, decreaseTimeout}
+            describe(describeTest + 'shouldNotSetCustomHardDepositDecreaseTimeout', function () {
+              const toSubmit = { beneficiary, decreaseTimeout }
               const toSign = toSubmit
               const signee = beneficiary
               const revertMessage = "SimpleSwap: not issuer"
@@ -1292,12 +1344,12 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
             })
           })
         })
-        context('when we send value along', function() {
+        context('when we send value along', function () {
           const value = new BN(1)
           const sender = issuer
           const signee = beneficiary
-          describe(describeTest + 'shouldNotSetCustomHardDepositDecreaseTimeout', function() {
-            const toSubmit = {beneficiary, decreaseTimeout}
+          describe(describeTest + 'shouldNotSetCustomHardDepositDecreaseTimeout', function () {
+            const toSubmit = { beneficiary, decreaseTimeout }
             const toSign = toSubmit
             const revertMessage = "revert"
             shouldNotSetCustomHardDepositDecreaseTimeout(toSubmit, toSign, signee, sender, value, revertMessage)
@@ -1308,49 +1360,45 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
 
     describe(describeFunction + 'withdraw', function () {
       if (enabledTests.withdraw) {
-        let amount = new BN(100)
-        beforeEach(async function () {
-          await this.simpleSwap.send(amount)
+        const withdrawAmount = new BN(50)
+        context("when we don't send value along", function () {
+          const value = new BN(0)
+          context('when the sender is the issuer', function () {
+            const sender = issuer
+            context('when the liquidBalance is more than the withdrawAmount', function () {
+              const depositAmount = withdrawAmount.mul(new BN(2))
+              describe(describePreCondition + 'shouldDeposit', function () {
+                shouldDeposit(depositAmount, issuer)
+                describe(describeTest + 'shouldWithdraw', function () {
+                  shouldWithdraw(withdrawAmount, sender)
+                })
+              })
+            })
+            context('when the liquidBalance equals the withdrawAount', function () {
+              const depositAmount = withdrawAmount
+              describe(describePreCondition + 'shouldDeposit', function () {
+                shouldDeposit(depositAmount, issuer)
+                describe(describeTest + 'shouldWithdraw', function () {
+                  shouldWithdraw(withdrawAmount, sender)
+                })
+              })
+            })
+            context('when the liquidBalance is less than the withdrawAmount', function () {
+              const revertMessage = "SimpleSwap: liquidBalance not sufficient"
+              shouldNotWithdraw(withdrawAmount, sender, value, revertMessage)
+            })
+          })
+          context('when the sender is not the issuer', function () {
+            const sender = alice
+            const revertMessage = "SimpleSwap: not issuer"
+            shouldNotWithdraw(withdrawAmount, sender, value, revertMessage)
+          })
         })
-
-        context('when the sender is the issuer', function () {
-          let sender = issuer
-          context('when the liquid balance is high enough', function () {
-            beforeEach(async function () {
-              let issuerBalancePrior = await balance.current(issuer)
-              let { logs, receipt } = await this.simpleSwap.withdraw(
-                amount,
-                { from: sender }
-              )
-
-              this.logs = logs
-              this.expectedBalance = issuerBalancePrior.add(amount).sub(await computeCost(receipt))
-            })
-
-            it('should change the issuer balance correctly', async function () {
-              expect(await balance.current(issuer)).bignumber.is.equal(this.expectedBalance)
-            })
-          })
-          context('when the liquid balance is too low', function () {
-            beforeEach(async function () {
-              await this.simpleSwap.increaseHardDeposit(bob, new BN(1), { from: sender })
-            })
-
-            it('reverts', async function () {
-              await expectRevert(this.simpleSwap.withdraw(amount, {
-                from: sender
-              }), "SimpleSwap: liquidBalance not sufficient")
-            })
-          })
-        })
-
-        context('when the sender is not the issuer', function () {
-          let sender = bob
-          it('reverts', async function () {
-            await expectRevert(this.simpleSwap.withdraw(amount, {
-              from: sender
-            }), 'SimpleSwap: not issuer')
-          })
+        context('when we send value along', function () {
+          const value = new BN(1)
+          const sender = alice
+          const revertMessage = "revert"
+          shouldNotWithdraw(withdrawAmount, sender, value, revertMessage)
         })
       }
     })

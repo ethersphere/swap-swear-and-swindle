@@ -21,7 +21,32 @@ function shouldReturnDEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT(expected) {
 }
 
 function shouldReturnCheques(beneficiary, expectedSerial, expectedAmount, expectedPaidOut, expectedCashTimeout) {
-
+  beforeEach(async function() {
+    this.cheque = await this.simpleSwap.cheques(beneficiary)
+  })
+  it('should return the expected serial', function() {
+    expect(expectedSerial).bignumber.to.be.equal(this.cheque.serial)
+  })
+  it('should return the expected amount', function() {
+    expect(expectedAmount).bignumber.to.be.equal(this.cheque.amount)
+  })
+  it('should return the expected paidOut', function() {
+    expect(expectedPaidOut).bignumber.to.be.equal(this.cheque.paidOut)
+  })
+  it('should return the expected cashTimeout', async function() {
+    let canBeCashedOutAt
+    // there was never a cheque submitted
+    if(this.cheque.serial.eq(new BN(0))) {
+      canBeCashedOutAt = new BN(0)
+    } else if(!this.cheque.amount.eq(this.cheque.paidOut)) {
+      
+      canBeCashedOutAt = expectedCashTimeout.add(await time.latest())
+    } else {
+      canBeCashedOutAt = await time.latest()
+    }
+    //TODO: this one fails unexpectedly due to a marginal time difference
+    expect(this.cheque.cashTimeout).bignumber.to.be.equal(canBeCashedOutAt)
+  })
 }
 
 function shouldReturnHarddeposits(beneficiary, expectedAmount, expectedDecreaseTimeout, expectedCanBeDecreasedAt) {
@@ -543,19 +568,27 @@ function shouldNotSetCustomHardDepositDecreaseTimeout(toSubmit, toSign, signee, 
 function shouldWithdraw(amount, from) {
   beforeEach(async function() {
     this.preconditions = {
+      calleeBalance: await balance.current(from),
       liquidBalance: await this.simpleSwap.liquidBalance()
     }
 
-    const { logs } = await this.simpleSwap.withdraw(amount, {from: from})
+    const { logs, receipt } = await this.simpleSwap.withdraw(amount, {from: from})
     this.logs = logs
 
+    this.cost = await computeCost(receipt)
+
     this.postconditions = {
+      calleeBalance: await balance.current(from),
       liquidBalance: await this.simpleSwap.liquidBalance()
     }
   })
 
   it('should have updated the liquidBalance', function() {
-    expect(this.postconditions.liquidBalance).bignumber.to.be.eqaul(this.preconditions.liquidBalance.add(amount))
+    expect(this.postconditions.liquidBalance).bignumber.to.be.equal(this.preconditions.liquidBalance.sub(amount))
+  })
+
+  it('should have updated the calleeBalance', function() {
+    expect(this.postconditions.calleeBalance).bignumber.to.be.equal(this.preconditions.calleeBalance.add(amount).sub(this.cost))
   })
 
   it('should have emitted a Withdraw event', function() {
