@@ -1247,9 +1247,10 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
       }
     })
 
-    describe(describeFunction + 'setCustomhardDepositDecreaseTimeout', function () {
-      if (enabledTests.setCustomhardDepositDecreaseTimeout) {
+    describe(describeFunction + 'setCustomHardDepositDecreaseTimeout', function () {
+      if (enabledTests.setCustomHardDepositDecreaseTimeout) {
         const beneficiary = defaultCheque.beneficiary
+        const decreaseTimeout = new BN(60)
         context("when we don't send value along", function() {
           const value = new BN(0)
           context('when the sender is the issuer', function() {
@@ -1257,24 +1258,50 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
             context('when the beneficiary is a signee', function() {
               const signee = beneficiary
               context('when the beneficiary signs the correct fields', function() {
-
+                describe(describeTest + 'shouldSetCustomHardDepositDecreaseTimeout', function() {
+                  shouldSetCustomHardDepositDecreaseTimeout(beneficiary, decreaseTimeout, sender)
+                })
               })
-              context('when the beneficiary does not sign the correct fields', functions() {
-
+              context('when the beneficiary does not sign the correct fields', function() {
+                describe(describeTest + 'shouldNotSetCustomHardDepositDecreaseTimeout', function() {
+                  const toSubmit = {beneficiary, decreaseTimeout}
+                  const toSign = {beneficiary, decreaseTimeout: decreaseTimeout.sub(new BN(1))}
+                  const revertMessage = "SimpleSwap: invalid beneficiarySig"
+                  shouldNotSetCustomHardDepositDecreaseTimeout(toSubmit, toSign, signee, sender, value, revertMessage)
+                })
               })
             })
             context('when the beneficiary is not a signee', function() {
               const signee = alice
+              describe(describeTest + 'shouldNotSetCustomHardDepositDecreaseTimeout', function() {
+                const toSubmit = {beneficiary, decreaseTimeout}
+                const toSign = toSubmit
+                const revertMessage = "SimpleSwap: invalid beneficiarySig"
+                shouldNotSetCustomHardDepositDecreaseTimeout(toSubmit, toSign, signee, sender, value, revertMessage)
+              })
             })
           })
           context('when the sender is not the issuer', function() {
             const sender = alice
+            describe(describeTest + 'shouldNotSetCustomHardDepositDecreaseTimeout', function() {
+              const toSubmit = {beneficiary, decreaseTimeout}
+              const toSign = toSubmit
+              const signee = beneficiary
+              const revertMessage = "SimpleSwap: not issuer"
+              shouldNotSetCustomHardDepositDecreaseTimeout(toSubmit, toSign, signee, sender, value, revertMessage)
+            })
           })
         })
         context('when we send value along', function() {
           const value = new BN(1)
           const sender = issuer
           const signee = beneficiary
+          describe(describeTest + 'shouldNotSetCustomHardDepositDecreaseTimeout', function() {
+            const toSubmit = {beneficiary, decreaseTimeout}
+            const toSign = toSubmit
+            const revertMessage = "revert"
+            shouldNotSetCustomHardDepositDecreaseTimeout(toSubmit, toSign, signee, sender, value, revertMessage)
+          })
         })
       }
     })

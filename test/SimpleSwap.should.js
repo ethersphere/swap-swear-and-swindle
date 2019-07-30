@@ -525,13 +525,12 @@ function shouldSetCustomHardDepositDecreaseTimeout(beneficiary, decreaseTimeout,
     })
   })
 }
-function shouldNotSetCustomHardDepositDecreaseTimeout(toSubmit, toSign, from,value, revertMessage) {
+function shouldNotSetCustomHardDepositDecreaseTimeout(toSubmit, toSign, signee, from, value, revertMessage) {
   beforeEach(async function() {
-    this.beneficiarySig = await signCustomDecreaseTimeout(this.simpleSwap, toSign.beneficiary, toSign.decreaseTimeout)
+    this.beneficiarySig = await signCustomDecreaseTimeout(this.simpleSwap, toSign.beneficiary, toSign.decreaseTimeout, signee)
   })
-
   it('reverts', async function() {
-    await expectRevert(this.simpleSwap.increaseHardDeposit(
+    await expectRevert(this.simpleSwap.setCustomHardDepositDecreaseTimeout(
       toSubmit.beneficiary,
       toSubmit.decreaseTimeout,
       this.beneficiarySig,

@@ -244,7 +244,7 @@ contract SimpleSwap {
     bytes memory beneficiarySig
   ) public {
     require(msg.sender == issuer, "SimpleSwap: not issuer");
-    require(beneficiary == recover(customDecreaseTimeoutHash(address(this), beneficiary, decreaseTimeout), beneficiarySig));
+    require(beneficiary == recover(customDecreaseTimeoutHash(address(this), beneficiary, decreaseTimeout), beneficiarySig), "SimpleSwap: invalid beneficiarySig");
     hardDeposits[beneficiary].decreaseTimeout = decreaseTimeout;
     emit HardDepositDecreaseTimeoutChanged(beneficiary, hardDeposits[beneficiary].decreaseTimeout);
   }
