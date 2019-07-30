@@ -226,7 +226,7 @@ contract SimpleSwap {
   function increaseHardDeposit(address beneficiary, uint amount) public {
     require(msg.sender == issuer, "SimpleSwap: not issuer");
     /* ensure hard deposits don't exceed the global balance */
-    require(totalHardDeposit.add(amount) <= address(this).balance, "SimpleSwap: hard deposit cannot be more than balance ");
+    require(totalHardDeposit.add(amount) <= address(this).balance, "SimpleSwap: hard deposit cannot be more than balance");
 
     HardDeposit storage hardDeposit = hardDeposits[beneficiary];
     hardDeposit.amount = hardDeposit.amount.add(amount);

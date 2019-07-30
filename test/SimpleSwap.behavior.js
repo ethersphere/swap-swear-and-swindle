@@ -36,7 +36,7 @@ const {
   shouldDecreaseHardDeposit,
   shouldNotDecreaseHardDeposit,
   shouldIncreaseHardDeposit,
-  shouldNotincreaseHardDeposit,
+  shouldNotIncreaseHardDeposit,
   shouldSetCustomHardDepositDecreaseTimeout,
   shouldNotSetCustomHardDepositDecreaseTimeout,
   shouldWithdraw,
@@ -1189,66 +1189,59 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
 
     describe(describeFunction + 'increaseHardDeposit', function () {
       if (enabledTests.increaseHardDeposit) {
-        let amount = new BN(50)
-        let beneficiary = bob
-        context('when the sender is the issuer', function () {
-          let sender = issuer
-          context('when the totalHardDeposit is below the swap balance', function () {
-            shouldDeposit(amount.muln(2), issuer)
-            describe('when there is no prior deposit', function () {
-              shouldIncreaseHardDeposit(sender, amount)
+        const hardDepositIncrease = new BN(50)
+        const beneficiary = defaultCheque.beneficiary
+        context("when we don't send value along", function() {
+          const value = new BN(0)
+          context('when the sender is the issuer', function() {
+            const sender = issuer
+            context('when there is more liquidBalance than the requested hardDepositIncrease', function() {
+              const deposit = hardDepositIncrease.mul(new BN(2))
+              describe(describePreCondition + 'shouldDeposit', function() {
+                shouldDeposit(deposit, issuer)
+                context('when we have set a customHardDepositDecreaseTimeout', function() {
+                  const customHardDepositDecreaseTimeout = new BN(60)
+                  describe(describePreCondition + 'shouldSetCustomHardDepositDecreaseTimeout', function() {
+                    shouldSetCustomHardDepositDecreaseTimeout(beneficiary, customHardDepositDecreaseTimeout, issuer)
+                    describe(describeTest + 'shouldIncreaseHardDeposit', function() {
+                      shouldIncreaseHardDeposit(beneficiary, hardDepositIncrease, sender)
+                    })
+                  })
+                })
+              })
             })
-            context('when there is a prior deposit', function () {
-              shouldIncreaseHardDeposit(sender, amount)
-              describe('when the totalHardDeposit is below the swap balance', function () {
-                shouldIncreaseHardDeposit(sender, amount)
+            context('when there is as much liquidBalance as the requested hardDepositIncrease', function() {
+              const deposit = hardDepositIncrease
+              describe(describePreCondition + 'shouldDeposit', function() {
+                shouldDeposit(deposit, issuer)
+                describe(describeTest + 'shouldIncreaseHardDeposit', function() {
+                  shouldIncreaseHardDeposit(beneficiary, hardDepositIncrease, sender)
+                })
+              })
+            })
+            context('when the liquidBalance is less than the requested hardDepositIncrease', function() {
+              describe(describeTest + 'shouldNotIncreaseHardDeposit', function() {
+                const revertMessage = "SimpleSwap: hard deposit cannot be more than balance"
+                shouldNotIncreaseHardDeposit(beneficiary, hardDepositIncrease, sender, value, revertMessage)
               })
             })
           })
-          context('when the totalHardDeposit exceeds the swap balance', function () {
-            it('reverts', async function () {
-              await expectRevert(this.simpleSwap.increaseHardDeposit(
-                bob,
-                new BN(amount),
-                { from: sender }), "SimpleSwap: hard deposit cannot be more than balance ")
+          context('when the sender is not the issuer', function() {
+            const sender = alice
+            describe(describeTest + 'shouldNotIncreaseHardDeposit', function() {
+              const revertMessage = "SimpleSwap: not issuer"
+              shouldNotIncreaseHardDeposit(beneficiary, hardDepositIncrease, sender, value, revertMessage)
             })
           })
-          function shouldIncreaseHardDeposit(sender, amount) {
-            beforeEach(async function () {
-              this.previoustotalHardDeposit = await this.simpleSwap.totalHardDeposit()
-              this.previoushardDeposit = (await this.simpleSwap.hardDeposits(beneficiary))[0]
-              let { logs } = await this.simpleSwap.increaseHardDeposit(
-                beneficiary,
-                amount,
-                { from: sender }
-              )
-              this.logs = logs
-            })
-
-            it('should fire the HardDepositAmountChanged event', async function () {
-              expectEvent.inLogs(this.logs, 'HardDepositAmountChanged', {
-                beneficiary,
-                amount: this.previoushardDeposit.add(amount)
-              })
-            })
-            it('increases the totalHardDeposit', async function () {
-              expect(await this.simpleSwap.totalHardDeposit()).bignumber.is.equal(this.previoustotalHardDeposit.add(amount))
-            })
-            it('increases the hardDeposit amount', async function () {
-              expect((await this.simpleSwap.hardDeposits(beneficiary))[0]).bignumber.is.equal(this.previoushardDeposit.add(amount))
-            })
-            it('reset the canBeDecreasedAt  value', async function () {
-              expect((await this.simpleSwap.hardDeposits(beneficiary))[3]).bignumber.is.equal(new BN(0))
-            })
-          }
         })
-        context('when the sender is not the issuer', function () {
-          let sender = bob
-          it('reverts', async function () {
-            await expectRevert(this.simpleSwap.increaseHardDeposit(
-              bob,
-              new BN(amount),
-              { from: sender }), "SimpleSwap: not issuer")
+        context('when we send value along', function() {
+          const value = new BN(1)
+          const hardDepositIncrease = new BN(50)
+          const beneficiary = defaultCheque.beneficiary
+          const sender = issuer
+          describe(describeTest + 'shouldNotIncreaseHardDeposit', function() {
+            const revertMessage = "revert"
+            shouldNotIncreaseHardDeposit(beneficiary, hardDepositIncrease, sender, value, revertMessage)
           })
         })
       }

@@ -477,12 +477,12 @@ function shouldIncreaseHardDeposit(beneficiary, amount, from) {
     expect(this.postconditions.hardDepositFor.amount).bignumber.to.be.equal(this.preconditions.hardDepositFor.amount.add(amount))
   })
 
-  it('should set the decreaseTimeout to the default value', function() {
-    expect(this.postconditions.hardDepositFor.decreaseTimeout).bignumber.to.be.equal(new BN(0))
+  it('should not influence the decreaseTimeout', function() {
+    expect(this.postconditions.hardDepositFor.decreaseTimeout).bignumber.to.be.equal(this.preconditions.hardDepositFor.decreaseTimeout)
   })
 
   it('should set canBeDecreasedAt to zero', function() {
-    expect(this.postconditions.hardDepositFor.decreaseTimeout).bignumber.to.be.equal(new BN(0))
+    expect(this.postconditions.hardDepositFor.canBeDecreasedAt).bignumber.to.be.equal(new BN(0))
   })
 
   it('emits a hardDepositAmountChanged event', function() {
