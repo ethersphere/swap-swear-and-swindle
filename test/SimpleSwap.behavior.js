@@ -16,8 +16,8 @@ const { computeCost } = require("./testutils");
 const {
   shouldReturnDEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT,
   shouldReturnCheques,
-  shouldReturnhardDeposits,
-  shouldReturntotalHardDeposit,
+  shouldReturnHardDeposits,
+  shouldReturnTotalHardDeposit,
   shouldReturnIssuer,
   shouldReturnLiquidBalance,
   shouldReturnLiquidBalanceFor,
@@ -140,19 +140,76 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
 
     describe(describeFunction + 'hardDeposits', function () {
       if (enabledTests.hardDeposits) {
-        describe('when no hardDeposit was allocated', function() {
-          describe('when no custom decreaseTimeout was set', function() {
-            const expectedAmount = new BN(0)
-            const exptectedDecreaseAmount = new BN(0)
-            const expectedDecreaseTimout = new BN(0)
-            const exptectedCanBeDecreasedAt = new BN(0)
+        const beneficiary = defaultCheque.beneficiary
+        context('when no hardDeposit was allocated', function() {
+          const expectedAmount = new BN(0)
+          const exptectedDecreaseAmount = new BN(0)
+          const exptectedCanBeDecreasedAt = new BN(0)
+          context('when no custom decreaseTimeout was set', function() {
+            const expectedDecreaseTimeout = new BN(0)
+            describe(describeTest + 'shouldReturnHardDeposits', function() {
+              shouldReturnHardDeposits(beneficiary, expectedAmount, exptectedDecreaseAmount,  expectedDecreaseTimeout, exptectedCanBeDecreasedAt)
+            })
+          })
+          context('when a custom decreaseTimeout was set', function() {
+            const expectedDecreaseTimeout = new BN(60)
+            describe(describePreCondition + 'shouldSetCustomDecreaseTimeout', function() {
+              shouldSetCustomHardDepositDecreaseTimeout(beneficiary, expectedDecreaseTimeout, issuer)
+              describe(describeTest + 'shouldReturnHardDeposits', function() {
+                shouldReturnHardDeposits(beneficiary, expectedAmount, exptectedDecreaseAmount,  expectedDecreaseTimeout, exptectedCanBeDecreasedAt)
+              })
+            })
+          })
+        })
+        context('when a hardDeposit was allocated', function() {
+          describe(describePreCondition + 'shouldDeposit', function() {
+            const depositAmount = new BN (50)
+            shouldDeposit(depositAmount, issuer)
+            describe(describePreCondition + 'shouldIncreaseHardDeposit', function() {
+              shouldIncreaseHardDeposit(beneficiary, depositAmount, issuer)
+              context('when the hardDeposit was not requested to decrease', function() {
+                const expectedDecreaseAmount = new BN(0)
+                const expectedCanBeDecreasedAt = new BN(0)
+                const expectedDecreaseTimeout = new BN(0)
+                describe(describeTest + 'shouldReturnHardDeposits', function() {
+                  shouldReturnHardDeposits(beneficiary, depositAmount, expectedDecreaseAmount, expectedDecreaseTimeout, expectedCanBeDecreasedAt)
+                })
+              })
+              context('when the hardDeposit was requested to decrease', function() {
+                describe(describePreCondition + 'shouldPrepareDecreaseHardDeposit', function() {
+                  const toDecrease = depositAmount.div(new BN(2))
+                  shouldPrepareDecreaseHardDeposit(beneficiary, toDecrease, issuer)
+                  describe(describeTest + 'shouldReturnHardDeposits', function() {
+                    const expectedDecreaseTimeout = new BN(0)
+      
+                    shouldReturnHardDeposits(beneficiary, depositAmount, toDecrease, expectedDecreaseTimeout, new BN(42)) // 42 (not BN(0)) signifies that we have to define it later
+                  })
+                })
+              })
+            })
           })
         })
       }
     })
 
     describe(describeFunction + 'totalHardDeposits', function() {
-      //TODO
+      context('when there are no hardDeposits', function() {
+        describe(describeTest + 'shouldReturnTotalHardDeposit', function() {
+          shouldReturnTotalHardDeposit(new BN(0))
+        })
+      })
+      context('when there are hardDeposits', function() {
+        const depositAmount = new BN(50)
+        describe(describePreCondition + 'shouldDeposit', function() {
+          shouldDeposit(depositAmount, issuer)
+          describe(describePreCondition + 'shouldIncreaseHardDeposit', function() {
+            shouldIncreaseHardDeposit(defaultCheque.beneficiary, depositAmount, issuer)
+            describe(describeTest + 'shouldReturnTotalHardDeposit', function() {
+              shouldReturnTotalHardDeposit(depositAmount)
+            })
+          })
+        })
+      })
     })
 
     describe(describeFunction + 'issuer', function () {

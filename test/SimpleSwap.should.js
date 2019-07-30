@@ -39,22 +39,47 @@ function shouldReturnCheques(beneficiary, expectedSerial, expectedAmount, expect
     if(this.cheque.serial.eq(new BN(0))) {
       canBeCashedOutAt = new BN(0)
     } else if(!this.cheque.amount.eq(this.cheque.paidOut)) {
-      
       canBeCashedOutAt = expectedCashTimeout.add(await time.latest())
     } else {
       canBeCashedOutAt = await time.latest()
     }
-    //TODO: this one fails unexpectedly due to a marginal time difference
     expect(this.cheque.cashTimeout).bignumber.to.be.equal(canBeCashedOutAt)
   })
 }
 
-function shouldReturnHarddeposits(beneficiary, expectedAmount, expectedDecreaseTimeout, expectedCanBeDecreasedAt) {
-
+function shouldReturnHardDeposits(beneficiary, expectedAmount, expectedDecreaseAmount,  expectedDecreaseTimeout, expectedCanBeDecreasedAt) {
+  beforeEach(async function() {
+    // If we expect this not to be the default value, we have to set the value here, as it depends on the most current time
+    if(!expectedCanBeDecreasedAt.eq(new BN(0))) {
+      this.expectedCanBeDecreasedAt = (await time.latest()).add(await this.simpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT())
+    } else {
+      this.expectedCanBeDecreasedAt = expectedCanBeDecreasedAt
+    }
+    this.exptectedCanBeDecreasedAt = (await time.latest()).add(await this.simpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT())
+    this.hardDeposits = await this.simpleSwap.hardDeposits(beneficiary)
+  })
+  it('should return the expected amount', function() {
+    expect(expectedAmount).bignumber.to.be.equal(this.hardDeposits.amount)
+  })
+  it('should return the expected decreaseAmount', function() {
+    expect(expectedDecreaseAmount).bignumber.to.be.equal(this.hardDeposits.decreaseAmount)
+  })
+  it('should return the expected decreaseTimeout', function() {
+    expect(expectedDecreaseTimeout).bignumber.to.be.equal(this.hardDeposits.decreaseTimeout)
+  })
+  it('should return the exptected canBeDecreasedAt', function() {
+    expect(this.expectedCanBeDecreasedAt).bignumber.to.be.equal(this.hardDeposits.canBeDecreasedAt)
+  })
 }
 
-function shouldReturnTotalhardDeposit(expectedHardDeposit) {
+function shouldReturnTotalHardDeposit(expectedTotalHardDeposit) {
+  beforeEach(async function() {
+    this.totalHardDeposit = await this.simpleSwap.totalHardDeposit()
+  })
 
+  it('should return the expectedTotalHardDeposit', function() {
+    expect(expectedTotalHardDeposit).bignumber.to.be.equal(this.totalHardDeposit)
+  })
 }
 
 function shouldReturnIssuer(expectedIssuer) {
@@ -638,8 +663,8 @@ function shouldDeposit(amount, from) {
 module.exports = {
   shouldReturnDEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT,
   shouldReturnCheques,
-  shouldReturnHarddeposits,
-  shouldReturnTotalhardDeposit,
+  shouldReturnHardDeposits,
+  shouldReturnTotalHardDeposit,
   shouldReturnIssuer,
   shouldReturnLiquidBalance,
   shouldReturnLiquidBalanceFor,
