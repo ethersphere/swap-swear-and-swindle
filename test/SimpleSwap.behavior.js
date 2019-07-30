@@ -1249,56 +1249,32 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
 
     describe(describeFunction + 'setCustomhardDepositDecreaseTimeout', function () {
       if (enabledTests.setCustomhardDepositDecreaseTimeout) {
-        let beneficiary = bob
-        let decreaseTimeout = new BN(10)
-        beforeEach(function () {
-          this.data = web3.utils.keccak256(web3.eth.abi.encodeParameters(['address', 'address', 'uint256'], [this.simpleSwap.address, beneficiary, decreaseTimeout.toString()]))
-        })
-        describe('when the sender is the issuer', function () {
-          let sender = issuer
-          describe('when the beneficiarySig is valid', function () {
-            beforeEach(async function () {
-              let { logs } = await this.simpleSwap.setCustomHardDepositDecreaseTimeout(
-                beneficiary,
-                decreaseTimeout,
-                await sign(this.data, beneficiary),
-                { from: sender }
-              )
-              this.logs = logs
-            })
+        const beneficiary = defaultCheque.beneficiary
+        context("when we don't send value along", function() {
+          const value = new BN(0)
+          context('when the sender is the issuer', function() {
+            const sender = issuer
+            context('when the beneficiary is a signee', function() {
+              const signee = beneficiary
+              context('when the beneficiary signs the correct fields', function() {
 
-            it('should set the decreaseTimeout', async function () {
-              expect((await this.simpleSwap.hardDeposits(beneficiary))[2]).bignumber.is.equal(decreaseTimeout)
-            })
+              })
+              context('when the beneficiary does not sign the correct fields', functions() {
 
-            it('should fire the HardDepositDecreaseTimeoutChanged', async function () {
-              expectEvent.inLogs(this.logs, 'HardDepositDecreaseTimeoutChanged', {
-                beneficiary,
-                decreaseTimeout
               })
             })
-          })
-          context('when the beneficiarySig is invalid', function () {
-            it('reverts', async function () {
-              await expectRevert.unspecified(this.simpleSwap.setCustomHardDepositDecreaseTimeout(
-                beneficiary,
-                decreaseTimeout,
-                '0x',
-                { from: sender }
-              ))
+            context('when the beneficiary is not a signee', function() {
+              const signee = alice
             })
           })
-        })
-        context('when the sender is not the issuer', function () {
-          let sender = alice
-          it('reverts', async function () {
-            await expectRevert.unspecified(this.simpleSwap.setCustomHardDepositDecreaseTimeout(
-              beneficiary,
-              decreaseTimeout,
-              await sign(this.data, beneficiary),
-              { from: sender }
-            ))
+          context('when the sender is not the issuer', function() {
+            const sender = alice
           })
+        })
+        context('when we send value along', function() {
+          const value = new BN(1)
+          const sender = issuer
+          const signee = beneficiary
         })
       }
     })
