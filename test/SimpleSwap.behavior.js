@@ -14,7 +14,7 @@ const { sign } = require("./swutils");
 
 const { computeCost } = require("./testutils");
 const {
-  shouldReturnDEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT,
+  shouldReturnDEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT,
   shouldReturnCheques,
   shouldReturnHardDeposits,
   shouldReturnTotalHardDeposit,
@@ -89,7 +89,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
   context('as a simple swap', function () {
     describe(describeFunction + 'DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT', function () {
       if (enabledTests.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT) {
-        shouldReturnDEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT(DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT)
+        shouldReturnDEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT(DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT)
       }
     })
 

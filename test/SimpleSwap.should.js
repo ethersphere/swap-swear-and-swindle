@@ -43,7 +43,7 @@ function shouldDeploy(issuer, DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT, from, value)
     }
   })
 }
-function shouldReturnDEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT(expected) {
+function shouldReturnDEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT(expected) {
   it('should return the expected DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT', async function() {
     expect(await this.simpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT()).bignumber.to.be.equal(expected)
   })
@@ -703,7 +703,7 @@ function shouldNotDeposit(amount, from) {
 
 module.exports = {
   shouldDeploy,
-  shouldReturnDEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT,
+  shouldReturnDEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT,
   shouldReturnCheques,
   shouldReturnHardDeposits,
   shouldReturnTotalHardDeposit,
