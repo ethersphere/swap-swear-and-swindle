@@ -1,0 +1,15 @@
+language: generic
+
+services:
+  - docker
+
+branches:
+  only:
+    - master
+
+jobs:
+  include:
+    - stage: test
+      script:
+        - docker build -t sw3-travis .
+        - docker run -it --rm sw3-travis npm test
