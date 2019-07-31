@@ -22,8 +22,9 @@ contract SimpleSwap {
   event HardDepositAmountChanged(address indexed beneficiary, uint amount);
   event HardDepositDecreasePrepared(address indexed beneficiary, uint decreaseAmount);
   event HardDepositDecreaseTimeoutChanged(address indexed beneficiary, uint decreaseTimeout);
+  event Withdraw(uint amount);
 
-  uint public DEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT;
+  uint public DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT;
   /* structure to keep track of the hard deposits (on-chain guarantee of solvency) per beneficiary*/
   struct HardDeposit {
     uint amount; /* hard deposit amount allocated */
@@ -51,7 +52,7 @@ contract SimpleSwap {
   /// @notice constructor, allows setting the issuer (needed for "setup wallet as payment")
   constructor(address payable _issuer, uint defaultHardDepositTimeoutDuration) public payable {
     // DEFAULT_HARDDEPOSIT_TIMOUTE_DURATION will be one day or a whatever non-zero argument given as an argument to the constructor
-    DEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT = defaultHardDepositTimeoutDuration;
+    DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT = defaultHardDepositTimeoutDuration;
     issuer = _issuer;
     if(msg.value > 0) {
       emit Deposit(msg.sender, msg.value);
@@ -91,7 +92,7 @@ contract SimpleSwap {
   /// @param amount the (cumulative) amount of the cheque
   /// @param cashTimeout the check can be cashed cashTimeout seconds in the future
   /// @param beneficiarySig signature of the issuer
-  function submitChequeissuer(address beneficiary, uint serial, uint amount, uint cashTimeout, bytes memory beneficiarySig) public {
+  function submitChequeIssuer(address beneficiary, uint serial, uint amount, uint cashTimeout, bytes memory beneficiarySig) public {
     require(msg.sender == issuer, "SimpleSwap: not issuer");
     /* verify signature of the beneficiary */
     require(beneficiary == recover(chequeHash(address(this), beneficiary, serial, amount, cashTimeout), beneficiarySig),
@@ -136,13 +137,14 @@ contract SimpleSwap {
   function _cashChequeInternal(address beneficiaryPrincipal, address payable beneficiaryAgent, uint requestPayout, uint calleePayout) public {
      ChequeInfo storage cheque = cheques[beneficiaryPrincipal];
     /* grace period must have ended */
-    require(now >= cheque.cashTimeout,  "SimpleSwap: cheque not yet timed out");
+    require(now >= cheque.cashTimeout, "SimpleSwap: cheque not yet timed out");
     require(requestPayout <= cheque.amount.sub(cheque.paidOut), "SimpleSwap: not enough balance owed");
     /* ensure there is a balance to claim */
      /* calculates hard-deposit usage */
     uint hardDepositUsage = Math.min(requestPayout, hardDeposits[beneficiaryPrincipal].amount);
     /* calculates acutal payout */
     uint totalPayout = Math.min(requestPayout, liquidBalance() + hardDepositUsage);
+    require(totalPayout >= calleePayout, "SimpleSwap: cannot pay callee");
       /* if there some of the hard deposit is used update the structure */
     if(hardDepositUsage != 0) {
       hardDeposits[beneficiaryPrincipal].amount = hardDeposits[beneficiaryPrincipal].amount.sub(hardDepositUsage);
@@ -157,6 +159,7 @@ contract SimpleSwap {
       emit ChequeBounced();
     }
   }
+
   function cashCheque(
     address beneficiaryPrincipal,
     address payable beneficiaryAgent,
@@ -166,8 +169,14 @@ contract SimpleSwap {
     uint256 calleePayout
   ) public {
     require(now <= expiry, "SimpleSwap: beneficiarySig expired");
-    require(beneficiaryPrincipal == recover(keccak256(abi.encodePacked(address(this), msg.sender, requestPayout, beneficiaryAgent, expiry, calleePayout)), beneficiarySig), 
-      "SimpleSwap: invalid beneficiarySig");
+    require(beneficiaryPrincipal == recover(cashOutHash(
+      address(this),
+      msg.sender,
+      requestPayout,
+      beneficiaryAgent,
+      expiry,
+      calleePayout
+      ), beneficiarySig), "SimpleSwap: invalid beneficiarySig");
     _cashChequeInternal(beneficiaryPrincipal, beneficiaryAgent, requestPayout, calleePayout);
     msg.sender.transfer(calleePayout);
   }
@@ -186,8 +195,8 @@ contract SimpleSwap {
     HardDeposit storage hardDeposit = hardDeposits[beneficiary];
     /* cannot decrease it by more than the deposit */
     require(decreaseAmount <= hardDeposit.amount, "SimpleSwap: hard deposit not sufficient");
-    // if hardDeposit.decreaseTimeout was never set, we DEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT. Otherwise we use the one which was set.
-    uint decreaseTimeout = hardDeposit.decreaseTimeout == 0 ? DEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT : hardDeposit.decreaseTimeout;
+    // if hardDeposit.decreaseTimeout was never set, we DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT. Otherwise we use the one which was set.
+    uint decreaseTimeout = hardDeposit.decreaseTimeout == 0 ? DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT : hardDeposit.decreaseTimeout;
     hardDeposit.canBeDecreasedAt = now + decreaseTimeout;
     hardDeposit.decreaseAmount = decreaseAmount;
     emit HardDepositDecreasePrepared(beneficiary, decreaseAmount);
@@ -217,7 +226,7 @@ contract SimpleSwap {
   function increaseHardDeposit(address beneficiary, uint amount) public {
     require(msg.sender == issuer, "SimpleSwap: not issuer");
     /* ensure hard deposits don't exceed the global balance */
-    require(totalHardDeposit.add(amount) <= address(this).balance, "SimpleSwap: hard deposit cannot be more than balance ");
+    require(totalHardDeposit.add(amount) <= address(this).balance, "SimpleSwap: hard deposit cannot be more than balance");
 
     HardDeposit storage hardDeposit = hardDeposits[beneficiary];
     hardDeposit.amount = hardDeposit.amount.add(amount);
@@ -235,7 +244,7 @@ contract SimpleSwap {
     bytes memory beneficiarySig
   ) public {
     require(msg.sender == issuer, "SimpleSwap: not issuer");
-    require(beneficiary == recover(keccak256(abi.encode(address(this), beneficiary, decreaseTimeout)), beneficiarySig));
+    require(beneficiary == recover(customDecreaseTimeoutHash(address(this), beneficiary, decreaseTimeout), beneficiarySig), "SimpleSwap: invalid beneficiarySig");
     hardDeposits[beneficiary].decreaseTimeout = decreaseTimeout;
     emit HardDepositDecreaseTimeoutChanged(beneficiary, hardDeposits[beneficiary].decreaseTimeout);
   }
@@ -248,6 +257,7 @@ contract SimpleSwap {
     /* ensure we don't take anything from the hard deposit */
     require(amount <= liquidBalance(), "SimpleSwap: liquidBalance not sufficient");
     issuer.transfer(amount);
+    emit Withdraw(amount);
   }
 
   /// @notice deposit ether
@@ -265,4 +275,16 @@ contract SimpleSwap {
   public pure returns (bytes32) {
     return keccak256(abi.encodePacked(swap, beneficiary, serial, amount, cashTimeout));
   }
+
+  function cashOutHash(address swap, address sender, uint requestPayout, address beneficiaryAgent, uint expiry, uint calleePayout)
+  public pure returns (bytes32) {
+    return keccak256(abi.encodePacked(swap, sender, requestPayout, beneficiaryAgent, expiry, calleePayout));
+  }
+
+  function customDecreaseTimeoutHash(address swap, address beneficiary, uint decreaseTimeout) public pure returns (bytes32) {
+    return keccak256(abi.encode(swap, beneficiary, decreaseTimeout));
+  }
+
 }
+
+
