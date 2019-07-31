@@ -72,7 +72,7 @@ function shouldReturnCheques(beneficiary, expectedSerial, expectedAmount, expect
     } else {
       canBeCashedOutAt = await time.latest()
     }
-    expect(parseInt(this.cheque.cashTimeout)).to.be.closeTo(parseInt(canBeCashedOutAt), 5)
+    expect(this.cheque.cashTimeout.toNumber()).to.be.closeTo(canBeCashedOutAt.toNumber(), 5)
   })
 }
 
@@ -97,7 +97,7 @@ function shouldReturnHardDeposits(beneficiary, expectedAmount, expectedDecreaseA
     expect(expectedDecreaseTimeout).bignumber.to.be.equal(this.hardDeposits.decreaseTimeout)
   })
   it('should return the exptected canBeDecreasedAt', function() {
-    expect(parseInt(this.expectedCanBeDecreasedAt)).to.be.closeTo(parseInt(this.hardDeposits.canBeDecreasedAt), 5)
+    expect(this.expectedCanBeDecreasedAt.toNumber()).to.be.closeTo(this.hardDeposits.canBeDecreasedAt.toNumber(), 5)
   })
 }
 
@@ -140,7 +140,7 @@ function submitChequeInternal() {
   })
 
   it('should update the cheque timeout', async function() {
-    expect(parseInt(this.postconditions.cheque.cashTimeout)).is.closeTo(parseInt((await time.latest()).add(this.signedCheque.timeout)), 5)
+    expect(this.postconditions.cheque.cashTimeout.toNumber()).is.closeTo(((await time.latest()).add(this.signedCheque.timeout)).toNumber(), 5)
   })
 
   it('should emit a chequeSubmitted event', async function() {
@@ -446,7 +446,7 @@ function shouldPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, from) {
       // use the value that was set
       expectedCanBeDecreasedAt = personalDecreaseTimeout
     }
-    expect(parseInt(this.postconditions.hardDepositFor.canBeDecreasedAt)).to.be.closeTo(parseInt((await time.latest()).add(expectedCanBeDecreasedAt)), 5)
+    expect(this.postconditions.hardDepositFor.canBeDecreasedAt.toNumber()).to.be.closeTo(((await time.latest()).add(expectedCanBeDecreasedAt)).toNumber(), 5)
   })
 
   it('should update the decreaseAmount', function() {
