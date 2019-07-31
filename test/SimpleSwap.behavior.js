@@ -41,7 +41,8 @@ const {
   shouldNotSetCustomHardDepositDecreaseTimeout,
   shouldWithdraw,
   shouldNotWithdraw,
-  shouldDeposit
+  shouldDeposit,
+  shouldNotDeposit
 } = require('./SimpleSwap.should.js')
 
 // switch to false if you don't want to test the particular function
@@ -62,7 +63,8 @@ enabledTests = {
   decreaseHardDeposit: true,
   increaseHardDeposit: true,
   setCustomHardDepositDecreaseTimeout: true,
-  withdraw: true
+  withdraw: true, 
+  deposit: true
 }
 
 // constants to make the test-log more readable
@@ -193,23 +195,25 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
     })
 
     describe(describeFunction + 'totalHardDeposits', function() {
-      context('when there are no hardDeposits', function() {
-        describe(describeTest + 'shouldReturnTotalHardDeposit', function() {
-          shouldReturnTotalHardDeposit(new BN(0))
+      if(enabledTests.totalHardDeposit) {
+        context('when there are no hardDeposits', function() {
+          describe(describeTest + 'shouldReturnTotalHardDeposit', function() {
+            shouldReturnTotalHardDeposit(new BN(0))
+          })
         })
-      })
-      context('when there are hardDeposits', function() {
-        const depositAmount = new BN(50)
-        describe(describePreCondition + 'shouldDeposit', function() {
-          shouldDeposit(depositAmount, issuer)
-          describe(describePreCondition + 'shouldIncreaseHardDeposit', function() {
-            shouldIncreaseHardDeposit(defaultCheque.beneficiary, depositAmount, issuer)
-            describe(describeTest + 'shouldReturnTotalHardDeposit', function() {
-              shouldReturnTotalHardDeposit(depositAmount)
+        context('when there are hardDeposits', function() {
+          const depositAmount = new BN(50)
+          describe(describePreCondition + 'shouldDeposit', function() {
+            shouldDeposit(depositAmount, issuer)
+            describe(describePreCondition + 'shouldIncreaseHardDeposit', function() {
+              shouldIncreaseHardDeposit(defaultCheque.beneficiary, depositAmount, issuer)
+              describe(describeTest + 'shouldReturnTotalHardDeposit', function() {
+                shouldReturnTotalHardDeposit(depositAmount)
+              })
             })
           })
         })
-      })
+      }
     })
 
     describe(describeFunction + 'issuer', function () {
@@ -334,7 +338,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                         shouldSubmitChequeIssuer(unsignedCheque, sender)
                         context('when the serial number is increasing', function () {
                           describe(describeTest + 'shouldSubmitChequeIssuer', function () {
-                            const secondSerial = new BN(parseInt(unsignedCheque.serial) + 1)
+                            const secondSerial = unsignedCheque.serial.add(new BN(1))
                             const increasing_serial_unsignedCheque = Object.assign({}, defaultCheque, { serial: secondSerial, signee: defaultCheque.beneficiary })
                             shouldSubmitChequeIssuer(increasing_serial_unsignedCheque, sender)
                           })
@@ -342,7 +346,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                         context('when the serial number stays the same', function () {
                           context('when the serial number is increasing', function () {
                             describe(describeTest + 'shouldSubmitChequeIssuer', function () {
-                              const secondSerial = new BN(parseInt(unsignedCheque.serial))
+                              const secondSerial = unsignedCheque.serial
                               const same_serial_unsignedCheque = Object.assign({}, defaultCheque, { serial: secondSerial, signee: defaultCheque.beneficiary })
                               shouldNotSubmitChequeIssuer(same_serial_unsignedCheque, same_serial_unsignedCheque, sender, value, "SimpleSwap: invalid serial")
                             })
@@ -350,7 +354,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                           context('when the serial number is decreasing', function () {
                             context('when the serial number is increasing', function () {
                               describe(describeTest + 'shouldSubmitChequeIssuer', function () {
-                                const secondSerial = new BN(parseInt(unsignedCheque.serial) + -1)
+                                const secondSerial = unsignedCheque.serial.sub(new BN(1))
                                 const decreasing_serial_unsignedCheque = Object.assign({}, defaultCheque, { serial: secondSerial, signee: defaultCheque.beneficiary })
                                 shouldNotSubmitChequeIssuer(decreasing_serial_unsignedCheque, decreasing_serial_unsignedCheque, sender, value, "SimpleSwap: invalid serial")
                               })
@@ -450,20 +454,20 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                         shouldSubmitChequeBeneficiary(unsignedCheque, sender)
                         context('when the serial number is increasing', function () {
                           describe(describeTest + 'shouldSubmitChequeBeneficiary', function () {
-                            const secondSerial = new BN(parseInt(unsignedCheque.serial) + 1)
+                            const secondSerial = unsignedCheque.serial.add(new BN(1))
                             const increasing_serial_unsignedCheque = Object.assign({}, defaultCheque, { serial: secondSerial })
                             shouldSubmitChequeBeneficiary(increasing_serial_unsignedCheque, sender)
                           })
                         })
                         context('when the serial number stays the same', function () {
                           describe(describeTest + 'shouldSubmitChequeBeneficiary', function () {
-                            const secondSerial = new BN(parseInt(unsignedCheque.serial))
+                            const secondSerial = unsignedCheque.serial
                             const same_serial_unsignedCheque = Object.assign({}, defaultCheque, { serial: secondSerial })
                             shouldNotSubmitChequeBeneficiary(same_serial_unsignedCheque, same_serial_unsignedCheque, sender, value, "SimpleSwap: invalid serial")
                           })
                           context('when the serial number is decreasing', function () {
                             describe(describeTest + 'shouldSubmitChequeBeneficiary', function () {
-                              const secondSerial = new BN(parseInt(unsignedCheque.serial) + -1)
+                              const secondSerial = unsignedCheque.serial.sub(new BN(1))
                               const decreasing_serial_unsignedCheque = Object.assign({}, defaultCheque, { serial: secondSerial })
                               shouldNotSubmitChequeBeneficiary(decreasing_serial_unsignedCheque, decreasing_serial_unsignedCheque, sender, value, "SimpleSwap: invalid serial")
                             })
@@ -574,21 +578,21 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                     shouldSubmitCheque(unsignedCheque, sender)
                     context('when the serial number is increasing', function () {
                       describe(describeTest + 'shouldSubmitCheque', function () {
-                        const secondSerial = new BN(parseInt(unsignedCheque.serial) + 1)
+                        const secondSerial = unsignedCheque.serial.add(new BN(1))
                         const increasing_serial_unsignedCheque = Object.assign({}, defaultCheque, { serial: secondSerial, signee: signees })
                         shouldSubmitCheque(increasing_serial_unsignedCheque, sender)
                       })
                     })
                     context('when the serial number stays the same', function () {
                       describe(describeTest + 'shouldNotSubmitCheque', function () {
-                        const secondSerial = new BN(parseInt(unsignedCheque.serial))
+                        const secondSerial = unsignedCheque.serial
                         const same_serial_unsignedCheque = Object.assign({}, defaultCheque, { serial: secondSerial, signee: signees })
                         shouldNotSubmitCheque(same_serial_unsignedCheque, same_serial_unsignedCheque, sender, value, "SimpleSwap: invalid serial")
                       })
                     })
                     context('when the serial number is decreasing', function () {
                       describe(describeTest + 'shouldNotSubmitCheque', function () {
-                        const secondSerial = new BN(parseInt(unsignedCheque.serial) + -1)
+                        const secondSerial = unsignedCheque.serial.sub(new BN(1))
                         const decreasing_serial_unsignedCheque = Object.assign({}, defaultCheque, { serial: secondSerial, signee: signees })
                         shouldNotSubmitCheque(decreasing_serial_unsignedCheque, decreasing_serial_unsignedCheque, sender, value, "SimpleSwap: invalid serial")
                       })
@@ -1462,7 +1466,18 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
 
     describe(describeFunction + 'deposit', function () {
       if (enabledTests.deposit) {
-        shouldDeposit(new BN(1), issuer)
+        context('when the depositAmount is not zero', function() {
+          const depositAmount = new BN(1)
+          describe(describeTest + 'shouldDeposit', function() {
+            shouldDeposit(depositAmount, issuer)
+          })
+        })
+        context('when the depositAmount is zero', function() {
+          const depositAmount = new BN(0)
+          describe(describeTest + 'shouldDeposit', function() {
+            shouldNotDeposit(depositAmount, issuer)
+          })
+        })
       }
     })
   })

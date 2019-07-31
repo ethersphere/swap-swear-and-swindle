@@ -1,20 +1,24 @@
 const {
-  BN,
-  balance,
-  time,
-  shouldFail,
-  constants,
-  expectEvent
+  BN
 } = require("openzeppelin-test-helpers");
 
 const { shouldBehaveLikeSimpleSwap } = require('./SimpleSwap.behavior')
-
-const SimpleSwap = artifacts.require('SimpleSwap')
+const { shouldDeploy } = require('./SimpleSwap.should')
 
 contract('SimpleSwap', function([issuer, alice, bob, agent]) {
 
-  beforeEach(async function() {
-    this.simpleSwap = await SimpleSwap.new(issuer, new BN(86400))
+  describe("when we don't deposit while deploying", function() {
+    const sender = issuer
+    const DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT = new BN(86400)
+    const value = new BN(0)
+    shouldDeploy(issuer, DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT, sender, value)
+    shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], new BN(86400))
   })
-  shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], new BN(86400))
+  describe('when we deposit while deploying', function() {
+    const sender = issuer
+    const DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT = new BN(86400)
+    const value = new BN(50)
+    shouldDeploy(issuer, DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT, sender, value)
+  })
+ 
 })

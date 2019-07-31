@@ -2,11 +2,11 @@ const {
   BN,
   balance,
   time,
-  expectRevert,
-  constants,
-  expectEvent
+  expectEvent,
+  expectRevert
 } = require("openzeppelin-test-helpers");
 
+const SimpleSwap = artifacts.require('SimpleSwap')
 
 const { signCheque, signCashOut, signCustomDecreaseTimeout } = require("./swutils");
 const { computeCost } = require("./testutils");
@@ -14,6 +14,35 @@ const { computeCost } = require("./testutils");
 
 const { expect } = require('chai');
 
+function shouldDeploy(issuer, DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT, from, value) {
+  beforeEach(async function() {
+    this.simpleSwap = await SimpleSwap.new(issuer,DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT, {value: value, from: from})   
+    this.postconditions = {
+      issuer: await this.simpleSwap.issuer(),
+      DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT: await this.simpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT()
+    }
+  })
+  it('should set the issuer', function() {
+    expect(this.postconditions.issuer).to.be.equal(issuer)
+  })
+  it('should set the DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT', function() {
+    expect(this.postconditions.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT).bignumber.to.be.equal(DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT)
+  })
+  it('should emit a deposit event only when the msg.value is higher than zero', async function() {
+    if(value > 0) {
+      expectEvent.inConstruction(this.simpleSwap, "Deposit", {
+        depositor: from,
+        amount: value
+      })
+    } else {
+      const receipt = await web3.eth.getTransactionReceipt(this.simpleSwap.transactionHash);
+      const logs = this.simpleSwap.constructor.decodeLogs(receipt.logs);
+      const eventName = 'Deposit'
+      const events = logs.filter(e => e.event === eventName);
+      expect(events.length > 0).to.equal(false, `There is a '${eventName}' event`);
+    }
+  })
+}
 function shouldReturnDEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT(expected) {
   it('should return the expected DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT', async function() {
     expect(await this.simpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT()).bignumber.to.be.equal(expected)
@@ -660,7 +689,20 @@ function shouldDeposit(amount, from) {
   })
 }
 
+function shouldNotDeposit(amount, from) {
+  beforeEach(async function() {
+    const { logs } = await this.simpleSwap.send(amount, {from: from})
+    this.logs = logs
+  })
+  it('should not emit a Deposit event', async function() {
+    const eventName = 'Deposit'
+    const events = this.logs.filter(e => e.event === eventName);
+  expect(events.length > 0).to.equal(false, `There is a '${eventName}' event`);
+  })
+}
+
 module.exports = {
+  shouldDeploy,
   shouldReturnDEFAULT_HARDDEPPOSIT_DECREASE_TIMEOUT,
   shouldReturnCheques,
   shouldReturnHardDeposits,
@@ -688,6 +730,7 @@ module.exports = {
   shouldNotSetCustomHardDepositDecreaseTimeout,
   shouldWithdraw,
   shouldNotWithdraw,
-  shouldDeposit
+  shouldDeposit,
+  shouldNotDeposit
 }
 
