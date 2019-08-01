@@ -13,7 +13,7 @@ contract SimpleSwap {
     address indexed recipient,
     address indexed callee,
     uint totalPayout,
-    uint requestPayout,
+    uint cumulativePayout,
     uint calleePayout
   );
   event ChequeBounced();
@@ -67,7 +67,7 @@ contract SimpleSwap {
       "SimpleSwap: invalid issuerSig");
     }
     /* the requestPayout is the amount requested for payment processing */
-    uint requestPayout = paidOutCheques[beneficiary].sub(cumulativePayout);
+    uint requestPayout = cumulativePayout.sub(paidOutCheques[beneficiary]);
     /* calculates acutal payout */
     uint totalPayout = Math.min(requestPayout, balanceFor(beneficiary));
     /* calculates hard-deposit usage */
@@ -86,7 +86,7 @@ contract SimpleSwap {
     if(calleePayout != 0) {
       msg.sender.transfer(calleePayout);
     }
-    emit ChequeCashed(beneficiary, recipient, msg.sender, totalPayout, requestPayout, calleePayout);
+    emit ChequeCashed(beneficiary, recipient, msg.sender, totalPayout, cumulativePayout, calleePayout);
     /* let the world know that the issuer has over-promised on outstanding cheques */
     if(requestPayout != totalPayout) {
       emit ChequeBounced();

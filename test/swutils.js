@@ -16,23 +16,13 @@ async function sign(hash, signer) {
   return rs + v.toString(16)
 }
 
-async function signCheque(swap, cheque) {
+async function signCheque(swap, beneficiary, cumulativePayout, signee) {
   const hash = await swap.chequeHash(
     swap.address,
-    cheque.beneficiary,
-    cheque.serial,
-    cheque.amount,
-    cheque.timeout
+    beneficiary,
+    cumulativePayout
   );
-
-  if(cheque.signee.length == 2) {
-    cheque.signature = []
-    cheque.signature.issuer = await sign(hash, cheque.signee[0])
-    cheque.signature.beneficiary = await sign(hash, cheque.signee[1])
-  } else {
-    cheque.signature = await sign(hash, cheque.signee)
-  }
-  return cheque
+  return await sign(hash, signee)
 }
 
 async function signCashOut(swap, sender, requestPayout, beneficiaryAgent, expiry, calleePayout, signee) {
