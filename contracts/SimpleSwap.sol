@@ -54,7 +54,7 @@ contract SimpleSwap {
     // DEFAULT_HARDDEPOSIT_TIMOUTE_DURATION will be one day or a whatever non-zero argument given as an argument to the constructor
     DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT = defaultHardDepositTimeoutDuration;
     issuer = _issuer;
-    if(msg.value > 0) {
+    if (msg.value > 0) {
       emit Deposit(msg.sender, msg.value);
     }
   }
@@ -158,7 +158,7 @@ contract SimpleSwap {
     uint totalPayout = Math.min(requestPayout, liquidBalance() + hardDepositUsage);
     require(totalPayout >= calleePayout, "SimpleSwap: cannot pay callee");
       /* if there some of the hard deposit is used update the structure */
-    if(hardDepositUsage != 0) {
+    if (hardDepositUsage != 0) {
       hardDeposits[beneficiaryPrincipal].amount = hardDeposits[beneficiaryPrincipal].amount.sub(hardDepositUsage);
       totalHardDeposit = totalHardDeposit.sub(hardDepositUsage);
     }
@@ -167,7 +167,7 @@ contract SimpleSwap {
     /* do the actual payments */
     beneficiaryAgent.transfer(totalPayout.sub(calleePayout));
     emit ChequeCashed(beneficiaryPrincipal, beneficiaryAgent, msg.sender, cheque.serial, totalPayout, requestPayout, calleePayout);
-    if(requestPayout != totalPayout) {
+    if (requestPayout != totalPayout) {
       emit ChequeBounced();
     }
   }
@@ -271,6 +271,7 @@ contract SimpleSwap {
 
   /// @notice withdraw ether
   /// @param amount amount to withdraw
+  // solhint-disable-next-line no-simple-event-func-name
   function withdraw(uint amount) public {
     /* only issuer can do this */
     require(msg.sender == issuer, "SimpleSwap: not issuer");
@@ -282,7 +283,7 @@ contract SimpleSwap {
 
   /// @notice deposit ether
   function() external payable {
-    if(msg.value > 0) {
+    if (msg.value > 0) {
       emit Deposit(msg.sender, msg.value);
     }
   }
