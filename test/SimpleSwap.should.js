@@ -108,7 +108,7 @@ function shouldReturnLiquidBalance(expectedLiquidBalance) {
 
 function shouldReturnBalanceFor(beneficiary, expectedBalanceFor) {
   it('should return the expected liquidBalance', async function() {
-    expect(await this.simpleSwap.balanceFor(beneficiary)).bignumber.to.equal(expectedLiquidBalance)
+    expect(await this.simpleSwap.balanceFor(beneficiary)).bignumber.to.equal(expectedBalanceFor)
   })
 }
 
@@ -233,11 +233,15 @@ function shouldCashChequeBeneficiary(recipient, cumulativePayout, signee, from) 
   })
   cashChequeInternal(from, recipient, cumulativePayout, new BN(0), from)
 }
-function shouldNotCashChequeBeneficiary(recipient, requestPayout, from, value, revertMessage) {
+function shouldNotCashChequeBeneficiary(recipient, toSubmitCumulativePayout, toSignCumulativePayout, signee, from, value, revertMessage) {
+  beforeEach(async function() {
+    this.issuerSig = await signCheque(this.simpleSwap, from, toSignCumulativePayout, signee)
+  })
   it('reverts', async function() {
     await expectRevert(this.simpleSwap.cashChequeBeneficiary(
       recipient,
-      requestPayout,
+      toSubmitCumulativePayout,
+      this.issuerSig,
      {from: from, value: value}), 
      revertMessage
     )
