@@ -77,7 +77,7 @@ const describeTest = 'TEST: '
 // @param issuer the issuer of the checkbook
 // @param alice a counterparty of the checkbook 
 // @param bob a counterparty of the checkbook
-function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT) {
+function shouldBehaveLikeSimpleSwap([issuer, alice, bob, _recipient], DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT) {
   const defaultCheque = {
     beneficiary: bob,
     serial: new BN(3),
@@ -679,13 +679,13 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
               })
               context('when the calleePayout is non-zero', function () {
                 const calleePayout = new BN(1)
-                context('when the beneficiaryPrincipal is a signee', function () {
+                context('when the beneficiary is a signee', function () {
                   const signee = defaultCheque.beneficiary
-                  context('when the beneficiaryPrincipal signs the correct fields', function () {
-                    context('when the beneficiaryPrincipal and beneficiaryAgent are not the sender', function () {
+                  context('when the beneficiary signs the correct fields', function () {
+                    context('when the beneficiary and recipient are not the sender', function () {
                       const sender = alice
-                      context("when the beneficiaryAgent is not the beneficiaryPrincipal", function () {
-                        const beneficiaryAgent = agent
+                      context("when the recipient is not the beneficiary", function () {
+                        const recipient = _recipient
                         context('when we submit the cheque beforeHand', function () {
                           describe(describePreCondition + 'shouldSubmitChequeBeneficiary', function () {
                             shouldSubmitChequeBeneficiary(defaultCheque, defaultCheque.beneficiary)
@@ -703,14 +703,14 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                                         const depositAmount = requestPayout.add(new BN(50))
                                         shouldDeposit(depositAmount, issuer)
                                         context('when there are hardDeposits', function () {
-                                          describe('when the hardDeposits are assigned to the beneficiaryPrincipal', function () {
+                                          describe('when the hardDeposits are assigned to the beneficiary', function () {
                                             const hardDepositReceiver = defaultCheque.beneficiary
                                             context('when the hardDeposit is more the requestPayout', function () {
                                               const hardDeposit = requestPayout.add(new BN(1))
                                               describe(describePreCondition + 'shouldIncreaseHardDeposit', function () {
                                                 shouldIncreaseHardDeposit(hardDepositReceiver, hardDeposit, issuer)
                                                 describe(describeTest + 'shouldCashCheque', function () {
-                                                  shouldCashCheque(defaultCheque.beneficiary, beneficiaryAgent, requestPayout, calleePayout, sender)
+                                                  shouldCashCheque(defaultCheque.beneficiary, recipient, requestPayout, calleePayout, sender)
                                                 })
                                               })
                                             })
@@ -719,7 +719,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                                               describe(describePreCondition + 'shouldIncreaseHardDeposit', function () {
                                                 shouldIncreaseHardDeposit(hardDepositReceiver, hardDeposit, issuer)
                                                 describe(describeTest + 'shouldCashCheque', function () {
-                                                  shouldCashCheque(defaultCheque.beneficiary, beneficiaryAgent, requestPayout, calleePayout, sender)
+                                                  shouldCashCheque(defaultCheque.beneficiary, recipient, requestPayout, calleePayout, sender)
                                                 })
                                               })
                                             })
@@ -728,7 +728,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                                               describe(describePreCondition + 'shouldIncreaseHardDeposit', function () {
                                                 shouldIncreaseHardDeposit(hardDepositReceiver, hardDeposit, issuer)
                                                 describe(describeTest + 'shouldCashCheque', function () {
-                                                  shouldCashCheque(defaultCheque.beneficiary, beneficiaryAgent, requestPayout, calleePayout, sender)
+                                                  shouldCashCheque(defaultCheque.beneficiary, recipient, requestPayout, calleePayout, sender)
                                                 })
                                               })
                                             })
@@ -739,7 +739,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                                             describe(describePreCondition + 'shouldIncreaseHardDeposit', function () {
                                               shouldIncreaseHardDeposit(hardDepositReceiver, hardDeposit, issuer)
                                               describe(describeTest + 'shouldCashCheque', function () {
-                                                shouldCashCheque(defaultCheque.beneficiary, beneficiaryAgent, requestPayout, calleePayout, sender)
+                                                shouldCashCheque(defaultCheque.beneficiary, recipient, requestPayout, calleePayout, sender)
                                               })
                                             })
                                           })
@@ -752,7 +752,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                                         shouldDeposit(depositAmount, issuer)
                                         describe(describeTest + 'shouldCashCheque', function () {
 
-                                          shouldCashCheque(defaultCheque.beneficiary, beneficiaryAgent, requestPayout, calleePayout, sender)
+                                          shouldCashCheque(defaultCheque.beneficiary, recipient, requestPayout, calleePayout, sender)
                                         })
                                       })
                                     })
@@ -761,10 +761,10 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                                     describe(describeTest + 'shouldNotCashCheque', function () {
                                       const toSignFields = {
                                         requestPayout,
-                                        beneficiaryAgent,
+                                        recipient,
                                         calleePayout,
                                       }
-                                      const toSubmitFields = Object.assign({}, toSignFields, { beneficiaryPrincipal: defaultCheque.beneficiary })
+                                      const toSubmitFields = Object.assign({}, toSignFields, { beneficiary: defaultCheque.beneficiary })
                                       shouldNotCashCheque(toSignFields, toSubmitFields, value, sender, signee, "SimpleSwap: cannot pay callee")
                                     })
                                   })
@@ -774,7 +774,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                                     shouldDeposit(defaultCheque.amount, issuer)
                                     const requestPayout = defaultCheque.amount.sub(new BN(1))
                                     describe(describeTest + 'shouldCashCheque', function () {
-                                      shouldCashCheque(defaultCheque.beneficiary, beneficiaryAgent, requestPayout, calleePayout, sender)
+                                      shouldCashCheque(defaultCheque.beneficiary, recipient, requestPayout, calleePayout, sender)
                                     })
                                   })
                                 })
@@ -789,7 +789,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                               describe(describePreCondition + 'shouldDeposit', function () {
                                 shouldDeposit(defaultCheque.amount, issuer)
                                 describe(describeTest + 'shouldCashCheque', function () {
-                                  shouldCashCheque(defaultCheque.beneficiary, beneficiaryAgent, requestPayout, calleePayout, sender)
+                                  shouldCashCheque(defaultCheque.beneficiary, recipient, requestPayout, calleePayout, sender)
                                 })
                               })
                             })
@@ -803,9 +803,9 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                                   shouldDeposit(defaultCheque.amount, issuer)
                                   describe(describePreCondition + 'shouldCashChequeBeneficiary', function () {
                                     const requestPayout = defaultCheque.amount.div(new BN(2))
-                                    shouldCashCheque(defaultCheque.beneficiary, beneficiaryAgent, requestPayout, calleePayout, sender)
+                                    shouldCashCheque(defaultCheque.beneficiary, recipient, requestPayout, calleePayout, sender)
                                     describe(describeTest + 'shouldCashCheque', function () {
-                                      shouldCashCheque(defaultCheque.beneficiary, beneficiaryAgent, requestPayout, calleePayout, sender)
+                                      shouldCashCheque(defaultCheque.beneficiary, recipient, requestPayout, calleePayout, sender)
                                     })
                                   })
                                 })
@@ -819,14 +819,14 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                                   shouldDeposit(defaultCheque.amount, issuer)
                                   describe(describePreCondition + 'shouldCashCheque', function () {
                                     const requestPayout = defaultCheque.amount
-                                    shouldCashCheque(defaultCheque.beneficiary, beneficiaryAgent, requestPayout, calleePayout, sender)
+                                    shouldCashCheque(defaultCheque.beneficiary, recipient, requestPayout, calleePayout, sender)
                                     describe(describeTest + 'shouldNotCashCheque', function () {
                                       const toSignFields = {
                                         requestPayout,
-                                        beneficiaryAgent,
+                                        recipient,
                                         calleePayout,
                                       }
-                                      const toSubmitFields = Object.assign({}, toSignFields, { beneficiaryPrincipal: defaultCheque.beneficiary })
+                                      const toSubmitFields = Object.assign({}, toSignFields, { beneficiary: defaultCheque.beneficiary })
                                       shouldNotCashCheque(toSignFields, toSubmitFields, value, sender, signee, "SimpleSwap: not enough balance owed")
                                     })
                                   })
@@ -840,16 +840,16 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                           describe(describeTest + 'shouldNotCashCheque', function () {
                             const toSignFields = {
                               requestPayout,
-                              beneficiaryAgent,
+                              recipient,
                               calleePayout,
                             }
-                            const toSubmitFields = Object.assign({}, toSignFields, { beneficiaryPrincipal: defaultCheque.beneficiary })
+                            const toSubmitFields = Object.assign({}, toSignFields, { beneficiary: defaultCheque.beneficiary })
                             shouldNotCashCheque(toSignFields, toSubmitFields, value, sender, signee, "SimpleSwap: not enough balance owed")
                           })
                         })
                       })
-                      context('when the beneficiaryAgent is the beneficiaryPrincipal', function () {
-                        const beneficiaryAgent = defaultCheque.beneficiary
+                      context('when the recipient is the beneficiary', function () {
+                        const recipient = defaultCheque.beneficiary
                         describe(describePreCondition + 'shouldDeposit', function () {
                           shouldDeposit(defaultCheque.amount, issuer)
                           describe(describePreCondition + 'shouldSubmitChequeBeneficiary', function () {
@@ -860,7 +860,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                               beforeEach(async function () {
                                 await time.increase(waitTime)
                               })
-                              shouldCashCheque(defaultCheque.beneficiary, beneficiaryAgent, defaultCheque.amount, new BN(1), alice)
+                              shouldCashCheque(defaultCheque.beneficiary, recipient, defaultCheque.amount, new BN(1), alice)
                             })
                           })
                         })
@@ -869,7 +869,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                   })
                   context('when the beneficiary does not sign the correct fields', function () {
                     const sender = alice
-                    const beneficiaryAgent = defaultCheque.beneficiary
+                    const recipient = defaultCheque.beneficiary
                     describe(describePreCondition + 'shouldDeposit', function () {
                       shouldDeposit(defaultCheque.amount, issuer)
                       describe(describePreCondition + 'shouldSubmitChequeBeneficiary', function () {
@@ -882,10 +882,10 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                           })
                           const toSignFields = {
                             requestPayout: new BN(0),
-                            beneficiaryAgent,
+                            recipient,
                             calleePayout,
                           }
-                          const toSubmitFields = Object.assign({}, toSignFields, { beneficiaryPrincipal: defaultCheque.beneficiary, requestPayout: new BN(1) })
+                          const toSubmitFields = Object.assign({}, toSignFields, { beneficiary: defaultCheque.beneficiary, requestPayout: new BN(1) })
                           shouldNotCashCheque(toSignFields, toSubmitFields, value, sender, signee, "SimpleSwap: invalid beneficiarySig")
                         })
                       })
@@ -898,7 +898,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                   beforeEach(async function () {
                     await time.increase(waitTime)
                   })
-                  const beneficiaryAgent = defaultCheque.beneficiary
+                  const recipient = defaultCheque.beneficiary
                   describe(describePreCondition + 'shouldDeposit', function () {
                     shouldDeposit(defaultCheque.amount, issuer)
                     describe(describePreCondition + 'shouldSubmitChequeBeneficiary', function () {
@@ -907,10 +907,10 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                       describe(describeTest + 'shouldNotCashCheque', function () {
                         const toSignFields = {
                           requestPayout: new BN(0),
-                          beneficiaryAgent,
+                          recipient,
                           calleePayout,
                         }
-                        const toSubmitFields = Object.assign({}, toSignFields, { beneficiaryPrincipal: defaultCheque.beneficiary })
+                        const toSubmitFields = Object.assign({}, toSignFields, { beneficiary: defaultCheque.beneficiary })
                         shouldNotCashCheque(toSignFields, toSubmitFields, value, sender, signee, "SimpleSwap: invalid beneficiarySig")
                       })
                     })
@@ -933,14 +933,14 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                     beforeEach(async function () {
                       await time.increase(waitTime)
                     })
-                    shouldCashCheque(defaultCheque.beneficiary, agent, defaultCheque.amount, calleePayout, alice)
+                    shouldCashCheque(defaultCheque.beneficiary, _recipient, defaultCheque.amount, calleePayout, alice)
                   })
                 })
               })
             })
           })
           context('when the signature has expired', async function () {
-            const beneficiaryAgent = agent
+            const recipient = _recipient
             const calleePayout = new BN(0)
             const sender = alice
             const signee = defaultCheque.beneficiary
@@ -955,10 +955,10 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                 describe(describeTest + 'shouldNotCashCheque', function () {
                   const toSignFields = {
                     requestPayout: new BN(0),
-                    beneficiaryAgent,
+                    recipient,
                     calleePayout,
                   }
-                  const toSubmitFields = Object.assign({}, toSignFields, { beneficiaryPrincipal: defaultCheque.beneficiary })
+                  const toSubmitFields = Object.assign({}, toSignFields, { beneficiary: defaultCheque.beneficiary })
                   shouldNotCashCheque(toSignFields, toSubmitFields, value, sender, signee, "SimpleSwap: beneficiarySig expired")
                 })
               })
@@ -970,17 +970,17 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
             this.expiry = (await time.latest()).sub(time.duration.days(new BN(1)))
           })
           const value = new BN(1)
-          const beneficiaryAgent = agent
+          const recipient = _recipient
           const calleePayout = new BN(0)
           const sender = alice
           const signee = defaultCheque.beneficiary
           describe(describeTest + 'shouldNotCashCheque', function () {
             const toSignFields = {
               requestPayout: new BN(0),
-              beneficiaryAgent,
+              recipient,
               calleePayout,
             }
-            const toSubmitFields = Object.assign({}, toSignFields, { beneficiaryPrincipal: defaultCheque.beneficiary })
+            const toSubmitFields = Object.assign({}, toSignFields, { beneficiary: defaultCheque.beneficiary })
             shouldNotCashCheque(toSignFields, toSubmitFields, value, sender, signee, "revert")
           })
         })
@@ -996,8 +996,8 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
             context('when we submit the cheque beforeHand', function () {
               describe(describePreCondition + 'shouldSubmitChequeBeneficiary', function () {
                 shouldSubmitChequeBeneficiary(defaultCheque, defaultCheque.beneficiary)
-                context('when the beneficiaryAgent is not the beneficiaryPrincipal', function () {
-                  const beneficiaryAgent = agent
+                context('when the recipient is not the beneficiary', function () {
+                  const recipient = _recipient
                   context('when we have not cashed a cheque before', function () {
                     context('when we have waited more than timeoutDuration', function () {
                       const waitTime = defaultCheque.timeout.add(new BN(100))
@@ -1019,7 +1019,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                                     describe(describePreCondition + 'shouldIncreaseHardDeposit', function () {
                                       shouldIncreaseHardDeposit(hardDepositReceiver, hardDeposit, issuer)
                                       describe(describeTest + 'shouldCashChequeBeneficiary', function () {
-                                        shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, sender)
+                                        shouldCashChequeBeneficiary(recipient, requestPayout, sender)
                                       })
                                     })
                                   })
@@ -1028,7 +1028,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                                     describe(describePreCondition + 'shouldIncreaseHardDeposit', function () {
                                       shouldIncreaseHardDeposit(hardDepositReceiver, hardDeposit, issuer)
                                       describe(describeTest + 'shouldCashChequeBeneficiary', function () {
-                                        shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, sender)
+                                        shouldCashChequeBeneficiary(recipient, requestPayout, sender)
                                       })
                                     })
                                   })
@@ -1037,7 +1037,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                                     describe(describePreCondition + 'shouldIncreaseHardDeposit', function () {
                                       shouldIncreaseHardDeposit(hardDepositReceiver, hardDeposit, issuer)
                                       describe(describeTest + 'shouldCashChequeBeneficiary', function () {
-                                        shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, sender)
+                                        shouldCashChequeBeneficiary(recipient, requestPayout, sender)
                                       })
                                     })
                                   })
@@ -1048,7 +1048,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                                   describe(describePreCondition + 'shouldIncreaseHardDeposit', function () {
                                     shouldIncreaseHardDeposit(hardDepositReceiver, hardDeposit, issuer)
                                     describe(describeTest + 'shouldCashChequeBeneficiary', function () {
-                                      shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, sender)
+                                      shouldCashChequeBeneficiary(recipient, requestPayout, sender)
                                     })
                                   })
                                 })
@@ -1060,21 +1060,21 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                               const depositAmount = requestPayout
                               shouldDeposit(depositAmount, issuer)
                               describe(describeTest + 'shouldCashChequeBeneficiary', function () {
-                                shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, sender)
+                                shouldCashChequeBeneficiary(recipient, requestPayout, sender)
                               })
                             })
                           })
                         })
                         context('when there is no balance', function () {
                           describe(describeTest + 'shouldCashChequeBeneficiary', function () {
-                            shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, sender)
+                            shouldCashChequeBeneficiary(recipient, requestPayout, sender)
                           })
                         })
                       })
                       context('when the requestPayout is less than the submitted value', function () {
                         const requestPayout = defaultCheque.amount.sub(new BN(1))
                         describe(describeTest + 'shouldCashChequeBeneficiary', function () {
-                          shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, sender)
+                          shouldCashChequeBeneficiary(recipient, requestPayout, sender)
                         })
                       })
                     })
@@ -1086,7 +1086,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                       await time.increase(waitTime)
                     })
                     describe(describeTest + 'shouldCashChequeBeneficiary', function () {
-                      shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, sender)
+                      shouldCashChequeBeneficiary(recipient, requestPayout, sender)
                     })
                   })
                   context('when we have cashed a cheque before', function () {
@@ -1097,9 +1097,9 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                       })
                       describe(describePreCondition + 'shouldCashChequeBeneficiary', function () {
                         const requestPayout = defaultCheque.amount.div(new BN(2))
-                        shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, sender)
+                        shouldCashChequeBeneficiary(recipient, requestPayout, sender)
                         describe(describeTest + 'shouldCashChequeBeneficiary', function () {
-                          shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, sender)
+                          shouldCashChequeBeneficiary(recipient, requestPayout, sender)
                         })
                       })
                     })
@@ -1112,31 +1112,31 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
                         shouldDeposit(defaultCheque.amount, issuer)
                         describe(describePreCondition + 'shouldCashChequeBeneficiary', function () {
                           const requestPayout = defaultCheque.amount
-                          shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, sender)
+                          shouldCashChequeBeneficiary(recipient, requestPayout, sender)
                           describe(describeTest + 'shouldNotCashChequeBeneficiary', function () {
-                            shouldNotCashChequeBeneficiary(beneficiaryAgent, requestPayout, sender, value, "SimpleSwap: not enough balance owed")
+                            shouldNotCashChequeBeneficiary(recipient, requestPayout, sender, value, "SimpleSwap: not enough balance owed")
                           })
                         })
                       })
                     })
                   })
                 })
-                context('when the beneficiaryAgent is the beneficiaryPrincipal', function () {
-                  const beneficiaryAgent = defaultCheque.beneficiary
+                context('when the recipient is the beneficiary', function () {
+                  const recipient = defaultCheque.beneficiary
                   const waitTime = defaultCheque.timeout.add(new BN(100))
                   beforeEach(async function () {
                     await time.increase(waitTime)
                   })
                   const requestPayout = defaultCheque.amount
                   describe(describeTest + 'shouldCashChequeBeneficiary', function () {
-                    shouldCashChequeBeneficiary(beneficiaryAgent, requestPayout, sender)
+                    shouldCashChequeBeneficiary(recipient, requestPayout, sender)
                   })
                 })
               })
             })
             context("when we don't submit a cheque beforeHand", function () {
               describe(describeTest + 'shouldNotCashChequeBeneficiary', function () {
-                shouldNotCashChequeBeneficiary(agent, defaultCheque.amount, sender, value, "SimpleSwap: not enough balance owed")
+                shouldNotCashChequeBeneficiary(_recipient, defaultCheque.amount, sender, value, "SimpleSwap: not enough balance owed")
               })
             })
           })
@@ -1147,7 +1147,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
               describe(describePreCondition + 'shouldSubmitChequeBeneficiary', function () {
                 shouldSubmitChequeBeneficiary(defaultCheque, defaultCheque.beneficiary)
                 describe(describeTest + 'shouldNotCashChequeBeneficiary', function () {
-                  shouldNotCashChequeBeneficiary(agent, defaultCheque.amount, sender, value, "SimpleSwap: not enough balance owed")
+                  shouldNotCashChequeBeneficiary(recipient, defaultCheque.amount, sender, value, "SimpleSwap: not enough balance owed")
                 })
               })
             })
@@ -1160,7 +1160,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, agent], DEFAULT_HARDDEP
               describe(describePreCondition + 'shouldSubmitChequeBeneficiary', function () {
                 shouldSubmitChequeBeneficiary(defaultCheque, defaultCheque.beneficiary)
                 describe(describeTest + 'shouldNotCashChequeBeneficiary', function () {
-                  shouldNotCashChequeBeneficiary(agent, defaultCheque.amount, sender, value, "revert")
+                  shouldNotCashChequeBeneficiary(_recipient, defaultCheque.amount, sender, value, "revert")
                 })
               })
             })
