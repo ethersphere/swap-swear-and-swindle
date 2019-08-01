@@ -95,8 +95,10 @@ contract SimpleSwap {
   function submitChequeIssuer(address beneficiary, uint serial, uint amount, uint cashTimeout, bytes memory beneficiarySig) public {
     require(msg.sender == issuer, "SimpleSwap: not issuer");
     /* verify signature of the beneficiary */
-    require(beneficiary == recover(chequeHash(address(this), beneficiary, serial, amount, cashTimeout), beneficiarySig),
-     "SimpleSwap: invalid beneficiarySig");
+    require(
+      beneficiary == recover(chequeHash(address(this), beneficiary, serial, amount, cashTimeout), beneficiarySig),
+      "SimpleSwap: invalid beneficiarySig"
+    );
     /* update the cheque data */
     _submitChequeInternal(beneficiary, serial, amount, cashTimeout);
   }
@@ -109,8 +111,13 @@ contract SimpleSwap {
   function submitChequeBeneficiary(uint serial, uint amount, uint cashTimeout, bytes memory issuerSig) public {
     /* verify signature of the issuer */
     //emit LogAddress(recover(chequeHash(address(this), msg.sender, serial, amount, cashTimeout), issuerSig));
-    require(issuer == recover(chequeHash(address(this), msg.sender, serial, amount, cashTimeout), issuerSig),
-     "SimpleSwap: invalid issuerSig");
+    require(
+      issuer == recover(
+        chequeHash(address(this), msg.sender, serial, amount, cashTimeout),
+        issuerSig
+      ),
+      "SimpleSwap: invalid issuerSig"
+    );
     /* update the cheque data */
     _submitChequeInternal(msg.sender, serial, amount, cashTimeout);
   }
@@ -122,20 +129,25 @@ contract SimpleSwap {
   /// @param cashTimeout the check can be cashed cashTimeout seconds in the future
   /// @param issuerSig signature of the issuer
   /// @param beneficarySig signature of the beneficiary
-  function submitCheque(address beneficiary, uint serial, uint amount, uint cashTimeout, bytes memory issuerSig, bytes memory beneficarySig) public {
+  function submitCheque(address beneficiary, uint serial, uint amount, uint cashTimeout, bytes memory issuerSig, bytes memory beneficarySig)
+  public {
     /* verify signature of the issuer */
-    require(issuer == recover(chequeHash(address(this), beneficiary, serial, amount, cashTimeout), issuerSig),
-    "SimpleSwap: invalid issuerSig");
+    require(
+      issuer == recover(chequeHash(address(this), beneficiary, serial, amount, cashTimeout), issuerSig),
+      "SimpleSwap: invalid issuerSig"
+    );
     /* verify signature of the beneficiary */
-    require(beneficiary == recover(chequeHash(address(this), beneficiary, serial, amount, cashTimeout), beneficarySig),
-    "SimpleSwap: invalid beneficiarySig");
+    require(
+      beneficiary == recover(chequeHash(address(this), beneficiary, serial, amount, cashTimeout), beneficarySig),
+      "SimpleSwap: invalid beneficiarySig"
+    );
     /* update the cheque data */
     _submitChequeInternal(beneficiary, serial, amount, cashTimeout);
   }
 
 
   function _cashChequeInternal(address beneficiaryPrincipal, address payable beneficiaryAgent, uint requestPayout, uint calleePayout) public {
-     ChequeInfo storage cheque = cheques[beneficiaryPrincipal];
+    ChequeInfo storage cheque = cheques[beneficiaryPrincipal];
     /* grace period must have ended */
     require(now >= cheque.cashTimeout, "SimpleSwap: cheque not yet timed out");
     require(requestPayout <= cheque.amount.sub(cheque.paidOut), "SimpleSwap: not enough balance owed");
@@ -169,14 +181,19 @@ contract SimpleSwap {
     uint256 calleePayout
   ) public {
     require(now <= expiry, "SimpleSwap: beneficiarySig expired");
-    require(beneficiaryPrincipal == recover(cashOutHash(
-      address(this),
-      msg.sender,
-      requestPayout,
-      beneficiaryAgent,
-      expiry,
-      calleePayout
-      ), beneficiarySig), "SimpleSwap: invalid beneficiarySig");
+    require(
+      beneficiaryPrincipal == recover(
+        cashOutHash(
+          address(this),
+          msg.sender,
+          requestPayout,
+          beneficiaryAgent,
+          expiry,
+          calleePayout
+        ),
+        beneficiarySig
+      ),
+      "SimpleSwap: invalid beneficiarySig");
     _cashChequeInternal(beneficiaryPrincipal, beneficiaryAgent, requestPayout, calleePayout);
     msg.sender.transfer(calleePayout);
   }
@@ -244,7 +261,10 @@ contract SimpleSwap {
     bytes memory beneficiarySig
   ) public {
     require(msg.sender == issuer, "SimpleSwap: not issuer");
-    require(beneficiary == recover(customDecreaseTimeoutHash(address(this), beneficiary, decreaseTimeout), beneficiarySig), "SimpleSwap: invalid beneficiarySig");
+    require(
+      beneficiary == recover(customDecreaseTimeoutHash(address(this), beneficiary, decreaseTimeout), beneficiarySig),
+      "SimpleSwap: invalid beneficiarySig"
+    );
     hardDeposits[beneficiary].decreaseTimeout = decreaseTimeout;
     emit HardDepositDecreaseTimeoutChanged(beneficiary, hardDeposits[beneficiary].decreaseTimeout);
   }
@@ -261,7 +281,7 @@ contract SimpleSwap {
   }
 
   /// @notice deposit ether
-  function() payable external {
+  function() external payable {
     if(msg.value > 0) {
       emit Deposit(msg.sender, msg.value);
     }
