@@ -93,7 +93,6 @@ contract SimpleSwap {
     }
   }
 
-
   function cashCheque(
     address beneficiary,
     address payable recipient,

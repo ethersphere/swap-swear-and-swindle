@@ -247,9 +247,10 @@ function shouldNotCashChequeBeneficiary(recipient, toSubmitCumulativePayout, toS
     )
   })
 }
-function shouldCashCheque(beneficiary, recipient, requestPayout, calleePayout, from) {
+function shouldCashCheque(beneficiary, recipient, cumulativePayout, calleePayout, from, beneficiarySignee, issuerSignee) {
   beforeEach(async function() {
-    const beneficiarySig = await signCashOut(this.simpleSwap, from, requestPayout, recipient, this.expiry, calleePayout, beneficiary)    
+    const beneficiarySig = await signCashOut(this.simpleSwap, from, cumulativePayout, recipient, calleePayout, beneficiarySignee)    
+    const issuerSig = await signCheque(this.simpleSwap, beneficiary, cumulativePayout, issuerSignee)
     this.preconditions = {
       calleeBalance: await balance.current(from),
       recipientBalance: await balance.current(recipient),
@@ -260,9 +261,9 @@ function shouldCashCheque(beneficiary, recipient, requestPayout, calleePayout, f
       balanceFor: await this.simpleSwap.balanceFor(beneficiary),
       chequebookBalance: await balance.current(this.simpleSwap.address),
       beneficiaryBalance: await balance.current(recipient),
-      cheque: await this.simpleSwap.cheques(beneficiary)
+      paidOutCheque: await this.simpleSwap.paidOutCheques(beneficiary)
     }
-    const { logs, receipt } = await this.simpleSwap.cashCheque(beneficiary, recipient, requestPayout, beneficiarySig, this.expiry, calleePayout, {from: from})
+    const { logs, receipt } = await this.simpleSwap.cashCheque(beneficiary, recipient, cumulativePayout, beneficiarySig, calleePayout, issuerSig, {from: from})
     this.logs = logs
     this.receipt = receipt
   
@@ -276,23 +277,24 @@ function shouldCashCheque(beneficiary, recipient, requestPayout, calleePayout, f
       balanceFor: await this.simpleSwap.balanceFor(beneficiary),
       chequebookBalance: await balance.current(this.simpleSwap.address),
       beneficiaryBalance: await balance.current(recipient),
-      cheque: await this.simpleSwap.cheques(beneficiary)
+      paidOutCheque: await this.simpleSwap.paidOutCheques(beneficiary)
     }
   })
-  cashChequeInternal(beneficiary, recipient, requestPayout, calleePayout, from)
+  cashChequeInternal(beneficiary, recipient, cumulativePayout, calleePayout, from)
 }
-function shouldNotCashCheque(toSignFields, toSubmitFields, value, from, signee, revertMessage) {
+function shouldNotCashCheque(beneficiaryToSign, issuerToSign, toSubmitFields, value, from, beneficiarySignee, issuerSignee, revertMessage) {
   beforeEach(async function() {
-    this.beneficiarySig = await signCashOut(this.simpleSwap, from, toSignFields.requestPayout, toSignFields.recipient, this.expiry, toSignFields.calleePayout, signee)    
+    this.beneficiarySig = await signCashOut(this.simpleSwap, from, beneficiaryToSign.cumulativePayout, beneficiaryToSign.recipient, beneficiaryToSign.calleePayout, beneficiarySignee)    
+    this.issuerSig = await signCheque(this.simpleSwap, issuerToSign.beneficiary, issuerToSign.cumulativePayout, issuerSignee)
   })
   it('reverts', async function() {
     await expectRevert(this.simpleSwap.cashCheque(
       toSubmitFields.beneficiary, 
       toSubmitFields.recipient, 
-      toSubmitFields.requestPayout, 
+      toSubmitFields.cumulativePayout, 
       this.beneficiarySig, 
-      this.expiry, 
       toSubmitFields.calleePayout, 
+      this.issuerSig,
       {from: from, value: value}), 
       revertMessage
     )

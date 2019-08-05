@@ -1,12 +1,3 @@
-const Swap = artifacts.require('./SimpleSwap')
-const {
-  constants
-} = require("openzeppelin-test-helpers");
-
-function getSwap() {  
-  return Swap.new(constants.ZERO_ADDRESS)    
-}
-
 async function sign(hash, signer) {
   let signature = await web3.eth.sign(hash, signer)
 
@@ -21,17 +12,17 @@ async function signCheque(swap, beneficiary, cumulativePayout, signee) {
     swap.address,
     beneficiary,
     cumulativePayout
-  );
+  )
+
   return await sign(hash, signee)
 }
 
-async function signCashOut(swap, sender, requestPayout, beneficiaryAgent, expiry, calleePayout, signee) {
+async function signCashOut(swap, sender, cumulativePayout, beneficiaryAgent, calleePayout, signee) {
   const hash = await swap.cashOutHash(
     swap.address,
     sender,
-    requestPayout,
+    cumulativePayout,
     beneficiaryAgent,
-    expiry,
     calleePayout
   )
 
