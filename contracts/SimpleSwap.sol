@@ -60,9 +60,15 @@ contract SimpleSwap {
     return liquidBalance().add(hardDeposits[beneficiary].amount);
   }
 
-  function _cashChequeInternal(address beneficiary, address payable recipient, uint cumulativePayout, uint calleePayout, bytes memory issuerSig) internal {
+  function _cashChequeInternal(
+    address beneficiary,
+    address payable recipient,
+    uint cumulativePayout,
+    uint calleePayout,
+    bytes memory issuerSig
+  ) internal {
     /* The issuer must have given explicit approval to the cumulativePayout, either by being the callee or by signature*/
-    if(msg.sender != issuer) {
+    if (msg.sender != issuer) {
       require(issuer == recover(chequeHash(address(this), beneficiary, cumulativePayout), issuerSig),
       "SimpleSwap: invalid issuerSig");
     }
@@ -74,9 +80,8 @@ contract SimpleSwap {
     /* calculates hard-deposit usage */
     uint hardDepositUsage = Math.min(totalPayout, hardDeposits[beneficiary].amount);
     require(totalPayout >= calleePayout, "SimpleSwap: cannot pay callee");
-    
     /* if there are some of the hard deposit used, update hardDeposits*/
-    if(hardDepositUsage != 0) {
+    if (hardDepositUsage != 0) {
       hardDeposits[beneficiary].amount = hardDeposits[beneficiary].amount.sub(hardDepositUsage);
 
       totalHardDeposit = totalHardDeposit.sub(hardDepositUsage);
@@ -87,13 +92,12 @@ contract SimpleSwap {
 
     recipient.transfer(totalPayout.sub(calleePayout));
     /* do a transfer to the callee if specified*/
-    if(calleePayout != 0) {
+    if (calleePayout != 0) {
       msg.sender.transfer(calleePayout);
     }
     emit ChequeCashed(beneficiary, recipient, msg.sender, totalPayout, cumulativePayout, calleePayout);
     /* let the world know that the issuer has over-promised on outstanding cheques */
-    if(requestPayout != totalPayout) {
-
+    if (requestPayout != totalPayout) {
       emit ChequeBounced();
     }
   }
