@@ -45,7 +45,7 @@ contract SimpleSwap {
   constructor(address payable _issuer, uint defaultHardDepositTimeoutDuration) public payable {
     DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT = defaultHardDepositTimeoutDuration;
     issuer = _issuer;
-    if(msg.value > 0) {
+    if (msg.value > 0) {
       emit Deposit(msg.sender, msg.value);
     }
   }
@@ -68,19 +68,23 @@ contract SimpleSwap {
     }
     /* the requestPayout is the amount requested for payment processing */
     uint requestPayout = cumulativePayout.sub(paidOut[beneficiary]);
+
     /* calculates acutal payout */
     uint totalPayout = Math.min(requestPayout, balanceFor(beneficiary));
     /* calculates hard-deposit usage */
     uint hardDepositUsage = Math.min(totalPayout, hardDeposits[beneficiary].amount);
     require(totalPayout >= calleePayout, "SimpleSwap: cannot pay callee");
+    
     /* if there are some of the hard deposit used, update hardDeposits*/
     if(hardDepositUsage != 0) {
       hardDeposits[beneficiary].amount = hardDeposits[beneficiary].amount.sub(hardDepositUsage);
+
       totalHardDeposit = totalHardDeposit.sub(hardDepositUsage);
     }
     /* increase the stored paidOut amount to avoid double payout */
     paidOut[beneficiary] = paidOut[beneficiary].add(totalPayout);
     /* do the actual payments */
+
     recipient.transfer(totalPayout.sub(calleePayout));
     /* do a transfer to the callee if specified*/
     if(calleePayout != 0) {
@@ -89,6 +93,7 @@ contract SimpleSwap {
     emit ChequeCashed(beneficiary, recipient, msg.sender, totalPayout, cumulativePayout, calleePayout);
     /* let the world know that the issuer has over-promised on outstanding cheques */
     if(requestPayout != totalPayout) {
+
       emit ChequeBounced();
     }
   }
@@ -171,13 +176,17 @@ contract SimpleSwap {
     bytes memory beneficiarySig
   ) public {
     require(msg.sender == issuer, "SimpleSwap: not issuer");
-    require(beneficiary == recover(customDecreaseTimeoutHash(address(this), beneficiary, decreaseTimeout), beneficiarySig), "SimpleSwap: invalid beneficiarySig");
+    require(
+      beneficiary == recover(customDecreaseTimeoutHash(address(this), beneficiary, decreaseTimeout), beneficiarySig),
+      "SimpleSwap: invalid beneficiarySig"
+    );
     hardDeposits[beneficiary].decreaseTimeout = decreaseTimeout;
     emit HardDepositDecreaseTimeoutChanged(beneficiary, hardDeposits[beneficiary].decreaseTimeout);
   }
 
   /// @notice withdraw ether
   /// @param amount amount to withdraw
+  // solhint-disable-next-line no-simple-event-func-name
   function withdraw(uint amount) public {
     /* only issuer can do this */
     require(msg.sender == issuer, "SimpleSwap: not issuer");
@@ -188,8 +197,8 @@ contract SimpleSwap {
   }
 
   /// @notice deposit ether
-  function() payable external {
-    if(msg.value > 0) {
+  function() external payable {
+    if (msg.value > 0) {
       emit Deposit(msg.sender, msg.value);
     }
   }
