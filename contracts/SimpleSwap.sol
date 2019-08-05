@@ -31,8 +31,8 @@ contract SimpleSwap {
     uint canBeDecreasedAt; /* point in time after which harddeposit can be decreased*/
   }
 
-  /* associates every beneficiary with their paidOutCheques */
-  mapping (address => uint) public paidOutCheques;
+  /* associates every beneficiary with how much has been paid out to them */
+  mapping (address => uint) public paidOut;
   /* associates every beneficiary with their HardDeposit */
   mapping (address => HardDeposit) public hardDeposits;
   /* sum of all hard deposits */
@@ -60,14 +60,14 @@ contract SimpleSwap {
     return liquidBalance().add(hardDeposits[beneficiary].amount);
   }
 
-  function _cashChequeInternal(address beneficiary, address payable recipient, uint cumulativePayout, uint calleePayout, bytes memory issuerSig) public {
+  function _cashChequeInternal(address beneficiary, address payable recipient, uint cumulativePayout, uint calleePayout, bytes memory issuerSig) internal {
     /* The issuer must have given explicit approval to the cumulativePayout, either by being the callee or by signature*/
     if(msg.sender != issuer) {
       require(issuer == recover(chequeHash(address(this), beneficiary, cumulativePayout), issuerSig),
       "SimpleSwap: invalid issuerSig");
     }
     /* the requestPayout is the amount requested for payment processing */
-    uint requestPayout = cumulativePayout.sub(paidOutCheques[beneficiary]);
+    uint requestPayout = cumulativePayout.sub(paidOut[beneficiary]);
     /* calculates acutal payout */
     uint totalPayout = Math.min(requestPayout, balanceFor(beneficiary));
     /* calculates hard-deposit usage */
@@ -79,7 +79,7 @@ contract SimpleSwap {
       totalHardDeposit = totalHardDeposit.sub(hardDepositUsage);
     }
     /* increase the stored paidOut amount to avoid double payout */
-    paidOutCheques[beneficiary] = paidOutCheques[beneficiary].add(totalPayout);
+    paidOut[beneficiary] = paidOut[beneficiary].add(totalPayout);
     /* do the actual payments */
     recipient.transfer(totalPayout.sub(calleePayout));
     /* do a transfer to the callee if specified*/

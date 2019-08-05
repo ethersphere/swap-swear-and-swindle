@@ -5,7 +5,7 @@ const {
 
 const {
   shouldReturnDEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT,
-  shouldReturnPaidOutCheques,
+  shouldReturnPaidOut,
   shouldReturnHardDeposits,
   shouldReturnTotalHardDeposit,
   shouldReturnIssuer,
@@ -78,9 +78,9 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, carol], DEFAULT_HARDDEP
       if (enabledTests.cheques) {
         const beneficiary = defaults.beneficiary
         context('when no cheque was ever cashed', function () {
-          describe(describeTest + 'shouldReturnPaidOutCheques', function () {
+          describe(describeTest + 'shouldReturnPaidOut', function () {
             const expectedAmount = new BN(0)
-            shouldReturnPaidOutCheques(beneficiary, expectedAmount)
+            shouldReturnPaidOut(beneficiary, expectedAmount)
           })
         })
         context('when a cheque was cashed', function () {
@@ -88,9 +88,9 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, carol], DEFAULT_HARDDEP
             shouldDeposit(defaults.deposit, issuer)
             describe(describePreCondition + 'shouldCashChequeBeneficiary', function () {
               shouldCashChequeBeneficiary(defaults.recipient, defaults.firstCumulativePayout, issuer, defaults.beneficiary)
-              describe(describeTest + 'shouldReturnPaidOutCheques', function () {
+              describe(describeTest + 'shouldReturnPaidOut', function () {
                 const expectedAmount = defaults.firstCumulativePayout
-                shouldReturnPaidOutCheques(beneficiary, expectedAmount)
+                shouldReturnPaidOut(beneficiary, expectedAmount)
               })
             })
           })
@@ -266,108 +266,130 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, carol], DEFAULT_HARDDEP
         const beneficiary = defaults.beneficiary
         const firstCumulativePayout = defaults.firstCumulativePayout
         const recipient = defaults.recipient
-        const callee = alice
-        context("when we don't send value along", function () {
-          const value = new BN(0)
-          context('when the beneficiary provides the beneficiarySig', function () {
-            const beneficiarySignee = beneficiary
-            context('when the issuer provides the issuerSig', function () {
-              const issuerSignee = issuer
-              context('when the calleePayout is non-zero', function () {
-                const calleePayout = defaults.firstCumulativePayout.div(new BN(100))
-                context('when there is some money deposited', function () {
-                  context('when the money fully covers the cheque', function() {
-                    const depositAmount = firstCumulativePayout.add(defaults.secondCumulativePayout)
-                    describe(describePreCondition + 'shouldDeposit', function () {
-                      shouldDeposit(depositAmount, issuer)
-                      context('when there are hardDeposits assigned to the beneficiary', function() {
-                        context('when the hardDeposits fully cover the cheque', function() {
-                          describe(describePreCondition + 'shouldIncreaseHardDeposit', function() {
-                            shouldIncreaseHardDeposit(beneficiary, firstCumulativePayout, issuer)
-                            context('when we submit one cheque', function() {
+        context('when the sender is not the issuer', function() {
+          const callee = alice
+          context("when we don't send value along", function () {
+            const value = new BN(0)
+            context('when the beneficiary provides the beneficiarySig', function () {
+              const beneficiarySignee = beneficiary
+              context('when the issuer provides the issuerSig', function () {
+                const issuerSignee = issuer
+                context('when the calleePayout is non-zero', function () {
+                  const calleePayout = defaults.firstCumulativePayout.div(new BN(100))
+                  context('when there is some money deposited', function () {
+                    context('when the money fully covers the cheque', function() {
+                      const depositAmount = firstCumulativePayout.add(defaults.secondCumulativePayout)
+                      describe(describePreCondition + 'shouldDeposit', function () {
+                        shouldDeposit(depositAmount, issuer)
+                        context('when there are hardDeposits assigned to the beneficiary', function() {
+                          context('when the hardDeposits fully cover the cheque', function() {
+                            describe(describePreCondition + 'shouldIncreaseHardDeposit', function() {
+                              shouldIncreaseHardDeposit(beneficiary, firstCumulativePayout, issuer)
+                              context('when we submit one cheque', function() {
+                                describe(describeTest + 'shouldCashCheque', function() {
+                                  shouldCashCheque(beneficiary, recipient, firstCumulativePayout, calleePayout, callee, beneficiarySignee, issuerSignee)
+                                })
+                              })
+                              context('when we attempt to submit two cheques', function() {
+                                describe(describePreCondition + 'shouldCashCheque', function() {
+                                  shouldCashCheque(beneficiary, recipient, firstCumulativePayout, calleePayout, callee, beneficiarySignee, issuerSignee)
+                                  context('when the second cumulativePayout is higher than the first cumulativePayout', function() {
+                                    const secondCumulativePayout = defaults.secondCumulativePayout
+                                    describe(describeTest + 'shouldCashCheque', function() {
+                                      shouldCashCheque(beneficiary, recipient, secondCumulativePayout, calleePayout, callee, beneficiarySignee, issuerSignee)
+                                    })
+                                  })
+                                  context('when the second cumulativePayout is lower than the first cumulativePayout', function() {
+                                    const secondCumulativePayout = firstCumulativePayout.sub(new BN(1))
+                                    const revertMessage = 'SafeMath: subtraction overflow.'
+                                    const beneficiaryToSign = {
+                                      cumulativePayout: secondCumulativePayout,
+                                      recipient,
+                                      calleePayout
+                                    }
+                                    const issuerToSign = {
+                                      beneficiary,
+                                      cumulativePayout: secondCumulativePayout,
+                                    }
+                                    const toSubmit = Object.assign({}, beneficiaryToSign, issuerToSign)
+                                    describe(describeTest + 'shouldNotCashCheque', function() {
+                                      shouldNotCashCheque(beneficiaryToSign, issuerToSign, toSubmit, value, callee, beneficiarySignee, issuerSignee, revertMessage)
+                                    })
+                                  })
+                                })
+                              })
+                            })
+                          })
+                          context('when the hardDeposits partly cover the cheque', function() {
+                            describe(describePreCondition + 'shouldIncreaseHardDeposit', function() {
+                              shouldIncreaseHardDeposit(beneficiary, firstCumulativePayout.div(new BN(2)), issuer)
                               describe(describeTest + 'shouldCashCheque', function() {
                                 shouldCashCheque(beneficiary, recipient, firstCumulativePayout, calleePayout, callee, beneficiarySignee, issuerSignee)
                               })
                             })
-                            context('when we attempt to submit two cheques', function() {
-                              describe(describePreCondition + 'shouldCashCheque', function() {
-                                shouldCashCheque(beneficiary, recipient, firstCumulativePayout, calleePayout, callee, beneficiarySignee, issuerSignee)
-                                context('when the second cumulativePayout is higher than the first cumulativePayout', function() {
-                                  const secondCumulativePayout = defaults.secondCumulativePayout
-                                  describe(describeTest + 'shouldCashCheque', function() {
-                                    shouldCashCheque(beneficiary, recipient, secondCumulativePayout, calleePayout, callee, beneficiarySignee, issuerSignee)
-                                  })
-                                })
-                                context('when the second cumulativePayout is lower than the first cumulativePayout', function() {
-                                  const secondCumulativePayout = firstCumulativePayout.sub(new BN(1))
-                                  const revertMessage = 'SafeMath: subtraction overflow.'
-                                  const beneficiaryToSign = {
-                                    cumulativePayout: secondCumulativePayout,
-                                    recipient,
-                                    calleePayout
-                                  }
-                                  const issuerToSign = {
-                                    beneficiary,
-                                    cumulativePayout: secondCumulativePayout,
-                                  }
-                                  const toSubmit = Object.assign({}, beneficiaryToSign, issuerToSign)
-                                  describe(describeTest + 'shouldNotCashCheque', function() {
-                                    shouldNotCashCheque(beneficiaryToSign, issuerToSign, toSubmit, value, callee, beneficiarySignee, issuerSignee, revertMessage)
-                                  })
-                                })
-                              })
-                            })
-                          })
-                        })
-                        context('when the hardDeposits partly cover the cheque', function() {
-                          describe(describePreCondition + 'shouldIncreaseHardDeposit', function() {
-                            shouldIncreaseHardDeposit(beneficiary, firstCumulativePayout.div(new BN(2)), issuer)
-                            describe(describeTest + 'shouldCashCheque', function() {
-                              shouldCashCheque(beneficiary, recipient, firstCumulativePayout, calleePayout, callee, beneficiarySignee, issuerSignee)
-                            })
                           })
                         })
                       })
                     })
-                  })
-                  context('when the money partly covers the cheque', function() {
-                    const depositAmount = firstCumulativePayout.div(new BN(2))
-                    describe(describePreCondition + 'shouldDeposit', function () {
-                      shouldDeposit(depositAmount, issuer)
-                      describe(describeTest + 'shouldCashCheque', function() {
-                        shouldCashCheque(beneficiary, recipient, firstCumulativePayout, calleePayout, callee, beneficiarySignee, issuerSignee)
+                    context('when the money partly covers the cheque', function() {
+                      const depositAmount = firstCumulativePayout.div(new BN(2))
+                      describe(describePreCondition + 'shouldDeposit', function () {
+                        shouldDeposit(depositAmount, issuer)
+                        describe(describeTest + 'shouldCashCheque', function() {
+                          shouldCashCheque(beneficiary, recipient, firstCumulativePayout, calleePayout, callee, beneficiarySignee, issuerSignee)
+                        })
                       })
+                    })                  
+                  })
+                  context('when no money is deposited', function () {
+                    const revertMessage = 'SimpleSwap: cannot pay callee'
+                    const beneficiaryToSign = {
+                      cumulativePayout: firstCumulativePayout,
+                      recipient,
+                      calleePayout
+                    }
+                    const issuerToSign = {
+                      beneficiary,
+                      cumulativePayout: firstCumulativePayout,
+                    }
+                    const toSubmit = Object.assign({}, beneficiaryToSign, issuerToSign)
+                    describe(describeTest + 'shouldNotCashCheque', function() {
+                      shouldNotCashCheque(beneficiaryToSign, issuerToSign, toSubmit, value, callee, beneficiarySignee, issuerSignee, revertMessage)
                     })
-                  })                  
+                  })
                 })
-                context('when no money is deposited', function () {
-                  const revertMessage = 'SimpleSwap: cannot pay callee'
-                  const beneficiaryToSign = {
-                    cumulativePayout: firstCumulativePayout,
-                    recipient,
-                    calleePayout
-                  }
-                  const issuerToSign = {
-                    beneficiary,
-                    cumulativePayout: firstCumulativePayout,
-                  }
-                  const toSubmit = Object.assign({}, beneficiaryToSign, issuerToSign)
-                  describe(describeTest + 'shouldNotCashCheque', function() {
-                    shouldNotCashCheque(beneficiaryToSign, issuerToSign, toSubmit, value, callee, beneficiarySignee, issuerSignee, revertMessage)
+                context('when the calleePayout is zero', function () {
+                  const calleePayout = new BN(0)
+                  describe(describeTest + 'shouldCashCheque', function() {
+                    shouldCashCheque(beneficiary, recipient, firstCumulativePayout, calleePayout, callee, beneficiarySignee, issuerSignee)
                   })
                 })
               })
-              context('when the calleePayout is zero', function () {
-                const calleePayout = new BN(0)
-                describe(describeTest + 'shouldCashCheque', function() {
-                  shouldCashCheque(beneficiary, recipient, firstCumulativePayout, calleePayout, callee, beneficiarySignee, issuerSignee)
+              context('when the issuer does not provide the issuerSig', function () {
+                const issuerSignee = alice
+                const calleePayout = defaults.firstCumulativePayout.div(new BN(100))
+                const revertMessage = 'SimpleSwap: invalid issuerSig'
+                const beneficiaryToSign = {
+                  cumulativePayout: firstCumulativePayout,
+                  recipient,
+                  calleePayout
+                }
+                const issuerToSign = {
+                  beneficiary,
+                  cumulativePayout: firstCumulativePayout,
+                }
+                const toSubmit = Object.assign({}, beneficiaryToSign, issuerToSign)
+                describe(describeTest + 'shouldNotCashCheque', function() {
+                  shouldNotCashCheque(beneficiaryToSign, issuerToSign, toSubmit, value, callee, beneficiarySignee, issuerSignee, revertMessage)
                 })
               })
+  
             })
-            context('when the issuer does not provide the issuerSig', function () {
-              const issuerSignee = alice
+            context('when the beneficiary does not provide the beneficiarySig', function () {
+              const beneficiarySignee = alice
+              const issuerSignee = issuer
               const calleePayout = defaults.firstCumulativePayout.div(new BN(100))
-              const revertMessage = 'SimpleSwap: invalid issuerSig'
+              const revertMessage = 'SimpleSwap: invalid beneficiarySig'
               const beneficiaryToSign = {
                 cumulativePayout: firstCumulativePayout,
                 recipient,
@@ -382,13 +404,13 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, carol], DEFAULT_HARDDEP
                 shouldNotCashCheque(beneficiaryToSign, issuerToSign, toSubmit, value, callee, beneficiarySignee, issuerSignee, revertMessage)
               })
             })
-
           })
-          context('when the beneficiary does not provide the beneficiarySig', function () {
+          context('when we send value along', function () {
+            const value = new BN(50)
             const beneficiarySignee = alice
             const issuerSignee = issuer
             const calleePayout = defaults.firstCumulativePayout.div(new BN(100))
-            const revertMessage = 'SimpleSwap: invalid beneficiarySig'
+            const revertMessage = 'revert'
             const beneficiaryToSign = {
               cumulativePayout: firstCumulativePayout,
               recipient,
@@ -404,26 +426,16 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, carol], DEFAULT_HARDDEP
             })
           })
         })
-        context('when we send value along', function () {
-          const value = new BN(50)
-          const beneficiarySignee = alice
-          const issuerSignee = issuer
-          const calleePayout = defaults.firstCumulativePayout.div(new BN(100))
-          const revertMessage = 'revert'
-          const beneficiaryToSign = {
-            cumulativePayout: firstCumulativePayout,
-            recipient,
-            calleePayout
-          }
-          const issuerToSign = {
-            beneficiary,
-            cumulativePayout: firstCumulativePayout,
-          }
-          const toSubmit = Object.assign({}, beneficiaryToSign, issuerToSign)
-          describe(describeTest + 'shouldNotCashCheque', function() {
-            shouldNotCashCheque(beneficiaryToSign, issuerToSign, toSubmit, value, callee, beneficiarySignee, issuerSignee, revertMessage)
+        context('when the sender is the issuer', function() {
+          const callee = issuer
+          const calleePayout = new BN(0)
+          const beneficiarySignee = beneficiary
+          const issuerSignee = beneficiary // on purpose not the correct signee, as it is not needed
+          describe(describeTest + 'shouldCashCheque', function() {
+            shouldCashCheque(beneficiary, recipient, firstCumulativePayout, calleePayout, callee, beneficiarySignee, issuerSignee)
           })
         })
+        
       }
     })
 
