@@ -9,8 +9,8 @@ contract SimpleSwap {
 
   event Deposit(address depositor, uint amount);
   event ChequeCashed(
-    address indexed beneficiaryPrincipal,
-    address indexed beneficiaryAgent,
+    address indexed beneficiary,
+    address indexed recipient,
     address indexed callee,
     uint serial,
     uint totalPayout,
@@ -146,62 +146,64 @@ contract SimpleSwap {
   }
 
 
-  function _cashChequeInternal(address beneficiaryPrincipal, address payable beneficiaryAgent, uint requestPayout, uint calleePayout) public {
-    ChequeInfo storage cheque = cheques[beneficiaryPrincipal];
+  function _cashChequeInternal(address beneficiary, address payable recipient, uint requestPayout, uint calleePayout) public {
+     ChequeInfo storage cheque = cheques[beneficiary];
+
     /* grace period must have ended */
     require(now >= cheque.cashTimeout, "SimpleSwap: cheque not yet timed out");
     require(requestPayout <= cheque.amount.sub(cheque.paidOut), "SimpleSwap: not enough balance owed");
     /* ensure there is a balance to claim */
      /* calculates hard-deposit usage */
-    uint hardDepositUsage = Math.min(requestPayout, hardDeposits[beneficiaryPrincipal].amount);
+    uint hardDepositUsage = Math.min(requestPayout, hardDeposits[beneficiary].amount);
     /* calculates acutal payout */
     uint totalPayout = Math.min(requestPayout, liquidBalance() + hardDepositUsage);
     require(totalPayout >= calleePayout, "SimpleSwap: cannot pay callee");
       /* if there some of the hard deposit is used update the structure */
-    if (hardDepositUsage != 0) {
-      hardDeposits[beneficiaryPrincipal].amount = hardDeposits[beneficiaryPrincipal].amount.sub(hardDepositUsage);
+
+    if(hardDepositUsage != 0) {
+      hardDeposits[beneficiary].amount = hardDeposits[beneficiary].amount.sub(hardDepositUsage);
+
       totalHardDeposit = totalHardDeposit.sub(hardDepositUsage);
     }
     /* increase the stored paidOut amount to avoid double payout */
     cheque.paidOut = cheque.paidOut.add(totalPayout);
     /* do the actual payments */
-    beneficiaryAgent.transfer(totalPayout.sub(calleePayout));
-    emit ChequeCashed(beneficiaryPrincipal, beneficiaryAgent, msg.sender, cheque.serial, totalPayout, requestPayout, calleePayout);
-    if (requestPayout != totalPayout) {
+
+    recipient.transfer(totalPayout.sub(calleePayout));
+    emit ChequeCashed(beneficiary, recipient, msg.sender, cheque.serial, totalPayout, requestPayout, calleePayout);
+    if(requestPayout != totalPayout) {
+
       emit ChequeBounced();
     }
   }
 
   function cashCheque(
-    address beneficiaryPrincipal,
-    address payable beneficiaryAgent,
+    address beneficiary,
+    address payable recipient,
     uint requestPayout,
     bytes memory beneficiarySig,
     uint256 expiry,
     uint256 calleePayout
   ) public {
     require(now <= expiry, "SimpleSwap: beneficiarySig expired");
-    require(
-      beneficiaryPrincipal == recover(
-        cashOutHash(
-          address(this),
-          msg.sender,
-          requestPayout,
-          beneficiaryAgent,
-          expiry,
-          calleePayout
-        ),
-        beneficiarySig
-      ),
-      "SimpleSwap: invalid beneficiarySig");
-    _cashChequeInternal(beneficiaryPrincipal, beneficiaryAgent, requestPayout, calleePayout);
+
+    require(beneficiary == recover(cashOutHash(
+      address(this),
+      msg.sender,
+      requestPayout,
+      recipient,
+      expiry,
+      calleePayout
+      ), beneficiarySig), "SimpleSwap: invalid beneficiarySig");
+    _cashChequeInternal(beneficiary, recipient, requestPayout, calleePayout);
+
     msg.sender.transfer(calleePayout);
   }
   /// @notice attempt to cash latest chequebeneficiary
-  /// @param beneficiaryAgent agent (of the beneficiary) who receives the payment (i.e. other chequebook contract or the beneficiary)
+  /// @param recipient agent (of the beneficiary) who receives the payment (i.e. other chequebook contract or the beneficiary)
   /// @param requestPayout amount requested to pay out
-  function cashChequeBeneficiary(address payable beneficiaryAgent, uint requestPayout) public {
-    _cashChequeInternal(msg.sender, beneficiaryAgent, requestPayout, 0);
+  function cashChequeBeneficiary(address payable recipient, uint requestPayout) public {
+    _cashChequeInternal(msg.sender, recipient, requestPayout, 0);
   }
 
   /// @notice prepare to decrease the hard deposit
@@ -297,9 +299,9 @@ contract SimpleSwap {
     return keccak256(abi.encodePacked(swap, beneficiary, serial, amount, cashTimeout));
   }
 
-  function cashOutHash(address swap, address sender, uint requestPayout, address beneficiaryAgent, uint expiry, uint calleePayout)
+  function cashOutHash(address swap, address sender, uint requestPayout, address recipient, uint expiry, uint calleePayout)
   public pure returns (bytes32) {
-    return keccak256(abi.encodePacked(swap, sender, requestPayout, beneficiaryAgent, expiry, calleePayout));
+    return keccak256(abi.encodePacked(swap, sender, requestPayout, recipient, expiry, calleePayout));
   }
 
   function customDecreaseTimeoutHash(address swap, address beneficiary, uint decreaseTimeout) public pure returns (bytes32) {
