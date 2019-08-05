@@ -16,13 +16,18 @@
   "devDependencies": {
     "bn-chai": "^1.0.1",
     "chai": "^4.2.0",
+    "ethlint": "^1.2.4",
     "openzeppelin-test-helpers": "^0.4.0",
+    "solhint": "^2.1.2",
     "solidity-coverage": "^0.6.0-beta.5",
     "truffle": "^5.0.24"
   },
   "scripts": {
-    "test": "./node_modules/.bin/truffle test",
-    "abigen": "solc openzeppelin-solidity=$(pwd)/node_modules/openzeppelin-solidity --allow-paths node_modules/openzeppelin-solidity/contracts --combined-json=bin,abi,userdoc,devdoc,metadata contracts/SimpleSwap.sol | tee output.json && abigen -pkg contract -out simpleswap.go --combined-json output.json && rm output.json"
+    "test": "truffle test",
+    "abigen": "solc openzeppelin-solidity=$(pwd)/node_modules/openzeppelin-solidity --allow-paths node_modules/openzeppelin-solidity/contracts --combined-json=bin,abi,userdoc,devdoc,metadata contracts/SimpleSwap.sol | tee output.json && abigen -pkg contract -out simpleswap.go --combined-json output.json && rm output.json",
+    "solhint": "solhint contracts/SimpleSwap.sol",
+    "ethlint": "solium -d contracts",
+    "coverage": "solidity-coverage"
   },
   "keywords": [],
   "author": "",

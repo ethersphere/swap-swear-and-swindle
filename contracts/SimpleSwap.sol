@@ -54,7 +54,7 @@ contract SimpleSwap {
     // DEFAULT_HARDDEPOSIT_TIMOUTE_DURATION will be one day or a whatever non-zero argument given as an argument to the constructor
     DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT = defaultHardDepositTimeoutDuration;
     issuer = _issuer;
-    if(msg.value > 0) {
+    if (msg.value > 0) {
       emit Deposit(msg.sender, msg.value);
     }
   }
@@ -95,8 +95,10 @@ contract SimpleSwap {
   function submitChequeIssuer(address beneficiary, uint serial, uint amount, uint cashTimeout, bytes memory beneficiarySig) public {
     require(msg.sender == issuer, "SimpleSwap: not issuer");
     /* verify signature of the beneficiary */
-    require(beneficiary == recover(chequeHash(address(this), beneficiary, serial, amount, cashTimeout), beneficiarySig),
-     "SimpleSwap: invalid beneficiarySig");
+    require(
+      beneficiary == recover(chequeHash(address(this), beneficiary, serial, amount, cashTimeout), beneficiarySig),
+      "SimpleSwap: invalid beneficiarySig"
+    );
     /* update the cheque data */
     _submitChequeInternal(beneficiary, serial, amount, cashTimeout);
   }
@@ -109,8 +111,13 @@ contract SimpleSwap {
   function submitChequeBeneficiary(uint serial, uint amount, uint cashTimeout, bytes memory issuerSig) public {
     /* verify signature of the issuer */
     //emit LogAddress(recover(chequeHash(address(this), msg.sender, serial, amount, cashTimeout), issuerSig));
-    require(issuer == recover(chequeHash(address(this), msg.sender, serial, amount, cashTimeout), issuerSig),
-     "SimpleSwap: invalid issuerSig");
+    require(
+      issuer == recover(
+        chequeHash(address(this), msg.sender, serial, amount, cashTimeout),
+        issuerSig
+      ),
+      "SimpleSwap: invalid issuerSig"
+    );
     /* update the cheque data */
     _submitChequeInternal(msg.sender, serial, amount, cashTimeout);
   }
@@ -122,13 +129,18 @@ contract SimpleSwap {
   /// @param cashTimeout the check can be cashed cashTimeout seconds in the future
   /// @param issuerSig signature of the issuer
   /// @param beneficarySig signature of the beneficiary
-  function submitCheque(address beneficiary, uint serial, uint amount, uint cashTimeout, bytes memory issuerSig, bytes memory beneficarySig) public {
+  function submitCheque(address beneficiary, uint serial, uint amount, uint cashTimeout, bytes memory issuerSig, bytes memory beneficarySig)
+  public {
     /* verify signature of the issuer */
-    require(issuer == recover(chequeHash(address(this), beneficiary, serial, amount, cashTimeout), issuerSig),
-    "SimpleSwap: invalid issuerSig");
+    require(
+      issuer == recover(chequeHash(address(this), beneficiary, serial, amount, cashTimeout), issuerSig),
+      "SimpleSwap: invalid issuerSig"
+    );
     /* verify signature of the beneficiary */
-    require(beneficiary == recover(chequeHash(address(this), beneficiary, serial, amount, cashTimeout), beneficarySig),
-    "SimpleSwap: invalid beneficiarySig");
+    require(
+      beneficiary == recover(chequeHash(address(this), beneficiary, serial, amount, cashTimeout), beneficarySig),
+      "SimpleSwap: invalid beneficiarySig"
+    );
     /* update the cheque data */
     _submitChequeInternal(beneficiary, serial, amount, cashTimeout);
   }
@@ -136,6 +148,7 @@ contract SimpleSwap {
 
   function _cashChequeInternal(address beneficiary, address payable recipient, uint requestPayout, uint calleePayout) public {
      ChequeInfo storage cheque = cheques[beneficiary];
+
     /* grace period must have ended */
     require(now >= cheque.cashTimeout, "SimpleSwap: cheque not yet timed out");
     require(requestPayout <= cheque.amount.sub(cheque.paidOut), "SimpleSwap: not enough balance owed");
@@ -146,16 +159,20 @@ contract SimpleSwap {
     uint totalPayout = Math.min(requestPayout, liquidBalance() + hardDepositUsage);
     require(totalPayout >= calleePayout, "SimpleSwap: cannot pay callee");
       /* if there some of the hard deposit is used update the structure */
+
     if(hardDepositUsage != 0) {
       hardDeposits[beneficiary].amount = hardDeposits[beneficiary].amount.sub(hardDepositUsage);
+
       totalHardDeposit = totalHardDeposit.sub(hardDepositUsage);
     }
     /* increase the stored paidOut amount to avoid double payout */
     cheque.paidOut = cheque.paidOut.add(totalPayout);
     /* do the actual payments */
+
     recipient.transfer(totalPayout.sub(calleePayout));
     emit ChequeCashed(beneficiary, recipient, msg.sender, cheque.serial, totalPayout, requestPayout, calleePayout);
     if(requestPayout != totalPayout) {
+
       emit ChequeBounced();
     }
   }
@@ -169,6 +186,7 @@ contract SimpleSwap {
     uint256 calleePayout
   ) public {
     require(now <= expiry, "SimpleSwap: beneficiarySig expired");
+
     require(beneficiary == recover(cashOutHash(
       address(this),
       msg.sender,
@@ -178,6 +196,7 @@ contract SimpleSwap {
       calleePayout
       ), beneficiarySig), "SimpleSwap: invalid beneficiarySig");
     _cashChequeInternal(beneficiary, recipient, requestPayout, calleePayout);
+
     msg.sender.transfer(calleePayout);
   }
   /// @notice attempt to cash latest chequebeneficiary
@@ -244,13 +263,17 @@ contract SimpleSwap {
     bytes memory beneficiarySig
   ) public {
     require(msg.sender == issuer, "SimpleSwap: not issuer");
-    require(beneficiary == recover(customDecreaseTimeoutHash(address(this), beneficiary, decreaseTimeout), beneficiarySig), "SimpleSwap: invalid beneficiarySig");
+    require(
+      beneficiary == recover(customDecreaseTimeoutHash(address(this), beneficiary, decreaseTimeout), beneficiarySig),
+      "SimpleSwap: invalid beneficiarySig"
+    );
     hardDeposits[beneficiary].decreaseTimeout = decreaseTimeout;
     emit HardDepositDecreaseTimeoutChanged(beneficiary, hardDeposits[beneficiary].decreaseTimeout);
   }
 
   /// @notice withdraw ether
   /// @param amount amount to withdraw
+  // solhint-disable-next-line no-simple-event-func-name
   function withdraw(uint amount) public {
     /* only issuer can do this */
     require(msg.sender == issuer, "SimpleSwap: not issuer");
@@ -261,8 +284,8 @@ contract SimpleSwap {
   }
 
   /// @notice deposit ether
-  function() payable external {
-    if(msg.value > 0) {
+  function() external payable {
+    if (msg.value > 0) {
       emit Deposit(msg.sender, msg.value);
     }
   }
