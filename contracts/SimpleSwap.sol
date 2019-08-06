@@ -87,8 +87,15 @@ contract SimpleSwap {
   ) internal {
     /* The issuer must have given explicit approval to the cumulativePayout, either by being the callee or by signature*/
     if (msg.sender != issuer) {
-      require(issuer == recover(chequeHash(address(this), beneficiary, cumulativePayout), issuerSig),
-      "SimpleSwap: invalid issuerSig");
+      require(
+        issuer == recover(
+          chequeHash(
+            address(this),
+            beneficiary,
+            cumulativePayout
+          ), issuerSig
+        ), "SimpleSwap: invalid issuerSig"
+      );
     }
     /* the requestPayout is the amount requested for payment processing */
     uint requestPayout = cumulativePayout.sub(paidOut[beneficiary]);
@@ -137,13 +144,16 @@ contract SimpleSwap {
     uint256 calleePayout,
     bytes memory issuerSig
   ) public {
-    require(beneficiary == recover(cashOutHash(
-      address(this),
-      msg.sender,
-      cumulativePayout,
-      recipient,
-      calleePayout
-      ), beneficiarySig), "SimpleSwap: invalid beneficiarySig");
+    require(
+      beneficiary == recover(
+        cashOutHash(
+          address(this),
+          msg.sender,
+          cumulativePayout,
+          recipient,
+          calleePayout
+        ), beneficiarySig
+      ), "SimpleSwap: invalid beneficiarySig");
     _cashChequeInternal(beneficiary, recipient, cumulativePayout, calleePayout, issuerSig);
   }
 
