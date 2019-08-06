@@ -10,7 +10,7 @@ const {
   shouldReturnTotalHardDeposit,
   shouldReturnIssuer,
   shouldReturnLiquidBalance,
-  shouldReturnBalanceFor,
+  shouldReturnAvailableBalanceFor,
   shouldCashChequeBeneficiary,
   shouldNotCashChequeBeneficiary,
   shouldCashCheque,
@@ -37,7 +37,7 @@ enabledTests = {
   totalHardDeposit: true,
   issuer: true,
   liquidBalance: true,
-  balanceFor: true,
+  availableBalanceFor: true,
   cashChequeBeneficiary: true,
   cashCheque: true,
   prepareDecreaseHardDeposit: true,
@@ -222,16 +222,16 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, carol], DEFAULT_HARDDEP
       }
     })
 
-    describe(describeFunction + 'shouldReturnBalanceFor', function () {
-      if (enabledTests.balanceFor) {
+    describe(describeFunction + 'shouldReturnAvailableBalanceFor', function () {
+      if (enabledTests.availableBalanceFor) {
         const beneficiary = bob
         const depositAmount = new BN(50)
         context('when there is some balance', function () {
           describe(describePreCondition + 'shoulDeposit', function () {
             shouldDeposit(depositAmount, issuer)
             context('when there are no hard deposits', function () {
-              describe(describeTest + 'shouldReturnBalanceFor', function () {
-                shouldReturnBalanceFor(beneficiary, depositAmount)
+              describe(describeTest + 'shouldReturnAvailableBalanceFor', function () {
+                shouldReturnAvailableBalanceFor(beneficiary, depositAmount)
               })
             })
             context('when there are no hard deposits', function () {
@@ -239,16 +239,16 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, carol], DEFAULT_HARDDEP
               describe('when these hard deposits are assigned to the beneficiary', function () {
                 describe(describePreCondition + 'shouldIncreaseHardDeposit', function () {
                   shouldIncreaseHardDeposit(beneficiary, hardDeposit, issuer)
-                  describe(describeTest + 'shouldReturnBalanceFor', function () {
-                    shouldReturnBalanceFor(beneficiary, depositAmount)
+                  describe(describeTest + 'shouldReturnAvailableBalanceFor', function () {
+                    shouldReturnAvailableBalanceFor(beneficiary, depositAmount)
                   })
                 })
               })
               describe('when these hard deposits are assigned to somebody else', function () {
                 describe(describePreCondition + 'shouldIncreaseHardDeposit', function () {
                   shouldIncreaseHardDeposit(alice, hardDeposit, issuer)
-                  describe(describeTest + 'shouldReturnBalanceFor', function () {
-                    shouldReturnBalanceFor(beneficiary, depositAmount.sub(hardDeposit))
+                  describe(describeTest + 'shouldReturnAvailableBalanceFor', function () {
+                    shouldReturnAvailableBalanceFor(beneficiary, depositAmount.sub(hardDeposit))
                   })
                 })
               })
@@ -256,7 +256,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, carol], DEFAULT_HARDDEP
           })
         })
         describe('when there is no balance', function () {
-          shouldReturnBalanceFor(beneficiary, new BN(0))
+          shouldReturnAvailableBalanceFor(beneficiary, new BN(0))
         })
       }
     })

@@ -106,9 +106,9 @@ function shouldReturnLiquidBalance(expectedLiquidBalance) {
   })
 }
 
-function shouldReturnBalanceFor(beneficiary, expectedBalanceFor) {
+function shouldReturnAvailableBalanceFor(beneficiary, expectedAvailableBalanceFor) {
   it('should return the expected liquidBalance', async function() {
-    expect(await this.simpleSwap.balanceFor(beneficiary)).bignumber.to.equal(expectedBalanceFor)
+    expect(await this.simpleSwap.availableBalanceFor(beneficiary)).bignumber.to.equal(expectedAvailableBalanceFor)
   })
 }
 
@@ -118,12 +118,12 @@ function cashChequeInternal(beneficiary, recipient, cumulativePayout, calleePayo
   beforeEach(async function() {
     let requestPayout = cumulativePayout.sub(this.preconditions.paidOut)
     //if the requested payout is less than the liquidBalance available for beneficiary
-    if(requestPayout.lt(this.preconditions.balanceFor)) {
+    if(requestPayout.lt(this.preconditions.availableBalanceFor)) {
       // full amount requested can be paid out
       this.totalPayout = requestPayout
     } else {
       // partial amount requested can be paid out (the liquid balance available to the node)
-      this.totalPayout = this.preconditions.balanceFor
+      this.totalPayout = this.preconditions.availableBalanceFor
     }
   })
   
@@ -206,7 +206,7 @@ function shouldCashChequeBeneficiary(recipient, cumulativePayout, signee, from) 
       totalHardDeposit: await this.simpleSwap.totalHardDeposit(),
       hardDepositFor: await this.simpleSwap.hardDeposits(from),
       liquidBalance: await this.simpleSwap.liquidBalance(),
-      balanceFor: await this.simpleSwap.balanceFor(from),
+      availableBalanceFor: await this.simpleSwap.availableBalanceFor(from),
       chequebookBalance: await balance.current(this.simpleSwap.address),
       beneficiaryBalance: await balance.current(recipient),
       paidOut: await this.simpleSwap.paidOut(from)
@@ -225,7 +225,7 @@ function shouldCashChequeBeneficiary(recipient, cumulativePayout, signee, from) 
       totalHardDeposit: await this.simpleSwap.totalHardDeposit(),
       hardDepositFor: await this.simpleSwap.hardDeposits(from),
       liquidBalance: await this.simpleSwap.liquidBalance(),
-      balanceFor: await this.simpleSwap.balanceFor(from),
+      availableBalanceFor: await this.simpleSwap.availableBalanceFor(from),
       chequebookBalance: await balance.current(this.simpleSwap.address),
       beneficiaryBalance: await balance.current(recipient),
       paidOut: await this.simpleSwap.paidOut(from)
@@ -258,7 +258,7 @@ function shouldCashCheque(beneficiary, recipient, cumulativePayout, calleePayout
       totalHardDeposit: await this.simpleSwap.totalHardDeposit(),
       hardDepositFor: await this.simpleSwap.hardDeposits(beneficiary),
       liquidBalance: await this.simpleSwap.liquidBalance(),
-      balanceFor: await this.simpleSwap.balanceFor(beneficiary),
+      availableBalanceFor: await this.simpleSwap.availableBalanceFor(beneficiary),
       chequebookBalance: await balance.current(this.simpleSwap.address),
       beneficiaryBalance: await balance.current(recipient),
       paidOut: await this.simpleSwap.paidOut(beneficiary)
@@ -274,7 +274,7 @@ function shouldCashCheque(beneficiary, recipient, cumulativePayout, calleePayout
       totalHardDeposit: await this.simpleSwap.totalHardDeposit(),
       hardDepositFor: await this.simpleSwap.hardDeposits(beneficiary),
       liquidBalance: await this.simpleSwap.liquidBalance(),
-      balanceFor: await this.simpleSwap.balanceFor(beneficiary),
+      availableBalanceFor: await this.simpleSwap.availableBalanceFor(beneficiary),
       chequebookBalance: await balance.current(this.simpleSwap.address),
       beneficiaryBalance: await balance.current(recipient),
       paidOut: await this.simpleSwap.paidOut(beneficiary)
@@ -399,7 +399,7 @@ function shouldIncreaseHardDeposit(beneficiary, amount, from) {
     this.preconditions = {
       balance: await balance.current(this.simpleSwap.address),
       liquidBalance: await this.simpleSwap.liquidBalance(),
-      balanceFor: await this.simpleSwap.balanceFor(beneficiary),
+      availableBalanceFor: await this.simpleSwap.availableBalanceFor(beneficiary),
       totalHardDeposit: await this.simpleSwap.totalHardDeposit(),
       hardDepositFor: await this.simpleSwap.hardDeposits(beneficiary),
     }
@@ -408,7 +408,7 @@ function shouldIncreaseHardDeposit(beneficiary, amount, from) {
     this.postconditions = {
       balance: await balance.current(this.simpleSwap.address),
       liquidBalance: await this.simpleSwap.liquidBalance(),
-      balanceFor: await this.simpleSwap.balanceFor(beneficiary),
+      availableBalanceFor: await this.simpleSwap.availableBalanceFor(beneficiary),
       totalHardDeposit: await this.simpleSwap.totalHardDeposit(),
       hardDepositFor: await this.simpleSwap.hardDeposits(beneficiary)
     }
@@ -418,8 +418,8 @@ function shouldIncreaseHardDeposit(beneficiary, amount, from) {
     expect(this.postconditions.liquidBalance).bignumber.to.be.equal(this.preconditions.liquidBalance.sub(amount))
   })
 
-  it('should not affect the balanceFor', function () {
-    expect(this.postconditions.balanceFor).bignumber.to.be.equal(this.preconditions.balanceFor)
+  it('should not affect the availableBalanceFor', function () {
+    expect(this.postconditions.availableBalanceFor).bignumber.to.be.equal(this.preconditions.availableBalanceFor)
   })
 
   it('should not affect the balance', function () {
@@ -587,7 +587,7 @@ module.exports = {
   shouldReturnTotalHardDeposit,
   shouldReturnIssuer,
   shouldReturnLiquidBalance,
-  shouldReturnBalanceFor,
+  shouldReturnAvailableBalanceFor,
   shouldCashChequeBeneficiary,
   shouldNotCashChequeBeneficiary,
   shouldCashCheque,

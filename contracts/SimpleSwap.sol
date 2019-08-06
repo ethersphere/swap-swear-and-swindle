@@ -56,7 +56,7 @@ contract SimpleSwap {
   }
 
   /// @return the part of the balance usable for a specific beneficiary
-  function balanceFor(address beneficiary) public view returns(uint) {
+  function availableBalanceFor(address beneficiary) public view returns(uint) {
     return liquidBalance().add(hardDeposits[beneficiary].amount);
   }
 
@@ -76,7 +76,7 @@ contract SimpleSwap {
     uint requestPayout = cumulativePayout.sub(paidOut[beneficiary]);
 
     /* calculates acutal payout */
-    uint totalPayout = Math.min(requestPayout, balanceFor(beneficiary));
+    uint totalPayout = Math.min(requestPayout, availableBalanceFor(beneficiary));
     /* calculates hard-deposit usage */
     uint hardDepositUsage = Math.min(totalPayout, hardDeposits[beneficiary].amount);
     require(totalPayout >= calleePayout, "SimpleSwap: cannot pay callee");
