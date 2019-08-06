@@ -1,17 +1,27 @@
 #!/usr/bin/env sh
 set -e
 
+# go package name
+PACKAGE=contract
+# temporary file for compiler output
 COMPILED_JSON=compiled.json
-OUTPUT=bindings/SimpleSwap
+# contract name
+CONTRACT=SimpleSwap
+# output directory
+OUTPUT=bindings/$CONTRACT
 
+# compile the contract allowing imports from openzeppelin-solidity
 solc \
   openzeppelin-solidity=$(pwd)/node_modules/openzeppelin-solidity\
   --allow-paths node_modules/openzeppelin-solidity/contracts\
   --combined-json=bin,abi,userdoc,devdoc,metadata,bin-runtime\
   contracts/SimpleSwap.sol > "$COMPILED_JSON"
 
+# generate the bindings
 mkdir -p "$OUTPUT"
-abigen -pkg contract -out "$OUTPUT/simpleswap.go" --combined-json "$COMPILED_JSON"
-node abigen/code.go.js contract "$COMPILED_JSON" SimpleSwap > "$OUTPUT/code.go"
+abigen -pkg $PACKAGE -out "$OUTPUT/simpleswap.go" --combined-json "$COMPILED_JSON"
+# this creates a separate file for the runtime binary which is not included by abigen
+node abigen/code.go.js $PACKAGE "$COMPILED_JSON" $CONTRACT > "$OUTPUT/code.go"
 
+# clean up temporary file for compiler output
 rm "$COMPILED_JSON"
