@@ -35,7 +35,7 @@ contract SwapWitness is AbstractWitness, SW3Utils {
 
     address owner = recover(noteHash, sig);
 
-    require(owner == Swap(uint160(note.swap)).owner());
+    require(owner == Swap(uint160(note.swap)).issuer());
     if(expectedOwner != address(0)) require(owner == expectedOwner, "invalid owner");
 
     bytes[] memory kvs = new bytes[](10);

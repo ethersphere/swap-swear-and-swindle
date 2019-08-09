@@ -20,7 +20,7 @@ contract Swap is SoftSwap, SW3Utils {
   /* associates every noteId with a NoteInfo */
   mapping (bytes32 => NoteInfo) public notes;
 
-  constructor(address payable _owner) SoftSwap(_owner) public { }
+  constructor(address payable _issuer) SoftSwap(_issuer) public { }
 
   /// @dev verify the conditions of a note
   function verifyNote(bytes32 id, Note memory note, bytes memory payload) internal view {
@@ -52,7 +52,7 @@ contract Swap is SoftSwap, SW3Utils {
     bytes32 id = keccak256(encoded);
 
     /* verify the signature of the owner */
-    require(owner == recover(id, sig), "invalid signature");
+    require(issuer == recover(id, sig), "invalid signature");
     /* make sure the note has not been submitted before */
     require(notes[id].timeout == 0);
 
@@ -110,8 +110,8 @@ contract Swap is SoftSwap, SW3Utils {
   /// @param amount of the cheque / note
   /// @param chequeSig owner signature of the cheque
   function submitPaidInvoice(bytes memory encoded, uint swapBalance, uint serial, bytes memory invoiceSig, uint amount, uint timeout, bytes memory chequeSig) public {
-    /* only the owner may do this */
-    require(msg.sender == owner);
+    /* only the issuer may do this */
+    require(msg.sender == issuer);
     Note memory note = abi.decode(encoded, (Note));
     bytes32 id = keccak256(encoded);
     bytes32 invoiceId = invoiceHash(id, swapBalance, serial);
@@ -129,17 +129,43 @@ contract Swap is SoftSwap, SW3Utils {
     /* check signature of the invoice */
     require(note.beneficiary == recover(invoiceId, invoiceSig));
     /* check signature of the cheque */
-    require(owner == recover(chequeHash(address(this), note.beneficiary, serial + 1, cumulativeTotal, timeout), chequeSig));
+    require(issuer == recover(chequeHash(address(this), note.beneficiary, serial + 1, cumulativeTotal, timeout), chequeSig));
 
     /* cheque needs to be an exact match */
     require(note.amount == amount);
     /* TODO: this breaks with note.amount = 0 */
     /* set paidOut to amount to prevent further payout */
     noteInfo.paidOut = amount;
-
-    /* process the cheque if it is newer than the previous one */
-    if(serial > cheques[note.beneficiary].serial)
-      _submitChequeInternal(note.beneficiary, serial + 1, cumulativeTotal, timeout);
   }
+
+  /// @dev helper function to calculate payout value while respecting hard deposits
+  /// @param beneficiary the address to send to
+  /// @param value maximum amount to send
+  /// @return payout amount that was actually paid out
+  /// @return payout amount that bounced
+  function _computePayout(address payable beneficiary, uint value) internal returns (uint payout, uint bounced) {
+    /* part of hard deposit used */
+    payout = Math.min(value, hardDeposits[beneficiary].amount);
+    /* if there some of the hard deposit is used update the structure */
+    if(payout != 0) {
+      hardDeposits[beneficiary].amount -= payout;
+      totalHardDeposit -= payout;
+    }
+
+    /* amount of the cash not backed by a hard deposit */
+    uint rest = value - payout;
+    uint liquid = liquidBalance();
+
+    if(liquid >= rest) {
+      /* swap channel is solvent */
+      payout = value;
+    } else {
+      /* part of the cheque bounces */
+      payout += liquid;
+      bounced = rest - liquid;
+    }
+  }
+
+
 
 }
