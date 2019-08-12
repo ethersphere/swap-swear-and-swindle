@@ -44,7 +44,7 @@ In addition to the file from `abigen` this will also generate a go file that inc
 
 ## Overview
 
-## SimpleSwap
+### SimpleSwap
 
 `SimpleSwap` is a chequebook-style contract with support hard deposits.
 
@@ -56,6 +56,19 @@ The owner can issue cheques. Those are a signed piece of data containing the swa
 
 The owner can lock a certain amount of the balance to a specific beneficiary (`increaseHardDeposit`) to give some solvency guarantees. Decreasing a hard deposit is a two step process: First it needs to be prepared (`prepareDecreaseHardDeposit`) to start a security delay, which the beneficiary can use to cash the outstanding cheques. Afterwards the deposit can be decreased (`decreaseHardDeposit`).
 The balance not covered by hard deposits can be withdrawn by the owner at any time.
+
+
+### Data Formats
+
+#### Cheques
+
+| Field        | Type | Description   |
+| ------------ | ------------- | ------------- |
+| swap        | uint256 | the swap contract this cheque is for |
+| beneficiary  | address | beneficiary of the cheque |
+| cumulativePayout | uint256 | cumulative amount |
+
+For signing purposes the fields are encoded in **packed encoding** in the order specified above. `SimpleSwap` uses the same signing scheme as `eth_sign` (with the `Ethereum Signed Message` prefix).
 
 ## Swap
 
