@@ -113,7 +113,7 @@ function shouldReturnAvailableBalanceFor(beneficiary, expectedAvailableBalanceFo
 }
 
 
-function cashChequeInternal(beneficiary, recipient, cumulativePayout, calleePayout, from) {
+function cashChequeInternal(beneficiary, recipient, cumulativePayout, callerPayout, from) {
 
   beforeEach(async function() {
     let requestPayout = cumulativePayout.sub(this.preconditions.paidOut)
@@ -160,31 +160,31 @@ function cashChequeInternal(beneficiary, recipient, cumulativePayout, calleePayo
     expect(this.postconditions.recipientBalance).bignumber.to.be.equal(
       this.preconditions.recipientBalance
         .add(this.totalPayout)
-        .sub(calleePayout)
+        .sub(callerPayout)
         .sub(recipientTransactionCosts)
       )
   })
-  it('should transfer the correct amount to the callee', async function() {
-    let expectedCalleeTransactionCosts = await computeCost(this.receipt)
-    let expectedAmountCallee
+  it('should transfer the correct amount to the caller', async function() {
+    let expectedCallerTransactionCosts = await computeCost(this.receipt)
+    let expectedAmountCaller
     // if the beneficiary agent equal the sender
     if(recipient == from) {
-      // the callee gets the totalPayout
-      expectedAmountCallee = this.totalPayout.sub(expectedCalleeTransactionCosts)
+      // the caller gets the totalPayout
+      expectedAmountCaller = this.totalPayout.sub(expectedCallerTransactionCosts)
     }   else {
-      // the callee get's a part of the totalPayout
-      expectedAmountCallee = calleePayout.sub(expectedCalleeTransactionCosts)
+      // the caller get's a part of the totalPayout
+      expectedAmountCaller = callerPayout.sub(expectedCallerTransactionCosts)
     }
-    expect(this.postconditions.calleeBalance).bignumber.to.be.equal(this.preconditions.calleeBalance.add(expectedAmountCallee))
+    expect(this.postconditions.callerBalance).bignumber.to.be.equal(this.preconditions.callerBalance.add(expectedAmountCaller))
   })
   it('should emit a ChequeCashed event', function() {
     expectEvent.inLogs(this.logs, "ChequeCashed", {
       beneficiary,
       recipient: recipient,
-      callee: from,
+      caller: from,
       totalPayout: this.totalPayout,
       cumulativePayout,
-      calleePayout,
+      callerPayout,
     })
   })
   it('should only emit a chequeBounced event when insufficient funds', function() {
@@ -200,7 +200,7 @@ function cashChequeInternal(beneficiary, recipient, cumulativePayout, calleePayo
 function shouldCashChequeBeneficiary(recipient, cumulativePayout, signee, from) {
   beforeEach(async function() {
     this.preconditions = {
-      calleeBalance: await balance.current(from),
+      callerBalance: await balance.current(from),
       recipientBalance: await balance.current(recipient),
       beneficiaryBalance: await balance.current(from),
       totalHardDeposit: await this.simpleSwap.totalHardDeposit(),
@@ -219,7 +219,7 @@ function shouldCashChequeBeneficiary(recipient, cumulativePayout, signee, from) 
     this.receipt = receipt
   
     this.postconditions = {
-      calleeBalance: await balance.current(from),
+      callerBalance: await balance.current(from),
       recipientBalance: await balance.current(recipient),
       beneficiaryBalance: await balance.current(from),
       totalHardDeposit: await this.simpleSwap.totalHardDeposit(),
@@ -247,12 +247,12 @@ function shouldNotCashChequeBeneficiary(recipient, toSubmitCumulativePayout, toS
     )
   })
 }
-function shouldCashCheque(beneficiary, recipient, cumulativePayout, calleePayout, from, beneficiarySignee, issuerSignee) {
+function shouldCashCheque(beneficiary, recipient, cumulativePayout, callerPayout, from, beneficiarySignee, issuerSignee) {
   beforeEach(async function() {
-    const beneficiarySig = await signCashOut(this.simpleSwap, from, cumulativePayout, recipient, calleePayout, beneficiarySignee)    
+    const beneficiarySig = await signCashOut(this.simpleSwap, from, cumulativePayout, recipient, callerPayout, beneficiarySignee)
     const issuerSig = await signCheque(this.simpleSwap, beneficiary, cumulativePayout, issuerSignee)
     this.preconditions = {
-      calleeBalance: await balance.current(from),
+      callerBalance: await balance.current(from),
       recipientBalance: await balance.current(recipient),
       beneficiaryBalance: await balance.current(beneficiary),
       totalHardDeposit: await this.simpleSwap.totalHardDeposit(),
@@ -263,12 +263,12 @@ function shouldCashCheque(beneficiary, recipient, cumulativePayout, calleePayout
       beneficiaryBalance: await balance.current(recipient),
       paidOut: await this.simpleSwap.paidOut(beneficiary)
     }
-    const { logs, receipt } = await this.simpleSwap.cashCheque(beneficiary, recipient, cumulativePayout, beneficiarySig, calleePayout, issuerSig, {from: from})
+    const { logs, receipt } = await this.simpleSwap.cashCheque(beneficiary, recipient, cumulativePayout, beneficiarySig, callerPayout, issuerSig, {from: from})
     this.logs = logs
     this.receipt = receipt
   
     this.postconditions = {
-      calleeBalance: await balance.current(from),
+      callerBalance: await balance.current(from),
       recipientBalance: await balance.current(recipient),
       beneficiaryBalance: await balance.current(beneficiary),
       totalHardDeposit: await this.simpleSwap.totalHardDeposit(),
@@ -280,11 +280,11 @@ function shouldCashCheque(beneficiary, recipient, cumulativePayout, calleePayout
       paidOut: await this.simpleSwap.paidOut(beneficiary)
     }
   })
-  cashChequeInternal(beneficiary, recipient, cumulativePayout, calleePayout, from)
+  cashChequeInternal(beneficiary, recipient, cumulativePayout, callerPayout, from)
 }
 function shouldNotCashCheque(beneficiaryToSign, issuerToSign, toSubmitFields, value, from, beneficiarySignee, issuerSignee, revertMessage) {
   beforeEach(async function() {
-    this.beneficiarySig = await signCashOut(this.simpleSwap, from, beneficiaryToSign.cumulativePayout, beneficiaryToSign.recipient, beneficiaryToSign.calleePayout, beneficiarySignee)    
+    this.beneficiarySig = await signCashOut(this.simpleSwap, from, beneficiaryToSign.cumulativePayout, beneficiaryToSign.recipient, beneficiaryToSign.callerPayout, beneficiarySignee)
     this.issuerSig = await signCheque(this.simpleSwap, issuerToSign.beneficiary, issuerToSign.cumulativePayout, issuerSignee)
   })
   it('reverts', async function() {
@@ -293,7 +293,7 @@ function shouldNotCashCheque(beneficiaryToSign, issuerToSign, toSubmitFields, va
       toSubmitFields.recipient, 
       toSubmitFields.cumulativePayout, 
       this.beneficiarySig, 
-      toSubmitFields.calleePayout, 
+      toSubmitFields.callerPayout,
       this.issuerSig,
       {from: from, value: value}), 
       revertMessage
@@ -500,7 +500,7 @@ function shouldNotSetCustomHardDepositDecreaseTimeout(toSubmit, toSign, signee, 
 function shouldWithdraw(amount, from) {
   beforeEach(async function() {
     this.preconditions = {
-      calleeBalance: await balance.current(from),
+      callerBalance: await balance.current(from),
       liquidBalance: await this.simpleSwap.liquidBalance()
     }
 
@@ -510,7 +510,7 @@ function shouldWithdraw(amount, from) {
     this.cost = await computeCost(receipt)
 
     this.postconditions = {
-      calleeBalance: await balance.current(from),
+      callerBalance: await balance.current(from),
       liquidBalance: await this.simpleSwap.liquidBalance()
     }
   })
@@ -519,8 +519,8 @@ function shouldWithdraw(amount, from) {
     expect(this.postconditions.liquidBalance).bignumber.to.be.equal(this.preconditions.liquidBalance.sub(amount))
   })
 
-  it('should have updated the calleeBalance', function() {
-    expect(this.postconditions.calleeBalance).bignumber.to.be.equal(this.preconditions.calleeBalance.add(amount).sub(this.cost))
+  it('should have updated the callerBalance', function() {
+    expect(this.postconditions.callerBalance).bignumber.to.be.equal(this.preconditions.callerBalance.add(amount).sub(this.cost))
   })
 
   it('should have emitted a Withdraw event', function() {
