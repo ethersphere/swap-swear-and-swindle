@@ -50,13 +50,12 @@ In addition to the file from `abigen` this will also generate a go file that inc
 
 #### Cheques
 
-The owner can issue cheques. Those are a signed piece of data containing the swap address, a beneficiary, and a cumulative amount. If the beneficiary wishes to cash the cheque it needs to be sent to the contract using the `cashChequeBeneficiary` function. Alternatively anyone else can also cash the cheque using `cashCheque` provided they have a signature from the beneficiary. In that case they might also get a portion of the payout as a fee. If there is not enough liquid balance in the contract part of the cheque might bounce (whether the full cheque was paid out should be verified through the `ChequeCashed` event). Later the beneficiary can try cashing again to get the remaining amount.
+The issuer can issue cheques. Those are a signed piece of data containing the swap address, a beneficiary, and a cumulative amount. If the beneficiary wishes to cash the cheque it needs to be sent to the contract using the `cashChequeBeneficiary` function. Alternatively anyone else can also cash the cheque using `cashCheque` provided they have a signature from the beneficiary. In that case they might also get a portion of the payout as a fee. If there is not enough liquid balance in the contract part of the cheque might bounce (whether the full cheque was paid out should be verified through the `ChequeCashed` event). Later the beneficiary can try cashing again to get the remaining amount.
 
 #### Hard Deposit
 
-The owner can lock a certain amount of the balance to a specific beneficiary (`increaseHardDeposit`) to give some solvency guarantees. Decreasing a hard deposit is a two step process: First it needs to be prepared (`prepareDecreaseHardDeposit`) to start a security delay, which the beneficiary can use to cash the outstanding cheques. Afterwards the deposit can be decreased (`decreaseHardDeposit`).
-The balance not covered by hard deposits can be withdrawn by the owner at any time.
-
+The issuer can lock a certain amount of the balance to a specific beneficiary (`increaseHardDeposit`) to give solvency guarantees up to the amount of the hard deposit. Decreasing a hard deposit is a two step process: First it needs to be prepared (`prepareDecreaseHardDeposit`) to start a security delay, which the beneficiary can use to cash the outstanding cheques. Afterwards the deposit can be decreased (`decreaseHardDeposit`).
+The balance not covered by hard deposits can be withdrawn by the issuer at any time.
 
 ### Data Formats
 
