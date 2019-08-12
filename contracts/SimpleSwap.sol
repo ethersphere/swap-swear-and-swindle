@@ -18,10 +18,10 @@ contract SimpleSwap {
   event ChequeCashed(
     address indexed beneficiary,
     address indexed recipient,
-    address indexed callee,
+    address indexed caller,
     uint totalPayout,
     uint cumulativePayout,
-    uint calleePayout
+    uint callerPayout
   );
   event ChequeBounced();
   event HardDepositAmountChanged(address indexed beneficiary, uint amount);
@@ -74,7 +74,7 @@ contract SimpleSwap {
   @dev internal function responsible for checking the issuerSignature, updating hardDeposit balances and doing transfers.
   Called by cashCheque and cashChequeBeneficary
   @param beneficiary the beneficiary to which cheques were assigned. Beneficiary must be an Externally Owned Account
-  @param recipient receives the differences between cumulativePayment and what was already paid-out to the beneficiary minus calleePayout
+  @param recipient receives the differences between cumulativePayment and what was already paid-out to the beneficiary minus callerPayout
   @param cumulativePayout cumulative amount of cheques assigned to beneficiary
   @param issuerSig if issuer is not the sender, issuer must have given explicit approval on the cumulativePayout to the beneficiary
   */
@@ -82,10 +82,10 @@ contract SimpleSwap {
     address beneficiary,
     address payable recipient,
     uint cumulativePayout,
-    uint calleePayout,
+    uint callerPayout,
     bytes memory issuerSig
   ) internal {
-    /* The issuer must have given explicit approval to the cumulativePayout, either by being the callee or by signature*/
+    /* The issuer must have given explicit approval to the cumulativePayout, either by being the caller or by signature*/
     if (msg.sender != issuer) {
       require(
         issuer == recover(
@@ -103,7 +103,7 @@ contract SimpleSwap {
     uint totalPayout = Math.min(requestPayout, availableBalanceFor(beneficiary));
     /* calculates hard-deposit usage */
     uint hardDepositUsage = Math.min(totalPayout, hardDeposits[beneficiary].amount);
-    require(totalPayout >= calleePayout, "SimpleSwap: cannot pay callee");
+    require(totalPayout >= callerPayout, "SimpleSwap: cannot pay caller");
     /* if there are some of the hard deposit used, update hardDeposits*/
     if (hardDepositUsage != 0) {
       hardDeposits[beneficiary].amount = hardDeposits[beneficiary].amount.sub(hardDepositUsage);
@@ -114,26 +114,26 @@ contract SimpleSwap {
     paidOut[beneficiary] = paidOut[beneficiary].add(totalPayout);
     /* do the actual payments */
 
-    recipient.transfer(totalPayout.sub(calleePayout));
-    /* do a transfer to the callee if specified*/
-    if (calleePayout != 0) {
-      msg.sender.transfer(calleePayout);
+    recipient.transfer(totalPayout.sub(callerPayout));
+    /* do a transfer to the caller if specified*/
+    if (callerPayout != 0) {
+      msg.sender.transfer(callerPayout);
     }
-    emit ChequeCashed(beneficiary, recipient, msg.sender, totalPayout, cumulativePayout, calleePayout);
+    emit ChequeCashed(beneficiary, recipient, msg.sender, totalPayout, cumulativePayout, callerPayout);
     /* let the world know that the issuer has over-promised on outstanding cheques */
     if (requestPayout != totalPayout) {
       emit ChequeBounced();
     }
   }
   /**
-  @notice cash a cheque of the beneficiary by a non-beneficiary and reward the sender for doing so with calleePayout
+  @notice cash a cheque of the beneficiary by a non-beneficiary and reward the sender for doing so with callerPayout
   @dev a beneficiary must be able to generate signatures (be an Externally Owned Account) to make use of this feature
   @param beneficiary the beneficiary to which cheques were assigned. Beneficiary must be an Externally Owned Account
-  @param recipient receives the differences between cumulativePayment and what was already paid-out to the beneficiary minus calleePayout
+  @param recipient receives the differences between cumulativePayment and what was already paid-out to the beneficiary minus callerPayout
   @param cumulativePayout cumulative amount of cheques assigned to beneficiary
-  @param beneficiarySig beneficiary must have given explicit approval for cashing out the cumulativePayout by the sender and sending the calleePayout
+  @param beneficiarySig beneficiary must have given explicit approval for cashing out the cumulativePayout by the sender and sending the callerPayout
   @param issuerSig if issuer is not the sender, issuer must have given explicit approval on the cumulativePayout to the beneficiary
-  @param calleePayout when beneficiary does not have ether yet, he can incentivize other people to cash cheques with help of calleePayout
+  @param callerPayout when beneficiary does not have ether yet, he can incentivize other people to cash cheques with help of callerPayout
   @param issuerSig if issuer is not the sender, issuer must have given explicit approval on the cumulativePayout to the beneficiary
   */
   function cashCheque(
@@ -141,7 +141,7 @@ contract SimpleSwap {
     address payable recipient,
     uint cumulativePayout,
     bytes memory beneficiarySig,
-    uint256 calleePayout,
+    uint256 callerPayout,
     bytes memory issuerSig
   ) public {
     require(
@@ -151,15 +151,15 @@ contract SimpleSwap {
           msg.sender,
           cumulativePayout,
           recipient,
-          calleePayout
+          callerPayout
         ), beneficiarySig
       ), "SimpleSwap: invalid beneficiarySig");
-    _cashChequeInternal(beneficiary, recipient, cumulativePayout, calleePayout, issuerSig);
+    _cashChequeInternal(beneficiary, recipient, cumulativePayout, callerPayout, issuerSig);
   }
 
   /**
   @notice cash a cheque as beneficiary
-  @param recipient receives the differences between cumulativePayment and what was already paid-out to the beneficiary minus calleePayout
+  @param recipient receives the differences between cumulativePayment and what was already paid-out to the beneficiary minus callerPayout
   @param cumulativePayout amount requested to pay out
   @param issuerSig issuer must have given explicit approval on the cumulativePayout to the beneficiary
   */
@@ -270,9 +270,9 @@ contract SimpleSwap {
     return keccak256(abi.encodePacked(swap, beneficiary, cumulativePayout));
   }
 
-  function cashOutHash(address swap, address sender, uint requestPayout, address recipient, uint calleePayout)
+  function cashOutHash(address swap, address sender, uint requestPayout, address recipient, uint callerPayout)
   internal pure returns (bytes32) {
-    return keccak256(abi.encodePacked(swap, sender, requestPayout, recipient, calleePayout));
+    return keccak256(abi.encodePacked(swap, sender, requestPayout, recipient, callerPayout));
   }
 
   function customDecreaseTimeoutHash(address swap, address beneficiary, uint decreaseTimeout) 
