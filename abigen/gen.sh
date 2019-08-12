@@ -10,6 +10,16 @@ CONTRACT=SimpleSwap
 # output directory
 OUTPUT=bindings/$CONTRACT
 
+# check if all tools are available
+for tool in node solc abigen
+do
+  if ! which $tool > /dev/null
+  then
+    echo "$tool not in PATH" >&2
+    exit 1
+  fi
+done
+
 # compile the contract allowing imports from openzeppelin-solidity
 solc \
   openzeppelin-solidity=$(pwd)/node_modules/openzeppelin-solidity\
@@ -25,3 +35,5 @@ node abigen/code.go.js $PACKAGE "$COMPILED_JSON" $CONTRACT > "$OUTPUT/code.go"
 
 # clean up temporary file for compiler output
 rm "$COMPILED_JSON"
+
+echo "generated go bindings for $CONTRACT in $OUTPUT"
