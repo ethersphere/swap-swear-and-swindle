@@ -266,17 +266,18 @@ contract SimpleSwap {
   }
 
   function chequeHash(address swap, address beneficiary, uint cumulativePayout)
-  public pure returns (bytes32) {
+  internal pure returns (bytes32) {
     return keccak256(abi.encodePacked(swap, beneficiary, cumulativePayout));
   }
 
   function cashOutHash(address swap, address sender, uint requestPayout, address recipient, uint calleePayout)
-  public pure returns (bytes32) {
+  internal pure returns (bytes32) {
     return keccak256(abi.encodePacked(swap, sender, requestPayout, recipient, calleePayout));
   }
 
-  function customDecreaseTimeoutHash(address swap, address beneficiary, uint decreaseTimeout) public pure returns (bytes32) {
-    return keccak256(abi.encode(swap, beneficiary, decreaseTimeout));
+  function customDecreaseTimeoutHash(address swap, address beneficiary, uint decreaseTimeout) 
+  internal pure returns (bytes32) {
+    return keccak256(abi.encodePacked(swap, beneficiary, decreaseTimeout));
   }
 
 }
