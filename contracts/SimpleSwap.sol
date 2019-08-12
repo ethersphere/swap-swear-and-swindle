@@ -3,7 +3,14 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/math/Math.sol";
 import "openzeppelin-solidity/contracts/cryptography/ECDSA.sol";
 
-/// @title Swap Channel Contract
+/**
+@title Chequebook contract without waivers
+@author The Swarm Authors
+@notice The chequebook contract allows the issuer of the chequebook to send cheques to an unlimited amount of counterparties.
+Furthermore, solvency can be guaranteed via hardDeposits
+@dev as an issuer, no cheques should be send if the cumulative worth of a cheques send is above the cumulative worth of all deposits
+as a beneficiary, we should always take into account the possibility that a cheque bounces (when no hardDeposits are assigned)
+*/
 contract SimpleSwap {
   using SafeMath for uint;
 
@@ -12,12 +19,10 @@ contract SimpleSwap {
     address indexed beneficiary,
     address indexed recipient,
     address indexed callee,
-    uint serial,
     uint totalPayout,
-    uint requestPayout,
+    uint cumulativePayout,
     uint calleePayout
   );
-  event ChequeSubmitted(address indexed beneficiary, uint indexed serial, uint amount, uint cashTimeout);
   event ChequeBounced();
   event HardDepositAmountChanged(address indexed beneficiary, uint amount);
   event HardDepositDecreasePrepared(address indexed beneficiary, uint decreaseAmount);
@@ -32,15 +37,9 @@ contract SimpleSwap {
     uint decreaseTimeout; /* issuer has to wait decreaseTimeout seconds after decrease is requested to decrease hardDeposit */
     uint canBeDecreasedAt; /* point in time after which harddeposit can be decreased*/
   }
-  /* structure to keep track of the latest cheque for one beneficiary */
-  struct ChequeInfo {
-    uint serial; /* serial of the last submitted cheque */
-    uint amount; /* cumulative amount of the last submitted cheque */
-    uint paidOut; /* total amount paid out */
-    uint cashTimeout; /* timeout after which payout can happen */
-  }
-  /* associates every beneficiary with their ChequeInfo */
-  mapping (address => ChequeInfo) public cheques;
+
+  /* associates every beneficiary with how much has been paid out to them */
+  mapping (address => uint) public paidOut;
   /* associates every beneficiary with their HardDeposit */
   mapping (address => HardDeposit) public hardDeposits;
   /* sum of all hard deposits */
@@ -48,10 +47,13 @@ contract SimpleSwap {
 
   /* issuer of the contract, set at construction */
   address payable public issuer;
-
-  /// @notice constructor, allows setting the issuer (needed for "setup wallet as payment")
+  /**
+  @notice sets the issuer, defaultHardDepositTimeoutDuration and receives an initial deposit
+  @param _issuer the issuer of cheques from this chequebook (needed as an argument for "Setting up a chequebook as a payment").
+  _issuer must be an Externally Owned Account, or it must support calling the function cashCheque
+  @param defaultHardDepositTimeoutDuration duration in seconds which by default will be used to reduce hardDeposit allocations
+  */
   constructor(address payable _issuer, uint defaultHardDepositTimeoutDuration) public payable {
-    // DEFAULT_HARDDEPOSIT_TIMOUTE_DURATION will be one day or a whatever non-zero argument given as an argument to the constructor
     DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT = defaultHardDepositTimeoutDuration;
     issuer = _issuer;
     if (msg.value > 0) {
@@ -64,151 +66,113 @@ contract SimpleSwap {
     return address(this).balance.sub(totalHardDeposit);
   }
 
-  /// @return the part of the balance usable for a specific beneficiary
-  function liquidBalanceFor(address beneficiary) public view returns(uint) {
+  /// @return the part of the balance available for a specific beneficiary
+  function availableBalanceFor(address beneficiary) public view returns(uint) {
     return liquidBalance().add(hardDeposits[beneficiary].amount);
   }
-
-  /// @dev helper function to process cheque after signatures have been checked
-  /// @param beneficiary the beneficiary of the cheque
-  /// @param serial the serial number of the cheque
-  /// @param amount the (cumulative) amount of the cheque
-  /// @param cashTimeout the check can be cashed cashTimeout seconds in the future
-  function _submitChequeInternal(address beneficiary, uint serial, uint amount, uint cashTimeout) internal {
-    ChequeInfo storage cheque = cheques[beneficiary];
-    /* ensure serial is increasing */
-    require(serial > cheque.serial, "SimpleSwap: invalid serial");
-    /* update the stored info */
-    cheque.serial = serial;
-    cheque.amount = amount;
-    cheque.cashTimeout = now + cashTimeout;
-    /* the channel participants should watch to this event to find out if an older cheque is being submitted */
-    emit ChequeSubmitted(beneficiary, serial, amount, cashTimeout);
-  }
-
-  /// @notice submit a cheque by the issuer
-  /// @param beneficiary the beneficiary of the cheque
-  /// @param serial the serial number of the cheque
-  /// @param amount the (cumulative) amount of the cheque
-  /// @param cashTimeout the check can be cashed cashTimeout seconds in the future
-  /// @param beneficiarySig signature of the issuer
-  function submitChequeIssuer(address beneficiary, uint serial, uint amount, uint cashTimeout, bytes memory beneficiarySig) public {
-    require(msg.sender == issuer, "SimpleSwap: not issuer");
-    /* verify signature of the beneficiary */
-    require(
-      beneficiary == recover(chequeHash(address(this), beneficiary, serial, amount, cashTimeout), beneficiarySig),
-      "SimpleSwap: invalid beneficiarySig"
-    );
-    /* update the cheque data */
-    _submitChequeInternal(beneficiary, serial, amount, cashTimeout);
-  }
-
-  /// @notice submit a cheque by the beneficiary
-  /// @param serial the serial number of the cheque
-  /// @param amount the (cumulative) amount of the cheque
-  /// @param cashTimeout the check can be cashed cashTimeout seconds in the future
-  /// @param issuerSig signature of the issuer
-  function submitChequeBeneficiary(uint serial, uint amount, uint cashTimeout, bytes memory issuerSig) public {
-    /* verify signature of the issuer */
-    //emit LogAddress(recover(chequeHash(address(this), msg.sender, serial, amount, cashTimeout), issuerSig));
-    require(
-      issuer == recover(
-        chequeHash(address(this), msg.sender, serial, amount, cashTimeout),
-        issuerSig
-      ),
-      "SimpleSwap: invalid issuerSig"
-    );
-    /* update the cheque data */
-    _submitChequeInternal(msg.sender, serial, amount, cashTimeout);
-  }
-
-  /// @notice submit a cheque by any party
-  /// @param beneficiary the beneficiary of the cheque
-  /// @param serial the serial number of the cheque
-  /// @param amount the (cumulative) amount of the cheque
-  /// @param cashTimeout the check can be cashed cashTimeout seconds in the future
-  /// @param issuerSig signature of the issuer
-  /// @param beneficarySig signature of the beneficiary
-  function submitCheque(address beneficiary, uint serial, uint amount, uint cashTimeout, bytes memory issuerSig, bytes memory beneficarySig)
-  public {
-    /* verify signature of the issuer */
-    require(
-      issuer == recover(chequeHash(address(this), beneficiary, serial, amount, cashTimeout), issuerSig),
-      "SimpleSwap: invalid issuerSig"
-    );
-    /* verify signature of the beneficiary */
-    require(
-      beneficiary == recover(chequeHash(address(this), beneficiary, serial, amount, cashTimeout), beneficarySig),
-      "SimpleSwap: invalid beneficiarySig"
-    );
-    /* update the cheque data */
-    _submitChequeInternal(beneficiary, serial, amount, cashTimeout);
-  }
-
-
-  function _cashChequeInternal(address beneficiary, address payable recipient, uint requestPayout, uint calleePayout) public {
-     ChequeInfo storage cheque = cheques[beneficiary];
-
-    /* grace period must have ended */
-    require(now >= cheque.cashTimeout, "SimpleSwap: cheque not yet timed out");
-    require(requestPayout <= cheque.amount.sub(cheque.paidOut), "SimpleSwap: not enough balance owed");
-    /* ensure there is a balance to claim */
-     /* calculates hard-deposit usage */
-    uint hardDepositUsage = Math.min(requestPayout, hardDeposits[beneficiary].amount);
+  /**
+  @dev internal function responsible for checking the issuerSignature, updating hardDeposit balances and doing transfers.
+  Called by cashCheque and cashChequeBeneficary
+  @param beneficiary the beneficiary to which cheques were assigned. Beneficiary must be an Externally Owned Account
+  @param recipient receives the differences between cumulativePayment and what was already paid-out to the beneficiary minus calleePayout
+  @param cumulativePayout cumulative amount of cheques assigned to beneficiary
+  @param issuerSig if issuer is not the sender, issuer must have given explicit approval on the cumulativePayout to the beneficiary
+  */
+  function _cashChequeInternal(
+    address beneficiary,
+    address payable recipient,
+    uint cumulativePayout,
+    uint calleePayout,
+    bytes memory issuerSig
+  ) internal {
+    /* The issuer must have given explicit approval to the cumulativePayout, either by being the callee or by signature*/
+    if (msg.sender != issuer) {
+      require(
+        issuer == recover(
+          chequeHash(
+            address(this),
+            beneficiary,
+            cumulativePayout
+          ), issuerSig
+        ), "SimpleSwap: invalid issuerSig"
+      );
+    }
+    /* the requestPayout is the amount requested for payment processing */
+    uint requestPayout = cumulativePayout.sub(paidOut[beneficiary]);
     /* calculates acutal payout */
-    uint totalPayout = Math.min(requestPayout, liquidBalance() + hardDepositUsage);
+    uint totalPayout = Math.min(requestPayout, availableBalanceFor(beneficiary));
+    /* calculates hard-deposit usage */
+    uint hardDepositUsage = Math.min(totalPayout, hardDeposits[beneficiary].amount);
     require(totalPayout >= calleePayout, "SimpleSwap: cannot pay callee");
-      /* if there some of the hard deposit is used update the structure */
-
-    if(hardDepositUsage != 0) {
+    /* if there are some of the hard deposit used, update hardDeposits*/
+    if (hardDepositUsage != 0) {
       hardDeposits[beneficiary].amount = hardDeposits[beneficiary].amount.sub(hardDepositUsage);
 
       totalHardDeposit = totalHardDeposit.sub(hardDepositUsage);
     }
     /* increase the stored paidOut amount to avoid double payout */
-    cheque.paidOut = cheque.paidOut.add(totalPayout);
+    paidOut[beneficiary] = paidOut[beneficiary].add(totalPayout);
     /* do the actual payments */
 
     recipient.transfer(totalPayout.sub(calleePayout));
-    emit ChequeCashed(beneficiary, recipient, msg.sender, cheque.serial, totalPayout, requestPayout, calleePayout);
-    if(requestPayout != totalPayout) {
-
+    /* do a transfer to the callee if specified*/
+    if (calleePayout != 0) {
+      msg.sender.transfer(calleePayout);
+    }
+    emit ChequeCashed(beneficiary, recipient, msg.sender, totalPayout, cumulativePayout, calleePayout);
+    /* let the world know that the issuer has over-promised on outstanding cheques */
+    if (requestPayout != totalPayout) {
       emit ChequeBounced();
     }
   }
-
+  /**
+  @notice cash a cheque of the beneficiary by a non-beneficiary and reward the sender for doing so with calleePayout
+  @dev a beneficiary must be able to generate signatures (be an Externally Owned Account) to make use of this feature
+  @param beneficiary the beneficiary to which cheques were assigned. Beneficiary must be an Externally Owned Account
+  @param recipient receives the differences between cumulativePayment and what was already paid-out to the beneficiary minus calleePayout
+  @param cumulativePayout cumulative amount of cheques assigned to beneficiary
+  @param beneficiarySig beneficiary must have given explicit approval for cashing out the cumulativePayout by the sender and sending the calleePayout
+  @param issuerSig if issuer is not the sender, issuer must have given explicit approval on the cumulativePayout to the beneficiary
+  @param calleePayout when beneficiary does not have ether yet, he can incentivize other people to cash cheques with help of calleePayout
+  @param issuerSig if issuer is not the sender, issuer must have given explicit approval on the cumulativePayout to the beneficiary
+  */
   function cashCheque(
     address beneficiary,
     address payable recipient,
-    uint requestPayout,
+    uint cumulativePayout,
     bytes memory beneficiarySig,
-    uint256 expiry,
-    uint256 calleePayout
+    uint256 calleePayout,
+    bytes memory issuerSig
   ) public {
-    require(now <= expiry, "SimpleSwap: beneficiarySig expired");
-
-    require(beneficiary == recover(cashOutHash(
-      address(this),
-      msg.sender,
-      requestPayout,
-      recipient,
-      expiry,
-      calleePayout
-      ), beneficiarySig), "SimpleSwap: invalid beneficiarySig");
-    _cashChequeInternal(beneficiary, recipient, requestPayout, calleePayout);
-
-    msg.sender.transfer(calleePayout);
-  }
-  /// @notice attempt to cash latest chequebeneficiary
-  /// @param recipient agent (of the beneficiary) who receives the payment (i.e. other chequebook contract or the beneficiary)
-  /// @param requestPayout amount requested to pay out
-  function cashChequeBeneficiary(address payable recipient, uint requestPayout) public {
-    _cashChequeInternal(msg.sender, recipient, requestPayout, 0);
+    require(
+      beneficiary == recover(
+        cashOutHash(
+          address(this),
+          msg.sender,
+          cumulativePayout,
+          recipient,
+          calleePayout
+        ), beneficiarySig
+      ), "SimpleSwap: invalid beneficiarySig");
+    _cashChequeInternal(beneficiary, recipient, cumulativePayout, calleePayout, issuerSig);
   }
 
-  /// @notice prepare to decrease the hard deposit
-  /// @param beneficiary beneficiary whose hard deposit should be decreased
-  /// @param decreaseAmount amount that the deposit is supposed to be decreased by
+  /**
+  @notice cash a cheque as beneficiary
+  @param recipient receives the differences between cumulativePayment and what was already paid-out to the beneficiary minus calleePayout
+  @param cumulativePayout amount requested to pay out
+  @param issuerSig issuer must have given explicit approval on the cumulativePayout to the beneficiary
+  */
+  function cashChequeBeneficiary(address payable recipient, uint cumulativePayout, bytes memory issuerSig) public {
+    _cashChequeInternal(msg.sender, recipient, cumulativePayout, 0, issuerSig);
+  }
+
+  /**
+  @notice prepare to decrease the hard deposit
+  @dev decreasing hardDeposits must be done in two steps to allow beneficiaries to cash any uncashed cheques (and make use of the assgined hard-deposits)
+  @param beneficiary beneficiary whose hard deposit should be decreased
+  @param decreaseAmount amount that the deposit is supposed to be decreased by
+  */
   function prepareDecreaseHardDeposit(address beneficiary, uint decreaseAmount) public {
     require(msg.sender == issuer, "SimpleSwap: not issuer");
     HardDeposit storage hardDeposit = hardDeposits[beneficiary];
@@ -221,27 +185,28 @@ contract SimpleSwap {
     emit HardDepositDecreasePrepared(beneficiary, decreaseAmount);
   }
 
-  /// @notice actually decrease the hard deposit
-  /// @param beneficiary beneficiary whose hard deposit should be decreased
+  /**
+  @notice decrease the hard deposit after waiting the necesary amount of time since prepareDecreaseHardDeposit was called
+  @param beneficiary beneficiary whose hard deposit should be decreased
+  */
   function decreaseHardDeposit(address beneficiary) public {
     HardDeposit storage hardDeposit = hardDeposits[beneficiary];
-
     require(now >= hardDeposit.canBeDecreasedAt && hardDeposit.canBeDecreasedAt != 0, "SimpleSwap: deposit not yet timed out");
-
-    /* decrease the amount */
     /* this throws if decreaseAmount > amount */
+    //TODO: if there is a cash-out in between prepareDecreaseHardDeposit and decreaseHardDeposit, decreaseHardDeposit will throw and reducing hard-deposits is impossible.
     hardDeposit.amount = hardDeposit.amount.sub(hardDeposit.decreaseAmount);
     /* reset the canBeDecreasedAt to avoid a double decrease */
     hardDeposit.canBeDecreasedAt = 0;
     /* keep totalDeposit in sync */
     totalHardDeposit = totalHardDeposit.sub(hardDeposit.decreaseAmount);
-
     emit HardDepositAmountChanged(beneficiary, hardDeposit.amount);
   }
 
-  /// @notice increase the hard deposit
-  /// @param beneficiary beneficiary whose hard deposit should be decreased
-  /// @param amount the new hard deposit
+  /**
+  @notice increase the hard deposit
+  @param beneficiary beneficiary whose hard deposit should be decreased
+  @param amount the new hard deposit
+  */
   function increaseHardDeposit(address beneficiary, uint amount) public {
     require(msg.sender == issuer, "SimpleSwap: not issuer");
     /* ensure hard deposits don't exceed the global balance */
@@ -256,7 +221,13 @@ contract SimpleSwap {
     emit HardDepositAmountChanged(beneficiary, hardDeposit.amount);
   }
 
-
+  /**
+  @notice allows for setting a custom hardDepositDecreaseTimeout per beneficiary
+  @dev this is required when solvency must be guaranteed for a period longer than the defaultHardDepositDecreaseTimeout
+  @param beneficiary beneficiary whose hard deposit decreaseTimeout must be changed
+  @param decreaseTimeout new decreaseTimeout for beneficiary
+  @param beneficiarySig beneficiary must give explicit approval by giving his signature on the new decreaseTimeout
+  */
   function setCustomHardDepositDecreaseTimeout(
     address beneficiary,
     uint decreaseTimeout,
@@ -294,14 +265,14 @@ contract SimpleSwap {
     return ECDSA.recover(ECDSA.toEthSignedMessageHash(hash), sig);
   }
 
-  function chequeHash(address swap, address beneficiary, uint serial, uint amount, uint cashTimeout)
+  function chequeHash(address swap, address beneficiary, uint cumulativePayout)
   public pure returns (bytes32) {
-    return keccak256(abi.encodePacked(swap, beneficiary, serial, amount, cashTimeout));
+    return keccak256(abi.encodePacked(swap, beneficiary, cumulativePayout));
   }
 
-  function cashOutHash(address swap, address sender, uint requestPayout, address recipient, uint expiry, uint calleePayout)
+  function cashOutHash(address swap, address sender, uint requestPayout, address recipient, uint calleePayout)
   public pure returns (bytes32) {
-    return keccak256(abi.encodePacked(swap, sender, requestPayout, recipient, expiry, calleePayout));
+    return keccak256(abi.encodePacked(swap, sender, requestPayout, recipient, calleePayout));
   }
 
   function customDecreaseTimeoutHash(address swap, address beneficiary, uint decreaseTimeout) public pure returns (bytes32) {
