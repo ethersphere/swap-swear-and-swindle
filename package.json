@@ -16,6 +16,7 @@
   "devDependencies": {
     "bn-chai": "^1.0.1",
     "chai": "^4.2.0",
+    "ethereumjs-abi": "^0.6.7",
     "ethlint": "^1.2.4",
     "openzeppelin-test-helpers": "^0.4.0",
     "solhint": "^2.1.2",

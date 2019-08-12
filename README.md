@@ -59,15 +59,35 @@ The balance not covered by hard deposits can be withdrawn by the issuer at any t
 
 ### Data Formats
 
+#### Signatures
+
+For signing purposes the fields are encoded in **packed encoding** in the order specified below. `SimpleSwap` uses the same signing scheme as `eth_sign` (with the `Ethereum Signed Message` prefix).
+
 #### Cheques
 
-| Field        | Type | Description   |
-| ------------ | ------------- | ------------- |
-| swap        | uint256 | the swap contract this cheque is for |
-| beneficiary  | address | beneficiary of the cheque |
-| cumulativePayout | uint256 | cumulative amount |
+| Field            | Type         | Description   |
+| ---------------- | ------------ | ------------- |
+| swap             | address      | the swap contract this is for |
+| beneficiary      | address      | beneficiary of the cheque |
+| cumulativePayout | uint256      | cumulative amount |
 
-For signing purposes the fields are encoded in **packed encoding** in the order specified above. `SimpleSwap` uses the same signing scheme as `eth_sign` (with the `Ethereum Signed Message` prefix).
+#### CashOut
+
+| Field            | Type         | Description   |
+| ---------------- | ------------ | ------------- |
+| swap             | address      | the swap contract this is for |
+| sender           | address      | the address allowed to submit this cheque |
+| requestPayout    | uint256      | the maximum amount that should be paid out |
+| recipient        | address      | the target of the payment |
+| calleePayout     | uint256      | amount of the payout that should go the caller |
+
+#### CustomHardDepositDecreaseTimeout
+
+| Field            | Type         | Description   |
+| ---------------- | ------------ | ------------- |
+| swap             | address      | the swap contract this is for |
+| beneficiary      | address      | beneficiary of the hard deposit |
+| decreaseTimeout  | uint256      | new timeout |
 
 ## Swap
 
