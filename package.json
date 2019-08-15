@@ -25,7 +25,7 @@
   },
   "scripts": {
     "test": "truffle test",
-    "abigen": "./abigen/gen.sh",
+    "abigen": "./abigen/gen.sh SimpleSwap",
     "solhint": "solhint contracts/SimpleSwap.sol",
     "ethlint": "solium -d contracts",
     "coverage": "solidity-coverage"
