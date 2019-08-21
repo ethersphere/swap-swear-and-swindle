@@ -8,8 +8,7 @@ function makeCodeFile(contract, path=`contracts/${contract}.sol`) {
   const Contract = output.contracts[`${path}:${contract}`]
   const binRuntime = Contract['bin-runtime']
 
-  return `
-  // Copyright 2019 The Swarm Authors
+  return `  // Copyright 2019 The Swarm Authors
   // This file is part of the Swarm library.
   //
   // The Swarm library is free software: you can redistribute it and/or modify

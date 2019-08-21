@@ -1,17 +1,44 @@
 language: generic
-
 services:
-  - docker
-
+- docker
 branches:
   only:
-    - master
-
+  - master
+  - "/v(\\d+\\.)(\\d+\\.)(\\d)/"
 jobs:
   include:
-    - stage: test
-      script:
-        - docker build -t sw3-travis .
-        - docker run -it --rm sw3-travis npm test
-        - docker run -it --rm sw3-travis npm run ethlint
-        - docker run -it --rm sw3-travis npm run solhint
+  - stage: test
+    script:
+    - docker build -t sw3-travis .
+    - docker run -it --rm sw3-travis npm test
+    - docker run -it --rm sw3-travis npm run ethlint
+    - docker run -it --rm sw3-travis npm run solhint
+  - stage: abigen
+    if: tag IS present
+    script:
+    - docker build -t sw3-travis .
+    - mkdir -p bindings
+    # turn vA.B.C to vA-B-C to avoid . in directory name
+    - export DIRECTORY=$(echo contracts-${TRAVIS_TAG} | tr '.' '-')
+    - docker run -v $(pwd)/bindings:/sw3/bindings sw3-travis npm run abigen
+    # bindings is owned by root at this point
+    - sudo chown -R $(id -u) bindings
+    - git clone "https://${GH_TOKEN}@${GH_REPO}"
+    - mv bindings ${REPO}/${DIRECTORY}
+    - cd ${REPO}
+    - git remote
+    - git config user.email ${EMAIL}
+    - git config user.name ${USER}
+    - git add .
+    - git commit -m "add bindings for ${TRAVIS_TAG}"
+    - git tag ${TRAVIS_TAG}
+    - git push origin master --tags
+env:
+  global:
+  - USER="ralph-pichler"
+  - EMAIL="pichler.ralph@gmail.com"
+  - REPO_USER="ethersphere"
+  - REPO="go-sw3"
+  - GH_REPO="github.com/${REPO_USER}/${REPO}.git"
+  # GH_TOKEN
+  - secure: b8W9Me6I32mzRD7H+ac/J+irthmHjUMaEoz3mCFm/LfLw/2VwgtKZ5Xh06eGekaPeQTJqLcOjYfp/fckWw0LESkKj+Tf6CKrGdx2cImkx7AQtgQGT/ExFWqHnTV7lOUVV+uJo2OxTzhIbM9J1s4f++KWLY+v+XlxzdxEvr68w0ZToqCsac79jUGuYnlZED5AP9TCgUFjPjIp0rnKA4k9y6sMVLPf2MDtvQVz3Cdns2O66fAYz9uWlI89zjM4SNyBnktV0LtkHH/JvPYaeaS7KvfXsPnP6H0BVCQ/UbmUej3JQmTjQ5vgLevIm/MnyaqmQ1ox08VI5q78NUNHfktTsVmemYwsU8R6sbFnE6jR4X+HXoG/97i+U4VCAwOnb7Yuno6p9jabwsRZjVauVdej2gyPJ7z+fCSb6p9aSuUYgMhDEXJt79EtWCtxzvozUelNq75bHzmCtbsHb6ujEtSNd2fiZOdgwJFiXCX8ygeXylSiOrm4Ie4tSRyxKYWDMheuFjHfr7VojFx4OqIdIgGRMA9/WaeZeMAdinOLrMSaLDPOGhVw3JI8y7ndq9Chu7NRPy5kvozgl4ska46uxnTb/fBU8t54SGojbECPpiroOLPHnLNqA67zhTvsSLMEhOVuFcnBh6Z0B4ojzzq32dTsn7TNOqCpPwiFe6+NPBDPqic=
