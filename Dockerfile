@@ -1,7 +1,7 @@
 FROM node:10.16.0-stretch as builder
 
 ARG GETH_VERSION="1.9.1-b7b2f60f"
-ARG SOLIDITY_VERSION="0.5.10"
+ARG SOLIDITY_VERSION="0.5.11"
 
 RUN wget -q "https://github.com/ethereum/solidity/releases/download/v$SOLIDITY_VERSION/solc-static-linux" \
   && chmod +x solc-static-linux \
