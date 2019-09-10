@@ -91,6 +91,10 @@ For signing purposes the fields are encoded in **packed encoding** in the order 
 | beneficiary      | address      | beneficiary of the hard deposit |
 | decreaseTimeout  | uint256      | new timeout |
 
+#### Factory
+
+`SimpleSwap` has an accompanying factory contract `SimpleSwapFactory`. Deploying through the factory guarantees that the `SimpleSwap `contract was deployed with the correct init code.
+
 ## Swap
 
 `Swap` is `SimpleSwap` extended with support for promissory notes. You can find it in the `experimental` branch.
