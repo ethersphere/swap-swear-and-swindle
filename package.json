@@ -1,6 +1,6 @@
 {
   "name": "sw3",
-  "version": "1.0.0",
+  "version": "0.1.1",
   "description": "",
   "main": "truffle.js",
   "directories": {
@@ -18,15 +18,15 @@
     "chai": "^4.2.0",
     "ethereumjs-abi": "^0.6.7",
     "ethlint": "^1.2.4",
-    "openzeppelin-test-helpers": "^0.4.0",
+    "openzeppelin-test-helpers": "^0.4.3",
     "solhint": "^2.1.2",
     "solidity-coverage": "^0.6.0-beta.5",
     "truffle": "^5.0.24"
   },
   "scripts": {
     "test": "truffle test",
-    "abigen": "./abigen/gen.sh SimpleSwap",
-    "solhint": "solhint contracts/SimpleSwap.sol",
+    "abigen": "./abigen/gen.sh SimpleSwap SimpleSwapFactory",
+    "solhint": "solhint contracts/SimpleSwap.sol contracts/SimpleSwapFactory.sol",
     "ethlint": "solium -d contracts",
     "coverage": "solidity-coverage"
   },
