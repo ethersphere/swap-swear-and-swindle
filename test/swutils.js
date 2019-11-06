@@ -1,27 +1,45 @@
-const Swap = artifacts.require("./Swap.sol");
+const abi = require('ethereumjs-abi')
 
-const { sign } = require('./testutils')
+async function sign(hash, signer) {
+  let signature = await web3.eth.sign(hash, signer)
 
-async function signCheque(signer, beneficiary, serial, amount) {
-  const swap = await Swap.deployed();
-  const hash = await swap.chequeHash(swap.address, beneficiary, serial, amount);
-  return sign(signer, hash);
+  let rs = signature.substr(0,130);  
+  let v = parseInt(signature.substr(130, 2), 16) + 27
+
+  return rs + v.toString(16)
 }
 
-async function signNote(signer, beneficiary, serial, amount, witness, validFrom, validUntil, remark) {
-  const swap = await Swap.deployed();
-  const hash = await swap.noteHash(swap.address, beneficiary, serial, amount, witness, validFrom, validUntil, remark);
-  return { ...sign(signer, hash), hash };
+async function signCheque(swap, beneficiary, cumulativePayout, signee) {
+  const encodedCheque = abi.solidityPack(
+    ['address', 'address', 'uint256'],
+    [swap.address, beneficiary, cumulativePayout]
+  )
+  const hash = web3.utils.keccak256(encodedCheque)
+  return await sign(hash, signee)
 }
 
-async function signInvoice(signer, noteId, swapBalance, serial) {
-  const swap = await Swap.deployed();
-  const hash = await swap.invoiceHash(noteId, swapBalance, serial);
-  return { ...sign(signer, hash), hash };
+async function signCashOut(swap, sender, cumulativePayout, beneficiaryAgent, calleePayout, signee) {
+  const encodedCashOut = abi.solidityPack(
+    ['address', 'address', 'uint256', 'address', 'uint256'],
+    [swap.address, sender, cumulativePayout, beneficiaryAgent, calleePayout]
+  )
+  const hash = web3.utils.keccak256(encodedCashOut)
+  return await sign(hash, signee)
+}
+
+async function signCustomDecreaseTimeout(swap, beneficiary, decreaseTimeout, signee) {
+  const encodedCustomDecreaseTimeout = abi.solidityPack(
+    ['address', 'address', 'uint256'],
+    [swap.address, beneficiary, decreaseTimeout]
+  )
+  const hash = web3.utils.keccak256(encodedCustomDecreaseTimeout)
+
+  return await sign(hash, signee)
 }
 
 module.exports = {
+  signCustomDecreaseTimeout,
+  signCashOut,
   signCheque,
-  signNote,
-  signInvoice
-}
+  sign
+};
