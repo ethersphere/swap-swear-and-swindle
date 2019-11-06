@@ -1,4 +1,5 @@
 pragma solidity ^0.5.11;
+import "./ISimpleSwap.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/math/Math.sol";
 import "openzeppelin-solidity/contracts/cryptography/ECDSA.sol";
@@ -11,7 +12,7 @@ Furthermore, solvency can be guaranteed via hardDeposits
 @dev as an issuer, no cheques should be send if the cumulative worth of a cheques send is above the cumulative worth of all deposits
 as a beneficiary, we should always take into account the possibility that a cheque bounces (when no hardDeposits are assigned)
 */
-contract SimpleSwap {
+contract SimpleSwap is ISimpleSwap {
   using SafeMath for uint;
 
   event Deposit(address depositor, uint amount);
