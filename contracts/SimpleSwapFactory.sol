@@ -29,15 +29,16 @@ contract SimpleSwapFactory {
   function deploySimpleSwap(address payable issuer, uint defaultHardDepositTimeoutDuration)
   public payable returns (address) {
     if(ERC20Address != address(0)) {
+      require(msg.value == 0, "SimpleSwapFactory: not allowed to send Ether to ERC20SimpleSwap");
       return _deployERC20SimpleSwap(issuer, defaultHardDepositTimeoutDuration);
     } else {
       return _deploySimpleSwap(issuer, defaultHardDepositTimeoutDuration);
     }
   }
 
-  function _deployERC20SimpleSwap(address payable issuer, uint defaultHardDepositTimeoutDuration)
+  function _deployERC20SimpleSwap(address issuer, uint defaultHardDepositTimeoutDuration)
   internal returns (address) {
-    address contractAddress = address((new ERC20SimpleSwap).value(msg.value)(issuer, ERC20Address, defaultHardDepositTimeoutDuration));
+    address contractAddress = address((new ERC20SimpleSwap)(issuer, ERC20Address, defaultHardDepositTimeoutDuration));
     deployedContracts[contractAddress] = true;
     emit SimpleSwapDeployed(contractAddress);
     return contractAddress;
