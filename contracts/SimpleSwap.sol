@@ -1,8 +1,7 @@
 pragma solidity ^0.5.11;
-import "./ISimpleSwap.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "openzeppelin-solidity/contracts/math/Math.sol";
-import "openzeppelin-solidity/contracts/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/math/Math.sol";
+import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 
 /**
 @title Chequebook contract without waivers
@@ -12,7 +11,7 @@ Furthermore, solvency can be guaranteed via hardDeposits
 @dev as an issuer, no cheques should be send if the cumulative worth of a cheques send is above the cumulative worth of all deposits
 as a beneficiary, we should always take into account the possibility that a cheque bounces (when no hardDeposits are assigned)
 */
-contract SimpleSwap is ISimpleSwap {
+contract SimpleSwap {
   using SafeMath for uint;
 
   event Deposit(address depositor, uint amount);
@@ -60,6 +59,11 @@ contract SimpleSwap is ISimpleSwap {
     if (msg.value > 0) {
       emit Deposit(msg.sender, msg.value);
     }
+  }
+
+  /// @return the balance of the chequebook
+  function balance() public view returns(uint) {
+    return address(this).balance;
   }
 
   /// @return the part of the balance that is not covered by hard deposits

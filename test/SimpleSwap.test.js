@@ -1,6 +1,6 @@
 const {
   BN
-} = require("openzeppelin-test-helpers");
+} = require("@openzeppelin/test-helpers");
 
 const { shouldBehaveLikeSimpleSwap } = require('./SimpleSwap.behavior')
 const { shouldDeploy } = require('./SimpleSwap.should')

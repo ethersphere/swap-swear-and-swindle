@@ -4,7 +4,7 @@ const {
   time,
   expectEvent,
   expectRevert
-} = require("openzeppelin-test-helpers");
+} = require("@openzeppelin/test-helpers");
 
 const SimpleSwap = artifacts.require('SimpleSwap')
 
@@ -207,7 +207,7 @@ function shouldCashChequeBeneficiary(recipient, cumulativePayout, signee, from) 
       hardDepositFor: await this.simpleSwap.hardDeposits(from),
       liquidBalance: await this.simpleSwap.liquidBalance(),
       availableBalanceFor: await this.simpleSwap.availableBalanceFor(from),
-      chequebookBalance: await balance.current(this.simpleSwap.address),
+      chequebookBalance: await this.simpleSwap.balance(),
       beneficiaryBalance: await balance.current(recipient),
       paidOut: await this.simpleSwap.paidOut(from)
     }
@@ -226,7 +226,7 @@ function shouldCashChequeBeneficiary(recipient, cumulativePayout, signee, from) 
       hardDepositFor: await this.simpleSwap.hardDeposits(from),
       liquidBalance: await this.simpleSwap.liquidBalance(),
       availableBalanceFor: await this.simpleSwap.availableBalanceFor(from),
-      chequebookBalance: await balance.current(this.simpleSwap.address),
+      chequebookBalance: await this.simpleSwap.balance(),
       beneficiaryBalance: await balance.current(recipient),
       paidOut: await this.simpleSwap.paidOut(from)
     }
@@ -259,7 +259,7 @@ function shouldCashCheque(beneficiary, recipient, cumulativePayout, callerPayout
       hardDepositFor: await this.simpleSwap.hardDeposits(beneficiary),
       liquidBalance: await this.simpleSwap.liquidBalance(),
       availableBalanceFor: await this.simpleSwap.availableBalanceFor(beneficiary),
-      chequebookBalance: await balance.current(this.simpleSwap.address),
+      chequebookBalance: await this.simpleSwap.balance(),
       beneficiaryBalance: await balance.current(recipient),
       paidOut: await this.simpleSwap.paidOut(beneficiary)
     }
@@ -275,7 +275,7 @@ function shouldCashCheque(beneficiary, recipient, cumulativePayout, callerPayout
       hardDepositFor: await this.simpleSwap.hardDeposits(beneficiary),
       liquidBalance: await this.simpleSwap.liquidBalance(),
       availableBalanceFor: await this.simpleSwap.availableBalanceFor(beneficiary),
-      chequebookBalance: await balance.current(this.simpleSwap.address),
+      chequebookBalance: await this.simpleSwap.balance(),
       beneficiaryBalance: await balance.current(recipient),
       paidOut: await this.simpleSwap.paidOut(beneficiary)
     }

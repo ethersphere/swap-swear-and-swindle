@@ -3,7 +3,7 @@ const {
   balance,
   constants,
   expectEvent
-} = require("openzeppelin-test-helpers");
+} = require("@openzeppelin/test-helpers");
 
 const { expect } = require('chai');
 const SimpleSwapFactory = artifacts.require('./SimpleSwapFactory')

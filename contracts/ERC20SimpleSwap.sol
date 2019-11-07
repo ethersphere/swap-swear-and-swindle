@@ -1,9 +1,8 @@
 pragma solidity ^0.5.11;
-import "./ISimpleSwap.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "openzeppelin-solidity/contracts/math/Math.sol";
-import "openzeppelin-solidity/contracts/cryptography/ECDSA.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/math/Math.sol";
+import "@openzeppelin/contracts/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20Mintable.sol";
 
 /**
 @title Chequebook contract without waivers
@@ -13,7 +12,7 @@ Furthermore, solvency can be guaranteed via hardDeposits
 @dev as an issuer, no cheques should be send if the cumulative worth of a cheques send is above the cumulative worth of all deposits
 as a beneficiary, we should always take into account the possibility that a cheque bounces (when no hardDeposits are assigned)
 */
-contract ERC20SimpleSwap is ISimpleSwap {
+contract ERC20SimpleSwap {
   using SafeMath for uint;
 
   event Deposit(address depositor, uint amount);
@@ -63,9 +62,13 @@ contract ERC20SimpleSwap is ISimpleSwap {
     DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT = defaultHardDepositTimeoutDuration;
   }
 
+  /// @return the balance of the chequebook
+  function balance() public view returns(uint) {
+    return token.balanceOf(address(this));
+  }
   /// @return the part of the balance that is not covered by hard deposits
   function liquidBalance() public view returns(uint) {
-    return token.balanceOf(address(this)).sub(totalHardDeposit);
+    return balance().sub(totalHardDeposit);
   }
 
   /// @return the part of the balance available for a specific beneficiary
@@ -82,7 +85,7 @@ contract ERC20SimpleSwap is ISimpleSwap {
   */
   function _cashChequeInternal(
     address beneficiary,
-    address payable recipient,
+    address recipient,
     uint cumulativePayout,
     uint callerPayout,
     bytes memory issuerSig
@@ -140,7 +143,7 @@ contract ERC20SimpleSwap is ISimpleSwap {
   */
   function cashCheque(
     address beneficiary,
-    address payable recipient,
+    address recipient,
     uint cumulativePayout,
     bytes memory beneficiarySig,
     uint256 callerPayout,
@@ -165,7 +168,7 @@ contract ERC20SimpleSwap is ISimpleSwap {
   @param cumulativePayout amount requested to pay out
   @param issuerSig issuer must have given explicit approval on the cumulativePayout to the beneficiary
   */
-  function cashChequeBeneficiary(address payable recipient, uint cumulativePayout, bytes memory issuerSig) public {
+  function cashChequeBeneficiary(address recipient, uint cumulativePayout, bytes memory issuerSig) public {
     _cashChequeInternal(msg.sender, recipient, cumulativePayout, 0, issuerSig);
   }
 
@@ -212,7 +215,7 @@ contract ERC20SimpleSwap is ISimpleSwap {
   function increaseHardDeposit(address beneficiary, uint amount) public {
     require(msg.sender == issuer, "SimpleSwap: not issuer");
     /* ensure hard deposits don't exceed the global balance */
-    require(totalHardDeposit.add(amount) <= address(this).balance, "SimpleSwap: hard deposit cannot be more than balance");
+    require(totalHardDeposit.add(amount) <= balance(), "SimpleSwap: hard deposit cannot be more than balance");
 
     HardDeposit storage hardDeposit = hardDeposits[beneficiary];
     hardDeposit.amount = hardDeposit.amount.add(amount);
@@ -274,7 +277,6 @@ contract ERC20SimpleSwap is ISimpleSwap {
   internal pure returns (bytes32) {
     return keccak256(abi.encodePacked(swap, beneficiary, decreaseTimeout));
   }
-
 }
 
 

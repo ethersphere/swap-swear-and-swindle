@@ -1,7 +1,7 @@
 const {
   BN,
   time
-} = require("openzeppelin-test-helpers");
+} = require("@openzeppelin/test-helpers");
 
 const {
   shouldReturnDEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT,
