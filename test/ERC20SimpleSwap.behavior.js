@@ -26,8 +26,7 @@ const {
   shouldWithdraw,
   shouldNotWithdraw,
   shouldDeposit,
-  shouldNotDeposit
-} = require('./SimpleSwap.should.js')
+} = require('./ERC20SimpleSwap.should.js')
 
 // switch to false if you don't want to test the particular function
 enabledTests = {
@@ -58,7 +57,7 @@ const describeTest = 'TEST: '
 // @param issuer the issuer of the checkbook
 // @param alice a counterparty of the checkbook 
 // @param bob a counterparty of the checkbook
-function shouldBehaveLikeSimpleSwap([issuer, alice, bob, carol], DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT) {
+function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT) {
   // defaults used throught the tests
   const defaults = {
     beneficiary: bob,
@@ -668,7 +667,7 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, carol], DEFAULT_HARDDEP
                     shouldPrepareDecreaseHardDeposit(beneficiary, hardDeposit, issuer)
                     context('when we have waited more than decreaseTimeout time', function () {
                       beforeEach(async function () {
-                        await time.increase(await this.simpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT())
+                        await time.increase(await this.ERC20SimpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT())
                       })
                       describe(describeTest + 'shouldDecreaseHardDeposit', function () {
                         shouldDecreaseHardDeposit(beneficiary, sender)
@@ -876,17 +875,11 @@ function shouldBehaveLikeSimpleSwap([issuer, alice, bob, carol], DEFAULT_HARDDEP
             shouldDeposit(depositAmount, issuer)
           })
         })
-        context('when the depositAmount is zero', function () {
-          const depositAmount = new BN(0)
-          describe(describeTest + 'shouldDeposit', function () {
-            shouldNotDeposit(depositAmount, issuer)
-          })
-        })
       }
     })
   })
 }
 
 module.exports = {
-  shouldBehaveLikeSimpleSwap
+  shouldBehaveLikeERC20SimpleSwap
 };

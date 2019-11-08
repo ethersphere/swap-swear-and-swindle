@@ -1,5 +1,5 @@
 {
-  "name": "sw3_with_ERC20",
+  "name": "sw3",
   "version": "0.1.1",
   "description": "",
   "main": "truffle.js",
@@ -25,8 +25,8 @@
   },
   "scripts": {
     "test": "truffle test",
-    "abigen": "./abigen/gen.sh SimpleSwap SimpleSwapFactory",
-    "solhint": "solhint contracts/SimpleSwap.sol contracts/SimpleSwapFactory.sol",
+    "abigen": "./abigen/gen.sh ERC20SimpleSwap SimpleSwapFactory",
+    "solhint": "solhint contracts/ERC20SimpleSwap.sol contracts/SimpleSwapFactory.sol",
     "ethlint": "solium -d contracts",
     "coverage": "solidity-coverage"
   },

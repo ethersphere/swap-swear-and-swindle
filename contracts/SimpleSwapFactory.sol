@@ -1,5 +1,4 @@
 pragma solidity ^0.5.11;
-import "./SimpleSwap.sol";
 import "./ERC20SimpleSwap.sol";
 
 /**
@@ -26,27 +25,9 @@ contract SimpleSwapFactory {
   @param issuer the issuer of cheques for the new chequebook
   @param defaultHardDepositTimeoutDuration duration in seconds which by default will be used to reduce hardDeposit allocations
   */
-  function deploySimpleSwap(address payable issuer, uint defaultHardDepositTimeoutDuration)
-  public payable returns (address) {
-    if(ERC20Address != address(0)) {
-      require(msg.value == 0, "SimpleSwapFactory: not allowed to send Ether to ERC20SimpleSwap");
-      return _deployERC20SimpleSwap(issuer, defaultHardDepositTimeoutDuration);
-    } else {
-      return _deploySimpleSwap(issuer, defaultHardDepositTimeoutDuration);
-    }
-  }
-
-  function _deployERC20SimpleSwap(address issuer, uint defaultHardDepositTimeoutDuration)
-  internal returns (address) {
+  function deploySimpleSwap(address issuer, uint defaultHardDepositTimeoutDuration)
+  public returns (address) {
     address contractAddress = address((new ERC20SimpleSwap)(issuer, ERC20Address, defaultHardDepositTimeoutDuration));
-    deployedContracts[contractAddress] = true;
-    emit SimpleSwapDeployed(contractAddress);
-    return contractAddress;
-  }
-
-  function _deploySimpleSwap(address payable issuer, uint defaultHardDepositTimeoutDuration)
-    internal returns (address) {
-    address contractAddress = address((new SimpleSwap).value(msg.value)(issuer, defaultHardDepositTimeoutDuration));
     deployedContracts[contractAddress] = true;
     emit SimpleSwapDeployed(contractAddress);
     return contractAddress;
