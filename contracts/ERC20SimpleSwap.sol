@@ -15,7 +15,6 @@ as a beneficiary, we should always take into account the possibility that a cheq
 contract ERC20SimpleSwap {
   using SafeMath for uint;
 
-  event Deposit(address depositor, uint amount);
   event ChequeCashed(
     address indexed beneficiary,
     address indexed recipient,
@@ -119,10 +118,10 @@ contract ERC20SimpleSwap {
     paidOut[beneficiary] = paidOut[beneficiary].add(totalPayout);
     /* do the actual payments */
 
-    token.transfer(recipient, totalPayout.sub(callerPayout));
+    require(token.transfer(recipient, totalPayout.sub(callerPayout)), "SimpleSwap: SimpleSwap: transfer failed");
     /* do a transfer to the caller if specified*/
     if (callerPayout != 0) {
-      token.transfer(msg.sender, callerPayout);
+      require(token.transfer(msg.sender, callerPayout), "SimpleSwap: SimpleSwap: transfer failed");
     }
     emit ChequeCashed(beneficiary, recipient, msg.sender, totalPayout, cumulativePayout, callerPayout);
     /* let the world know that the issuer has over-promised on outstanding cheques */
@@ -255,8 +254,7 @@ contract ERC20SimpleSwap {
     require(msg.sender == issuer, "SimpleSwap: not issuer");
     /* ensure we don't take anything from the hard deposit */
     require(amount <= liquidBalance(), "SimpleSwap: liquidBalance not sufficient");
-    token.transfer(issuer, amount);
-    emit Withdraw(amount);
+    require(token.transfer(issuer, amount), "SimpleSwap: SimpleSwap: transfer failed");
   }
 
   function recover(bytes32 hash, bytes memory sig) internal pure returns (address) {

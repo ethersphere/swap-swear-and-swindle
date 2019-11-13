@@ -469,8 +469,7 @@ function shouldWithdraw(amount, from) {
       liquidBalance: await this.ERC20SimpleSwap.liquidBalance()
     }
 
-    const { logs } = await this.ERC20SimpleSwap.withdraw(amount, {from: from})
-    this.logs = logs
+    await this.ERC20SimpleSwap.withdraw(amount, {from: from})
 
     this.postconditions = {
       callerBalance: await  this.ERC20Mintable.balanceOf(from),
@@ -485,13 +484,6 @@ function shouldWithdraw(amount, from) {
   it('should have updated the callerBalance', function() {
     expect(this.postconditions.callerBalance).bignumber.to.be.equal(this.preconditions.callerBalance.add(amount))
   })
-
-  it('should have emitted a Withdraw event', function() {
-    expectEvent.inLogs(this.logs, 'Withdraw', {
-      amount
-    })
-  })
-
 }
 function shouldNotWithdraw(amount, from, value, revertMessage) {
   it('reverts', async function() {

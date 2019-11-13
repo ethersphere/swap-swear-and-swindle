@@ -14,9 +14,9 @@ contract SimpleSwapFactory {
   /* mapping to keep track of which contracts were deployed by this factory */
   mapping (address => bool) public deployedContracts;
 
-  /* address of the ERC20-token, to be used by the to-be-deployed chequebooks.
-  If 0, deploy SimpleSwap, otherwise ERC20SimpleSwap */
+  /* address of the ERC20-token, to be used by the to-be-deployed chequebooks */
   address public ERC20Address;
+
   constructor(address _ERC20Address) public {
     ERC20Address = _ERC20Address;
   }
@@ -27,7 +27,7 @@ contract SimpleSwapFactory {
   */
   function deploySimpleSwap(address issuer, uint defaultHardDepositTimeoutDuration)
   public returns (address) {
-    address contractAddress = address((new ERC20SimpleSwap)(issuer, ERC20Address, defaultHardDepositTimeoutDuration));
+    address contractAddress = address(new ERC20SimpleSwap(issuer, ERC20Address, defaultHardDepositTimeoutDuration));
     deployedContracts[contractAddress] = true;
     emit SimpleSwapDeployed(contractAddress);
     return contractAddress;
