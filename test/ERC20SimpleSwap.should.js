@@ -105,9 +105,9 @@ function shouldReturnLiquidBalance(expectedLiquidBalance) {
   })
 }
 
-function shouldReturnAvailableBalanceFor(beneficiary, expectedAvailableBalanceFor) {
+function shouldReturnLiquidBalanceFor(beneficiary, expectedLiquidBalanceFor) {
   it('should return the expected liquidBalance', async function() {
-    expect(await this.ERC20SimpleSwap.availableBalanceFor(beneficiary)).bignumber.to.equal(expectedAvailableBalanceFor)
+    expect(await this.ERC20SimpleSwap.liquidBalanceFor(beneficiary)).bignumber.to.equal(expectedLiquidBalanceFor)
   })
 }
 
@@ -117,12 +117,12 @@ function cashChequeInternal(beneficiary, recipient, cumulativePayout, callerPayo
   beforeEach(async function() {
     let requestPayout = cumulativePayout.sub(this.preconditions.paidOut)
     //if the requested payout is less than the liquidBalance available for beneficiary
-    if(requestPayout.lt(this.preconditions.availableBalanceFor)) {
+    if(requestPayout.lt(this.preconditions.liquidBalanceFor)) {
       // full amount requested can be paid out
       this.totalPayout = requestPayout
     } else {
       // partial amount requested can be paid out (the liquid balance available to the node)
-      this.totalPayout = this.preconditions.availableBalanceFor
+      this.totalPayout = this.preconditions.liquidBalanceFor
     }
     this.totalPaidOut = this.preconditions.totalPaidOut + this.totalPayout
   })
@@ -192,7 +192,7 @@ function shouldCashChequeBeneficiary(recipient, cumulativePayout, signee, from) 
       totalHardDeposit: await this.ERC20SimpleSwap.totalHardDeposit(),
       hardDepositFor: await this.ERC20SimpleSwap.hardDeposits(from),
       liquidBalance: await this.ERC20SimpleSwap.liquidBalance(),
-      availableBalanceFor: await this.ERC20SimpleSwap.availableBalanceFor(from),
+      liquidBalanceFor: await this.ERC20SimpleSwap.liquidBalanceFor(from),
       chequebookBalance: await this.ERC20SimpleSwap.balance(),
       paidOut: await this.ERC20SimpleSwap.paidOut(from),
       totalPaidOut: await this.ERC20SimpleSwap.totalPaidOut()
@@ -210,7 +210,7 @@ function shouldCashChequeBeneficiary(recipient, cumulativePayout, signee, from) 
       totalHardDeposit: await this.ERC20SimpleSwap.totalHardDeposit(),
       hardDepositFor: await this.ERC20SimpleSwap.hardDeposits(from),
       liquidBalance: await this.ERC20SimpleSwap.liquidBalance(),
-      availableBalanceFor: await this.ERC20SimpleSwap.availableBalanceFor(from),
+      liquidBalanceFor: await this.ERC20SimpleSwap.liquidBalanceFor(from),
       chequebookBalance: await this.ERC20SimpleSwap.balance(),
       paidOut: await this.ERC20SimpleSwap.paidOut(from),
       totalPaidOut: await this.ERC20SimpleSwap.totalPaidOut()
@@ -242,7 +242,7 @@ function shouldCashCheque(beneficiary, recipient, cumulativePayout, callerPayout
       totalHardDeposit: await this.ERC20SimpleSwap.totalHardDeposit(),
       hardDepositFor: await this.ERC20SimpleSwap.hardDeposits(beneficiary),
       liquidBalance: await this.ERC20SimpleSwap.liquidBalance(),
-      availableBalanceFor: await this.ERC20SimpleSwap.availableBalanceFor(beneficiary),
+      liquidBalanceFor: await this.ERC20SimpleSwap.liquidBalanceFor(beneficiary),
       chequebookBalance: await this.ERC20SimpleSwap.balance(),
       paidOut: await this.ERC20SimpleSwap.paidOut(beneficiary),
       totalPaidOut: await this.ERC20SimpleSwap.totalPaidOut()
@@ -257,7 +257,7 @@ function shouldCashCheque(beneficiary, recipient, cumulativePayout, callerPayout
       totalHardDeposit: await this.ERC20SimpleSwap.totalHardDeposit(),
       hardDepositFor: await this.ERC20SimpleSwap.hardDeposits(beneficiary),
       liquidBalance: await this.ERC20SimpleSwap.liquidBalance(),
-      availableBalanceFor: await this.ERC20SimpleSwap.availableBalanceFor(beneficiary),
+      liquidBalanceFor: await this.ERC20SimpleSwap.liquidBalanceFor(beneficiary),
       chequebookBalance: await this.ERC20SimpleSwap.balance(),
       paidOut: await this.ERC20SimpleSwap.paidOut(beneficiary),
       totalPaidOut: await this.ERC20SimpleSwap.totalPaidOut()
@@ -382,7 +382,7 @@ function shouldIncreaseHardDeposit(beneficiary, amount, from) {
     this.preconditions = {
       balance: await this.ERC20SimpleSwap.balance(),
       liquidBalance: await this.ERC20SimpleSwap.liquidBalance(),
-      availableBalanceFor: await this.ERC20SimpleSwap.availableBalanceFor(beneficiary),
+      liquidBalanceFor: await this.ERC20SimpleSwap.liquidBalanceFor(beneficiary),
       totalHardDeposit: await this.ERC20SimpleSwap.totalHardDeposit(),
       hardDepositFor: await this.ERC20SimpleSwap.hardDeposits(beneficiary),
     }
@@ -391,7 +391,7 @@ function shouldIncreaseHardDeposit(beneficiary, amount, from) {
     this.postconditions = {
       balance: await this.ERC20SimpleSwap.balance(),
       liquidBalance: await this.ERC20SimpleSwap.liquidBalance(),
-      availableBalanceFor: await this.ERC20SimpleSwap.availableBalanceFor(beneficiary),
+      liquidBalanceFor: await this.ERC20SimpleSwap.liquidBalanceFor(beneficiary),
       totalHardDeposit: await this.ERC20SimpleSwap.totalHardDeposit(),
       hardDepositFor: await this.ERC20SimpleSwap.hardDeposits(beneficiary)
     }
@@ -401,8 +401,8 @@ function shouldIncreaseHardDeposit(beneficiary, amount, from) {
     expect(this.postconditions.liquidBalance).bignumber.to.be.equal(this.preconditions.liquidBalance.sub(amount))
   })
 
-  it('should not affect the availableBalanceFor', function () {
-    expect(this.postconditions.availableBalanceFor).bignumber.to.be.equal(this.preconditions.availableBalanceFor)
+  it('should not affect the liquidBalanceFor', function () {
+    expect(this.postconditions.liquidBalanceFor).bignumber.to.be.equal(this.preconditions.liquidBalanceFor)
   })
 
   it('should not affect the balance', function () {
@@ -548,7 +548,7 @@ module.exports = {
   shouldReturnTotalHardDeposit,
   shouldReturnIssuer,
   shouldReturnLiquidBalance,
-  shouldReturnAvailableBalanceFor,
+  shouldReturnLiquidBalanceFor,
   shouldCashChequeBeneficiary,
   shouldNotCashChequeBeneficiary,
   shouldCashCheque,
