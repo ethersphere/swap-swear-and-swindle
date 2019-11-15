@@ -1,7 +1,8 @@
 pragma solidity ^0.5.11;
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "openzeppelin-solidity/contracts/math/Math.sol";
-import "openzeppelin-solidity/contracts/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/math/Math.sol";
+import "@openzeppelin/contracts/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20Mintable.sol";
 
 /**
 @title Chequebook contract without waivers
@@ -11,10 +12,9 @@ Furthermore, solvency can be guaranteed via hardDeposits
 @dev as an issuer, no cheques should be send if the cumulative worth of a cheques send is above the cumulative worth of all deposits
 as a beneficiary, we should always take into account the possibility that a cheque bounces (when no hardDeposits are assigned)
 */
-contract SimpleSwap {
+contract ERC20SimpleSwap {
   using SafeMath for uint;
 
-  event Deposit(address depositor, uint amount);
   event ChequeCashed(
     address indexed beneficiary,
     address indexed recipient,
@@ -38,6 +38,8 @@ contract SimpleSwap {
     uint canBeDecreasedAt; /* point in time after which harddeposit can be decreased*/
   }
 
+  /* The token against which this chequebook writes cheques */
+  ERC20 public token;
   /* associates every beneficiary with how much has been paid out to them */
   mapping (address => uint) public paidOut;
   /* associates every beneficiary with their HardDeposit */
@@ -46,24 +48,26 @@ contract SimpleSwap {
   uint public totalHardDeposit;
 
   /* issuer of the contract, set at construction */
-  address payable public issuer;
+  address public issuer;
   /**
   @notice sets the issuer, defaultHardDepositTimeoutDuration and receives an initial deposit
   @param _issuer the issuer of cheques from this chequebook (needed as an argument for "Setting up a chequebook as a payment").
   _issuer must be an Externally Owned Account, or it must support calling the function cashCheque
   @param defaultHardDepositTimeoutDuration duration in seconds which by default will be used to reduce hardDeposit allocations
   */
-  constructor(address payable _issuer, uint defaultHardDepositTimeoutDuration) public payable {
-    DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT = defaultHardDepositTimeoutDuration;
+  constructor(address _issuer, address _token, uint defaultHardDepositTimeoutDuration) public {
     issuer = _issuer;
-    if (msg.value > 0) {
-      emit Deposit(msg.sender, msg.value);
-    }
+    token = ERC20(_token);
+    DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT = defaultHardDepositTimeoutDuration;
   }
 
+  /// @return the balance of the chequebook
+  function balance() public view returns(uint) {
+    return token.balanceOf(address(this));
+  }
   /// @return the part of the balance that is not covered by hard deposits
   function liquidBalance() public view returns(uint) {
-    return address(this).balance.sub(totalHardDeposit);
+    return balance().sub(totalHardDeposit);
   }
 
   /// @return the part of the balance available for a specific beneficiary
@@ -80,7 +84,7 @@ contract SimpleSwap {
   */
   function _cashChequeInternal(
     address beneficiary,
-    address payable recipient,
+    address recipient,
     uint cumulativePayout,
     uint callerPayout,
     bytes memory issuerSig
@@ -114,10 +118,10 @@ contract SimpleSwap {
     paidOut[beneficiary] = paidOut[beneficiary].add(totalPayout);
     /* do the actual payments */
 
-    recipient.transfer(totalPayout.sub(callerPayout));
+    require(token.transfer(recipient, totalPayout.sub(callerPayout)), "SimpleSwap: SimpleSwap: transfer failed");
     /* do a transfer to the caller if specified*/
     if (callerPayout != 0) {
-      msg.sender.transfer(callerPayout);
+      require(token.transfer(msg.sender, callerPayout), "SimpleSwap: SimpleSwap: transfer failed");
     }
     emit ChequeCashed(beneficiary, recipient, msg.sender, totalPayout, cumulativePayout, callerPayout);
     /* let the world know that the issuer has over-promised on outstanding cheques */
@@ -138,7 +142,7 @@ contract SimpleSwap {
   */
   function cashCheque(
     address beneficiary,
-    address payable recipient,
+    address recipient,
     uint cumulativePayout,
     bytes memory beneficiarySig,
     uint256 callerPayout,
@@ -163,7 +167,7 @@ contract SimpleSwap {
   @param cumulativePayout amount requested to pay out
   @param issuerSig issuer must have given explicit approval on the cumulativePayout to the beneficiary
   */
-  function cashChequeBeneficiary(address payable recipient, uint cumulativePayout, bytes memory issuerSig) public {
+  function cashChequeBeneficiary(address recipient, uint cumulativePayout, bytes memory issuerSig) public {
     _cashChequeInternal(msg.sender, recipient, cumulativePayout, 0, issuerSig);
   }
 
@@ -210,7 +214,7 @@ contract SimpleSwap {
   function increaseHardDeposit(address beneficiary, uint amount) public {
     require(msg.sender == issuer, "SimpleSwap: not issuer");
     /* ensure hard deposits don't exceed the global balance */
-    require(totalHardDeposit.add(amount) <= address(this).balance, "SimpleSwap: hard deposit cannot be more than balance");
+    require(totalHardDeposit.add(amount) <= balance(), "SimpleSwap: hard deposit cannot be more than balance");
 
     HardDeposit storage hardDeposit = hardDeposits[beneficiary];
     hardDeposit.amount = hardDeposit.amount.add(amount);
@@ -250,15 +254,7 @@ contract SimpleSwap {
     require(msg.sender == issuer, "SimpleSwap: not issuer");
     /* ensure we don't take anything from the hard deposit */
     require(amount <= liquidBalance(), "SimpleSwap: liquidBalance not sufficient");
-    issuer.transfer(amount);
-    emit Withdraw(amount);
-  }
-
-  /// @notice deposit ether
-  function() external payable {
-    if (msg.value > 0) {
-      emit Deposit(msg.sender, msg.value);
-    }
+    require(token.transfer(issuer, amount), "SimpleSwap: SimpleSwap: transfer failed");
   }
 
   function recover(bytes32 hash, bytes memory sig) internal pure returns (address) {
@@ -275,11 +271,10 @@ contract SimpleSwap {
     return keccak256(abi.encodePacked(swap, sender, requestPayout, recipient, callerPayout));
   }
 
-  function customDecreaseTimeoutHash(address swap, address beneficiary, uint decreaseTimeout) 
+  function customDecreaseTimeoutHash(address swap, address beneficiary, uint decreaseTimeout)
   internal pure returns (bytes32) {
     return keccak256(abi.encodePacked(swap, beneficiary, decreaseTimeout));
   }
-
 }
 
 
