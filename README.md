@@ -36,7 +36,7 @@ This will generate the bindings in the `bindings/` directory. Suitable versions 
 Alternatively this can also be done through docker:
 
 ```sh
-docker build -t sw3 .
+docker build -t sw3 -f Dockerfile.abigen .
 docker run -v $(pwd)/bindings:/sw3/bindings sw3 npm run abigen
 ```
 

@@ -7,16 +7,23 @@ branches:
   - "/v(\\d+\\.)(\\d+\\.)(\\d)/"
 jobs:
   include:
+  - stage: lint
+    script:
+    - docker build -t sw3-travis .
+    - docker run -it --rm sw3-travis npm run ethlint
+    - docker run -it --rm sw3-travis npm run solhint
   - stage: test
     script:
     - docker build -t sw3-travis .
     - docker run -it --rm sw3-travis npm test
-    - docker run -it --rm sw3-travis npm run ethlint
-    - docker run -it --rm sw3-travis npm run solhint
+  - stage: test
+    script:
+    - docker build -t sw3-travis .
+    - docker run -it --rm sw3-travis npm run coverage  
   - stage: abigen
     if: tag IS present
     script:
-    - docker build -t sw3-travis .
+    - docker build -t sw3-travis -f Dockerfile.abigen .
     - mkdir -p bindings
     # turn vA.B.C to vA-B-C to avoid . in directory name
     - export DIRECTORY=$(echo contracts-${TRAVIS_TAG} | tr '.' '-')
