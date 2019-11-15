@@ -42,6 +42,8 @@ contract ERC20SimpleSwap {
   ERC20 public token;
   /* associates every beneficiary with how much has been paid out to them */
   mapping (address => uint) public paidOut;
+  /* total amount paid out */
+  uint public totalPaidOut;
   /* associates every beneficiary with their HardDeposit */
   mapping (address => HardDeposit) public hardDeposits;
   /* sum of all hard deposits */
@@ -71,7 +73,7 @@ contract ERC20SimpleSwap {
   }
 
   /// @return the part of the balance available for a specific beneficiary
-  function availableBalanceFor(address beneficiary) public view returns(uint) {
+  function liquidBalanceFor(address beneficiary) public view returns(uint) {
     return liquidBalance().add(hardDeposits[beneficiary].amount);
   }
   /**
@@ -104,7 +106,7 @@ contract ERC20SimpleSwap {
     /* the requestPayout is the amount requested for payment processing */
     uint requestPayout = cumulativePayout.sub(paidOut[beneficiary]);
     /* calculates acutal payout */
-    uint totalPayout = Math.min(requestPayout, availableBalanceFor(beneficiary));
+    uint totalPayout = Math.min(requestPayout, liquidBalanceFor(beneficiary));
     /* calculates hard-deposit usage */
     uint hardDepositUsage = Math.min(totalPayout, hardDeposits[beneficiary].amount);
     require(totalPayout >= callerPayout, "SimpleSwap: cannot pay caller");
@@ -116,6 +118,7 @@ contract ERC20SimpleSwap {
     }
     /* increase the stored paidOut amount to avoid double payout */
     paidOut[beneficiary] = paidOut[beneficiary].add(totalPayout);
+    totalPaidOut = totalPaidOut.add(totalPayout);
     /* do the actual payments */
 
     require(token.transfer(recipient, totalPayout.sub(callerPayout)), "SimpleSwap: SimpleSwap: transfer failed");

@@ -10,7 +10,7 @@ const {
   shouldReturnTotalHardDeposit,
   shouldReturnIssuer,
   shouldReturnLiquidBalance,
-  shouldReturnAvailableBalanceFor,
+  shouldReturnLiquidBalanceFor,
   shouldCashChequeBeneficiary,
   shouldNotCashChequeBeneficiary,
   shouldCashCheque,
@@ -36,7 +36,7 @@ enabledTests = {
   totalHardDeposit: true,
   issuer: true,
   liquidBalance: true,
-  availableBalanceFor: true,
+  liquidBalanceFor: true,
   cashChequeBeneficiary: true,
   cashCheque: true,
   prepareDecreaseHardDeposit: true,
@@ -221,16 +221,16 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], DEFAULT_HA
       }
     })
 
-    describe(describeFunction + 'shouldReturnAvailableBalanceFor', function () {
-      if (enabledTests.availableBalanceFor) {
+    describe(describeFunction + 'shouldReturnLiquidBalanceFor', function () {
+      if (enabledTests.liquidBalanceFor) {
         const beneficiary = bob
         const depositAmount = new BN(50)
         context('when there is some balance', function () {
           describe(describePreCondition + 'shoulDeposit', function () {
             shouldDeposit(depositAmount, issuer)
             context('when there are no hard deposits', function () {
-              describe(describeTest + 'shouldReturnAvailableBalanceFor', function () {
-                shouldReturnAvailableBalanceFor(beneficiary, depositAmount)
+              describe(describeTest + 'shouldReturnLiquidBalanceFor', function () {
+                shouldReturnLiquidBalanceFor(beneficiary, depositAmount)
               })
             })
             context('when there are no hard deposits', function () {
@@ -238,16 +238,16 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], DEFAULT_HA
               describe('when these hard deposits are assigned to the beneficiary', function () {
                 describe(describePreCondition + 'shouldIncreaseHardDeposit', function () {
                   shouldIncreaseHardDeposit(beneficiary, hardDeposit, issuer)
-                  describe(describeTest + 'shouldReturnAvailableBalanceFor', function () {
-                    shouldReturnAvailableBalanceFor(beneficiary, depositAmount)
+                  describe(describeTest + 'shouldReturnLiquidBalanceFor', function () {
+                    shouldReturnLiquidBalanceFor(beneficiary, depositAmount)
                   })
                 })
               })
               describe('when these hard deposits are assigned to somebody else', function () {
                 describe(describePreCondition + 'shouldIncreaseHardDeposit', function () {
                   shouldIncreaseHardDeposit(alice, hardDeposit, issuer)
-                  describe(describeTest + 'shouldReturnAvailableBalanceFor', function () {
-                    shouldReturnAvailableBalanceFor(beneficiary, depositAmount.sub(hardDeposit))
+                  describe(describeTest + 'shouldReturnLiquidBalanceFor', function () {
+                    shouldReturnLiquidBalanceFor(beneficiary, depositAmount.sub(hardDeposit))
                   })
                 })
               })
@@ -255,7 +255,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], DEFAULT_HA
           })
         })
         describe('when there is no balance', function () {
-          shouldReturnAvailableBalanceFor(beneficiary, new BN(0))
+          shouldReturnLiquidBalanceFor(beneficiary, new BN(0))
         })
       }
     })
