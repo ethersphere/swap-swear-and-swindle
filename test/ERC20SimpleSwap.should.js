@@ -48,6 +48,15 @@ function shouldReturnPaidOut(beneficiary, expectedAmount) {
   })
 }
 
+function shouldReturnTotalPaidOut(expectedAmount) {
+  beforeEach(async function() {
+    this.totalPaidOut = await this.ERC20SimpleSwap.totalPaidOut()
+  })
+  it('should return the expected amount', function() {
+    expect(expectedAmount).bignumber.to.be.equal(this.totalPaidOut)
+  })
+}
+
 function shouldReturnHardDeposits(beneficiary, expectedAmount, expectedDecreaseAmount,  expectedDecreaseTimeout, expectedCanBeDecreasedAt) {
   beforeEach(async function() {
     // If we expect this not to be the default value, we have to set the value here, as it depends on the most current time
@@ -115,6 +124,7 @@ function cashChequeInternal(beneficiary, recipient, cumulativePayout, callerPayo
       // partial amount requested can be paid out (the liquid balance available to the node)
       this.totalPayout = this.preconditions.availableBalanceFor
     }
+    this.totalPaidOut = this.preconditions.totalPaidOut + this.totalPayout
   })
   
   it('should update the totalHardDeposit and hardDepositFor ', function() {
@@ -135,6 +145,10 @@ function cashChequeInternal(beneficiary, recipient, cumulativePayout, callerPayo
   
   it('should update paidOut', async function() {
     expect(this.postconditions.paidOut).bignumber.to.be.equal(this.preconditions.paidOut.add(this.totalPayout))
+  })
+
+  it('should update totalPaidOut', async function() {
+    expect(this.postconditions.totalPaidOut).bignumber.to.be.equal(this.preconditions.paidOut.add(this.totalPayout))
   })
 
   it('should transfer the correct amount to the recipient', async function() {
@@ -180,7 +194,8 @@ function shouldCashChequeBeneficiary(recipient, cumulativePayout, signee, from) 
       liquidBalance: await this.ERC20SimpleSwap.liquidBalance(),
       availableBalanceFor: await this.ERC20SimpleSwap.availableBalanceFor(from),
       chequebookBalance: await this.ERC20SimpleSwap.balance(),
-      paidOut: await this.ERC20SimpleSwap.paidOut(from)
+      paidOut: await this.ERC20SimpleSwap.paidOut(from),
+      totalPaidOut: await this.ERC20SimpleSwap.totalPaidOut()
     }
 
     const issuerSig = await signCheque(this.ERC20SimpleSwap, from, cumulativePayout, signee)
@@ -197,7 +212,8 @@ function shouldCashChequeBeneficiary(recipient, cumulativePayout, signee, from) 
       liquidBalance: await this.ERC20SimpleSwap.liquidBalance(),
       availableBalanceFor: await this.ERC20SimpleSwap.availableBalanceFor(from),
       chequebookBalance: await this.ERC20SimpleSwap.balance(),
-      paidOut: await this.ERC20SimpleSwap.paidOut(from)
+      paidOut: await this.ERC20SimpleSwap.paidOut(from),
+      totalPaidOut: await this.ERC20SimpleSwap.totalPaidOut()
     }
   })
   cashChequeInternal(from, recipient, cumulativePayout, new BN(0), from)
@@ -228,7 +244,8 @@ function shouldCashCheque(beneficiary, recipient, cumulativePayout, callerPayout
       liquidBalance: await this.ERC20SimpleSwap.liquidBalance(),
       availableBalanceFor: await this.ERC20SimpleSwap.availableBalanceFor(beneficiary),
       chequebookBalance: await this.ERC20SimpleSwap.balance(),
-      paidOut: await this.ERC20SimpleSwap.paidOut(beneficiary)
+      paidOut: await this.ERC20SimpleSwap.paidOut(beneficiary),
+      totalPaidOut: await this.ERC20SimpleSwap.totalPaidOut()
     }
     const { logs, receipt } = await this.ERC20SimpleSwap.cashCheque(beneficiary, recipient, cumulativePayout, beneficiarySig, callerPayout, issuerSig, {from: from})
     this.logs = logs
@@ -242,7 +259,8 @@ function shouldCashCheque(beneficiary, recipient, cumulativePayout, callerPayout
       liquidBalance: await this.ERC20SimpleSwap.liquidBalance(),
       availableBalanceFor: await this.ERC20SimpleSwap.availableBalanceFor(beneficiary),
       chequebookBalance: await this.ERC20SimpleSwap.balance(),
-      paidOut: await this.ERC20SimpleSwap.paidOut(beneficiary)
+      paidOut: await this.ERC20SimpleSwap.paidOut(beneficiary),
+      totalPaidOut: await this.ERC20SimpleSwap.totalPaidOut()
     }
   })
   cashChequeInternal(beneficiary, recipient, cumulativePayout, callerPayout, from)

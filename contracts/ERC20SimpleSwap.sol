@@ -42,6 +42,8 @@ contract ERC20SimpleSwap {
   ERC20 public token;
   /* associates every beneficiary with how much has been paid out to them */
   mapping (address => uint) public paidOut;
+  /* total amount paid out */
+  uint public totalPaidOut;
   /* associates every beneficiary with their HardDeposit */
   mapping (address => HardDeposit) public hardDeposits;
   /* sum of all hard deposits */
@@ -116,6 +118,7 @@ contract ERC20SimpleSwap {
     }
     /* increase the stored paidOut amount to avoid double payout */
     paidOut[beneficiary] = paidOut[beneficiary].add(totalPayout);
+    totalPaidOut = totalPaidOut.add(totalPayout);
     /* do the actual payments */
 
     require(token.transfer(recipient, totalPayout.sub(callerPayout)), "SimpleSwap: SimpleSwap: transfer failed");
