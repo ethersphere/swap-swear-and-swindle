@@ -4,8 +4,9 @@ const {
 } = require("@openzeppelin/test-helpers");
 
 const {
-  shouldReturndefaultHarddepositTimeout,
+  shouldReturnDefaultHardDepositTimeout,
   shouldReturnPaidOut,
+  shouldReturnTotalPaidOut,
   shouldReturnHardDeposits,
   shouldReturnTotalHardDeposit,
   shouldReturnIssuer,
@@ -70,7 +71,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
   context('as a simple swap', function () {
     describe(describeFunction + 'defaultHardDepositTimeout', function () {
       if (enabledTests.defaultHardDepositTimeout) {
-        shouldReturndefaultHarddepositTimeout(defaultHardDepositTimeout)
+        shouldReturnDefaultHardDepositTimeout(defaultHardDepositTimeout)
       }
     })
     describe(describeFunction + 'paidOutCheques', function () {
@@ -80,6 +81,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
           describe(describeTest + 'shouldReturnPaidOut', function () {
             const expectedAmount = new BN(0)
             shouldReturnPaidOut(beneficiary, expectedAmount)
+            shouldReturnTotalPaidOut(expectedAmount)
           })
         })
         context('when a cheque was cashed', function () {
@@ -90,6 +92,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
               describe(describeTest + 'shouldReturnPaidOut', function () {
                 const expectedAmount = defaults.firstCumulativePayout
                 shouldReturnPaidOut(beneficiary, expectedAmount)
+                shouldReturnTotalPaidOut(expectedAmount)
               })
             })
           })

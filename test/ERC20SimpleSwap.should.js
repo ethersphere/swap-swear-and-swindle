@@ -32,7 +32,7 @@ function shouldDeploy(issuer, defaultHardDepositTimeout, from, value) {
     expect(this.postconditions.defaultHardDepositTimeout).bignumber.to.be.equal(defaultHardDepositTimeout)
   })
 }
-function shouldReturndefaultHarddepositTimeout(expected) {
+function shouldReturnDefaultHardDepositTimeout(expected) {
   it('should return the expected defaultHardDepositTimeout', async function() {
     expect(await this.ERC20SimpleSwap.defaultHardDepositTimeout()).bignumber.to.be.equal(expected)
   })
@@ -541,8 +541,9 @@ function shouldDeposit(amount, from) {
 }
 module.exports = {
   shouldDeploy,
-  shouldReturndefaultHarddepositTimeout,
+  shouldReturnDefaultHardDepositTimeout,
   shouldReturnPaidOut,
+  shouldReturnTotalPaidOut,
   shouldReturnHardDeposits,
   shouldReturnTotalHardDeposit,
   shouldReturnIssuer,
