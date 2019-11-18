@@ -22,8 +22,8 @@ do
 
   # compile the contract allowing imports from openzeppelin-solidity
   solc \
-    openzeppelin-solidity=$(pwd)/node_modules/openzeppelin-solidity\
-    --allow-paths node_modules/openzeppelin-solidity/contracts\
+    @openzeppelin=$(pwd)/node_modules/@openzeppelin\
+    --allow-paths node_modules/@openzeppelin/contracts/\
     --combined-json=bin,abi,userdoc,devdoc,metadata,bin-runtime\
     contracts/$CONTRACT.sol > "$COMPILED_JSON"
 
