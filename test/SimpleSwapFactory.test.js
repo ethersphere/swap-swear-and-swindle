@@ -34,7 +34,7 @@ contract('SimpleSwapFactory', function([issuer]) {
     })
 
     it('should deploy with the right DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT', async function() {
-      expect(await this.ERC20SimpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT()).to.be.bignumber.equal(DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT)
+      expect(await this.ERC20SimpleSwap.defaultHardDepositTimeout()).to.be.bignumber.equal(DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT)
     })
 
     if(value.gtn(0)) {
