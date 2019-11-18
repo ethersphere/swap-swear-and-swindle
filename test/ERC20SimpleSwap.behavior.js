@@ -4,7 +4,7 @@ const {
 } = require("@openzeppelin/test-helpers");
 
 const {
-  shouldReturnDEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT,
+  shouldReturndefaultHarddepositTimeout,
   shouldReturnPaidOut,
   shouldReturnHardDeposits,
   shouldReturnTotalHardDeposit,
@@ -21,8 +21,8 @@ const {
   shouldNotDecreaseHardDeposit,
   shouldIncreaseHardDeposit,
   shouldNotIncreaseHardDeposit,
-  shouldSetCustomHardDepositDecreaseTimeout,
-  shouldNotSetCustomHardDepositDecreaseTimeout,
+  shouldSetCustomHardDepositTimeout,
+  shouldNotSetCustomHardDepositTimeout,
   shouldWithdraw,
   shouldNotWithdraw,
   shouldDeposit,
@@ -30,7 +30,7 @@ const {
 
 // switch to false if you don't want to test the particular function
 enabledTests = {
-  DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT: true,
+  defaultHardDepositTimeout: true,
   cheques: true,
   hardDeposits: true,
   totalHardDeposit: true,
@@ -42,7 +42,7 @@ enabledTests = {
   prepareDecreaseHardDeposit: true,
   decreaseHardDeposit: true,
   increaseHardDeposit: true,
-  setCustomHardDepositDecreaseTimeout: true,
+  setCustomHardDepositTimeout: true,
   withdraw: true,
   deposit: true
 }
@@ -57,7 +57,7 @@ const describeTest = 'TEST: '
 // @param issuer the issuer of the checkbook
 // @param alice a counterparty of the checkbook 
 // @param bob a counterparty of the checkbook
-function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT) {
+function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHardDepositTimeout) {
   // defaults used throught the tests
   const defaults = {
     beneficiary: bob,
@@ -68,9 +68,9 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], DEFAULT_HA
   }
 
   context('as a simple swap', function () {
-    describe(describeFunction + 'DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT', function () {
-      if (enabledTests.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT) {
-        shouldReturnDEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT(DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT)
+    describe(describeFunction + 'defaultHardDepositTimeout', function () {
+      if (enabledTests.defaultHardDepositTimeout) {
+        shouldReturndefaultHarddepositTimeout(defaultHardDepositTimeout)
       }
     })
     describe(describeFunction + 'paidOutCheques', function () {
@@ -104,16 +104,16 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], DEFAULT_HA
           const expectedAmount = new BN(0)
           const exptectedDecreaseAmount = new BN(0)
           const exptectedCanBeDecreasedAt = new BN(0)
-          context('when no custom decreaseTimeout was set', function () {
+          context('when no custom timeout was set', function () {
             const expectedDecreaseTimeout = new BN(0)
             describe(describeTest + 'shouldReturnHardDeposits', function () {
               shouldReturnHardDeposits(beneficiary, expectedAmount, exptectedDecreaseAmount, expectedDecreaseTimeout, exptectedCanBeDecreasedAt)
             })
           })
-          context('when a custom decreaseTimeout was set', function () {
+          context('when a custom timeout was set', function () {
             const expectedDecreaseTimeout = new BN(60)
             describe(describePreCondition + 'shouldSetCustomDecreaseTimeout', function () {
-              shouldSetCustomHardDepositDecreaseTimeout(beneficiary, expectedDecreaseTimeout, issuer)
+              shouldSetCustomHardDepositTimeout(beneficiary, expectedDecreaseTimeout, issuer)
               describe(describeTest + 'shouldReturnHardDeposits', function () {
                 shouldReturnHardDeposits(beneficiary, expectedAmount, exptectedDecreaseAmount, expectedDecreaseTimeout, exptectedCanBeDecreasedAt)
               })
@@ -587,18 +587,18 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], DEFAULT_HA
                   const sender = issuer
                   context('when the decreaseAmount is the hardDepositAmount', function () {
                     const decreaseAmount = hardDepositAmount
-                    context('when we have set a custom decreaseTimeout', function () {
-                      describe(describePreCondition + 'shouldSetCustomHardDepositDecreaseTimeout', function () {
+                    context('when we have set a custom timeout', function () {
+                      describe(describePreCondition + 'shouldSetCustomHardDepositTimeout', function () {
                         const customTimeout = new BN(10)
-                        shouldSetCustomHardDepositDecreaseTimeout(beneficiary, customTimeout, issuer)
-                        context('when we have not set a custom decreaseTimeout', function () {
+                        shouldSetCustomHardDepositTimeout(beneficiary, customTimeout, issuer)
+                        context('when we have not set a custom timeout', function () {
                           describe(describeTest + 'prepareDecreaseHardDeposit', function () {
                             shouldPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, sender)
                           })
                         })
                       })
                     })
-                    context('when we have not set a custom decreaseTimeout', function () {
+                    context('when we have not set a custom timeout', function () {
                       describe(describeTest + 'prepareDecreaseHardDeposit', function () {
                         shouldPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, sender)
                       })
@@ -665,15 +665,15 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], DEFAULT_HA
                   shouldIncreaseHardDeposit(beneficiary, hardDeposit, issuer)
                   describe(describePreCondition + "shouldPrepareDecreaseHardDeposit", function () {
                     shouldPrepareDecreaseHardDeposit(beneficiary, hardDeposit, issuer)
-                    context('when we have waited more than decreaseTimeout time', function () {
+                    context('when we have waited more than timeout time', function () {
                       beforeEach(async function () {
-                        await time.increase(await this.ERC20SimpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT())
+                        await time.increase(await this.ERC20SimpleSwap.defaultHardDepositTimeout())
                       })
                       describe(describeTest + 'shouldDecreaseHardDeposit', function () {
                         shouldDecreaseHardDeposit(beneficiary, sender)
                       })
                     })
-                    context('when we have not waited more than decreaseTimeout time', function () {
+                    context('when we have not waited more than defaultHardDepositTimeout time', function () {
                       describe(describeTest + 'shouldNotDecreaseHardDeposit', function () {
                         const revertMessage = "SimpleSwap: deposit not yet timed out"
                         shouldNotDecreaseHardDeposit(beneficiary, sender, value, revertMessage)
@@ -715,10 +715,10 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], DEFAULT_HA
               const deposit = hardDepositIncrease.mul(new BN(2))
               describe(describePreCondition + 'shouldDeposit', function () {
                 shouldDeposit(deposit, issuer)
-                context('when we have set a customHardDepositDecreaseTimeout', function () {
-                  const customHardDepositDecreaseTimeout = new BN(60)
-                  describe(describePreCondition + 'shouldSetCustomHardDepositDecreaseTimeout', function () {
-                    shouldSetCustomHardDepositDecreaseTimeout(beneficiary, customHardDepositDecreaseTimeout, issuer)
+                context('when we have set a customHardDepositTimeout', function () {
+                  const customHardDepositTimeout = new BN(60)
+                  describe(describePreCondition + 'shouldSetCustomHardDepositTimeout', function () {
+                    shouldSetCustomHardDepositTimeout(beneficiary, customHardDepositTimeout, issuer)
                     describe(describeTest + 'shouldIncreaseHardDeposit', function () {
                       shouldIncreaseHardDeposit(beneficiary, hardDepositIncrease, sender)
                     })
@@ -763,10 +763,10 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], DEFAULT_HA
       }
     })
 
-    describe(describeFunction + 'setCustomHardDepositDecreaseTimeout', function () {
-      if (enabledTests.setCustomHardDepositDecreaseTimeout) {
+    describe(describeFunction + 'setCustomHardDepositTimeout', function () {
+      if (enabledTests.setCustomHardDepositTimeout) {
         const beneficiary = defaults.beneficiary
-        const decreaseTimeout = new BN(60)
+        const timeout = new BN(60)
         context("when we don't send value along", function () {
           const value = new BN(0)
           context('when the sender is the issuer', function () {
@@ -774,37 +774,37 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], DEFAULT_HA
             context('when the beneficiary is a signee', function () {
               const signee = beneficiary
               context('when the beneficiary signs the correct fields', function () {
-                describe(describeTest + 'shouldSetCustomHardDepositDecreaseTimeout', function () {
-                  shouldSetCustomHardDepositDecreaseTimeout(beneficiary, decreaseTimeout, sender)
+                describe(describeTest + 'shouldSetCustomHardDepositTimeout', function () {
+                  shouldSetCustomHardDepositTimeout(beneficiary, timeout, sender)
                 })
               })
               context('when the beneficiary does not sign the correct fields', function () {
-                describe(describeTest + 'shouldNotSetCustomHardDepositDecreaseTimeout', function () {
-                  const toSubmit = { beneficiary, decreaseTimeout }
-                  const toSign = { beneficiary, decreaseTimeout: decreaseTimeout.sub(new BN(1)) }
+                describe(describeTest + 'shouldNotSetCustomHardDepositTimeout', function () {
+                  const toSubmit = { beneficiary, timeout }
+                  const toSign = { beneficiary, timeout: timeout.sub(new BN(1)) }
                   const revertMessage = "SimpleSwap: invalid beneficiarySig"
-                  shouldNotSetCustomHardDepositDecreaseTimeout(toSubmit, toSign, signee, sender, value, revertMessage)
+                  shouldNotSetCustomHardDepositTimeout(toSubmit, toSign, signee, sender, value, revertMessage)
                 })
               })
             })
             context('when the beneficiary is not a signee', function () {
               const signee = alice
-              describe(describeTest + 'shouldNotSetCustomHardDepositDecreaseTimeout', function () {
-                const toSubmit = { beneficiary, decreaseTimeout }
+              describe(describeTest + 'shouldNotSetCustomHardDepositTimeout', function () {
+                const toSubmit = { beneficiary, timeout }
                 const toSign = toSubmit
                 const revertMessage = "SimpleSwap: invalid beneficiarySig"
-                shouldNotSetCustomHardDepositDecreaseTimeout(toSubmit, toSign, signee, sender, value, revertMessage)
+                shouldNotSetCustomHardDepositTimeout(toSubmit, toSign, signee, sender, value, revertMessage)
               })
             })
           })
           context('when the sender is not the issuer', function () {
             const sender = alice
-            describe(describeTest + 'shouldNotSetCustomHardDepositDecreaseTimeout', function () {
-              const toSubmit = { beneficiary, decreaseTimeout }
+            describe(describeTest + 'shouldNotSetCustomHardDepositTimeout', function () {
+              const toSubmit = { beneficiary, timeout }
               const toSign = toSubmit
               const signee = beneficiary
               const revertMessage = "SimpleSwap: not issuer"
-              shouldNotSetCustomHardDepositDecreaseTimeout(toSubmit, toSign, signee, sender, value, revertMessage)
+              shouldNotSetCustomHardDepositTimeout(toSubmit, toSign, signee, sender, value, revertMessage)
             })
           })
         })
@@ -812,11 +812,11 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], DEFAULT_HA
           const value = new BN(1)
           const sender = issuer
           const signee = beneficiary
-          describe(describeTest + 'shouldNotSetCustomHardDepositDecreaseTimeout', function () {
-            const toSubmit = { beneficiary, decreaseTimeout }
+          describe(describeTest + 'shouldNotSetCustomHardDepositTimeout', function () {
+            const toSubmit = { beneficiary, timeout }
             const toSign = toSubmit
             const revertMessage = "revert"
-            shouldNotSetCustomHardDepositDecreaseTimeout(toSubmit, toSign, signee, sender, value, revertMessage)
+            shouldNotSetCustomHardDepositTimeout(toSubmit, toSign, signee, sender, value, revertMessage)
           })
         })
       }

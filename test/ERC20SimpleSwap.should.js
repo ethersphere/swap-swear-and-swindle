@@ -10,32 +10,31 @@ const ERC20SimpleSwap = artifacts.require('ERC20SimpleSwap')
 const ERC20Mintable = artifacts.require("ERC20Mintable")
 
 const { signCheque, signCashOut, signCustomDecreaseTimeout } = require("./swutils");
-const { computeCost } = require("./testutils");
 const { expect } = require('chai');
 
-function shouldDeploy(issuer, DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT, from, value) {
+function shouldDeploy(issuer, defaultHardDepositTimeout, from, value) {
   beforeEach(async function() {
     this.ERC20Mintable = await ERC20Mintable.new({from: issuer})
     await this.ERC20Mintable.mint(issuer, 1000000000, {from: issuer});
-    this.ERC20SimpleSwap = await ERC20SimpleSwap.new(issuer, this.ERC20Mintable.address, DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT, {from: from})   
+    this.ERC20SimpleSwap = await ERC20SimpleSwap.new(issuer, this.ERC20Mintable.address, defaultHardDepositTimeout, {from: from})   
     if(value != 0) {
       await this.ERC20Mintable.transfer(this.ERC20SimpleSwap.address, value, {from: issuer});
     }
     this.postconditions = {
       issuer: await this.ERC20SimpleSwap.issuer(),
-      DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT: await this.ERC20SimpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT()
+      defaultHardDepositTimeout: await this.ERC20SimpleSwap.defaultHardDepositTimeout()
     }
   })
   it('should set the issuer', function() {
     expect(this.postconditions.issuer).to.be.equal(issuer)
   })
-  it('should set the DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT', function() {
-    expect(this.postconditions.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT).bignumber.to.be.equal(DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT)
+  it('should set the defaultHardDepositTimeout', function() {
+    expect(this.postconditions.defaultHardDepositTimeout).bignumber.to.be.equal(defaultHardDepositTimeout)
   })
 }
-function shouldReturnDEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT(expected) {
-  it('should return the expected DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT', async function() {
-    expect(await this.ERC20SimpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT()).bignumber.to.be.equal(expected)
+function shouldReturndefaultHarddepositTimeout(expected) {
+  it('should return the expected defaultHardDepositTimeout', async function() {
+    expect(await this.ERC20SimpleSwap.defaultHardDepositTimeout()).bignumber.to.be.equal(expected)
   })
 }
 
@@ -61,11 +60,11 @@ function shouldReturnHardDeposits(beneficiary, expectedAmount, expectedDecreaseA
   beforeEach(async function() {
     // If we expect this not to be the default value, we have to set the value here, as it depends on the most current time
     if(!expectedCanBeDecreasedAt.eq(new BN(0))) {
-      this.expectedCanBeDecreasedAt = (await time.latest()).add(await this.ERC20SimpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT())
+      this.expectedCanBeDecreasedAt = (await time.latest()).add(await this.ERC20SimpleSwap.defaultHardDepositTimeout())
     } else {
       this.expectedCanBeDecreasedAt = expectedCanBeDecreasedAt
     }
-    this.exptectedCanBeDecreasedAt = (await time.latest()).add(await this.ERC20SimpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT())
+    this.exptectedCanBeDecreasedAt = (await time.latest()).add(await this.ERC20SimpleSwap.defaultHardDepositTimeout())
     this.hardDeposits = await this.ERC20SimpleSwap.hardDeposits(beneficiary)
   })
   it('should return the expected amount', function() {
@@ -74,8 +73,8 @@ function shouldReturnHardDeposits(beneficiary, expectedAmount, expectedDecreaseA
   it('should return the expected decreaseAmount', function() {
     expect(expectedDecreaseAmount).bignumber.to.be.equal(this.hardDeposits.decreaseAmount)
   })
-  it('should return the expected decreaseTimeout', function() {
-    expect(expectedDecreaseTimeout).bignumber.to.be.equal(this.hardDeposits.decreaseTimeout)
+  it('should return the expected timeout', function() {
+    expect(expectedDecreaseTimeout).bignumber.to.be.equal(this.hardDeposits.timeout)
   })
   it('should return the exptected canBeDecreasedAt', function() {
     expect(this.expectedCanBeDecreasedAt.toNumber()).to.be.closeTo(this.hardDeposits.canBeDecreasedAt.toNumber(), 5)
@@ -298,11 +297,11 @@ function shouldPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, from) {
 
   it("should update the canBeDecreasedAt", async function() {
     let expectedCanBeDecreasedAt
-    let personalDecreaseTimeout = (await this.ERC20SimpleSwap.hardDeposits(beneficiary)).decreaseTimeout
+    let personalDecreaseTimeout = (await this.ERC20SimpleSwap.hardDeposits(beneficiary)).timeout
     // if personalDecreaseTimeout is zero
     if(personalDecreaseTimeout.eq(new BN(0))) {
       // use the contract's default
-      expectedCanBeDecreasedAt = await this.ERC20SimpleSwap.DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT()
+      expectedCanBeDecreasedAt = await this.ERC20SimpleSwap.defaultHardDepositTimeout()
     } else {
       // use the value that was set
       expectedCanBeDecreasedAt = personalDecreaseTimeout
@@ -417,8 +416,8 @@ function shouldIncreaseHardDeposit(beneficiary, amount, from) {
     expect(this.postconditions.hardDepositFor.amount).bignumber.to.be.equal(this.preconditions.hardDepositFor.amount.add(amount))
   })
 
-  it('should not influence the decreaseTimeout', function() {
-    expect(this.postconditions.hardDepositFor.decreaseTimeout).bignumber.to.be.equal(this.preconditions.hardDepositFor.decreaseTimeout)
+  it('should not influence the timeout', function() {
+    expect(this.postconditions.hardDepositFor.timeout).bignumber.to.be.equal(this.preconditions.hardDepositFor.timeout)
   })
 
   it('should set canBeDecreasedAt to zero', function() {
@@ -442,11 +441,11 @@ function shouldNotIncreaseHardDeposit(beneficiary, amount, from, value, revertMe
     )
   })
 }
-function shouldSetCustomHardDepositDecreaseTimeout(beneficiary, decreaseTimeout, from) {
+function shouldSetCustomHardDepositTimeout(beneficiary, timeout, from) {
   beforeEach(async function() {
-    const beneficiarySig = await signCustomDecreaseTimeout(this.ERC20SimpleSwap, beneficiary, decreaseTimeout, beneficiary)
+    const beneficiarySig = await signCustomDecreaseTimeout(this.ERC20SimpleSwap, beneficiary, timeout, beneficiary)
 
-    const { logs } = await this.ERC20SimpleSwap.setCustomHardDepositDecreaseTimeout(beneficiary, decreaseTimeout, beneficiarySig, {from: from})
+    const { logs } = await this.ERC20SimpleSwap.setCustomHardDepositTimeout(beneficiary, timeout, beneficiarySig, {from: from})
     this.logs = logs
 
     this.postconditions = {
@@ -454,25 +453,25 @@ function shouldSetCustomHardDepositDecreaseTimeout(beneficiary, decreaseTimeout,
     }
   })
 
-  it('should have set the decreaseTimeout', async function() {
-    expect(this.postconditions.hardDepositFor.decreaseTimeout).bignumber.to.be.equal(decreaseTimeout)
+  it('should have set the timeout', async function() {
+    expect(this.postconditions.hardDepositFor.timeout).bignumber.to.be.equal(timeout)
   })
 
-  it('emits a HardDepositDecreaseTimeoutChanged event', function() {
-    expectEvent.inLogs(this.logs, 'HardDepositDecreaseTimeoutChanged', {
+  it('emits a HardDepositTimeoutChanged event', function() {
+    expectEvent.inLogs(this.logs, 'HardDepositTimeoutChanged', {
       beneficiary,
-      decreaseTimeout
+      timeout
     })
   })
 }
-function shouldNotSetCustomHardDepositDecreaseTimeout(toSubmit, toSign, signee, from, value, revertMessage) {
+function shouldNotSetCustomHardDepositTimeout(toSubmit, toSign, signee, from, value, revertMessage) {
   beforeEach(async function() {
-    this.beneficiarySig = await signCustomDecreaseTimeout(this.ERC20SimpleSwap, toSign.beneficiary, toSign.decreaseTimeout, signee)
+    this.beneficiarySig = await signCustomDecreaseTimeout(this.ERC20SimpleSwap, toSign.beneficiary, toSign.timeout, signee)
   })
   it('reverts', async function() {
-    await expectRevert(this.ERC20SimpleSwap.setCustomHardDepositDecreaseTimeout(
+    await expectRevert(this.ERC20SimpleSwap.setCustomHardDepositTimeout(
       toSubmit.beneficiary,
-      toSubmit.decreaseTimeout,
+      toSubmit.timeout,
       this.beneficiarySig,
       {from: from, value: value}), 
       revertMessage
@@ -542,7 +541,7 @@ function shouldDeposit(amount, from) {
 }
 module.exports = {
   shouldDeploy,
-  shouldReturnDEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT,
+  shouldReturndefaultHarddepositTimeout,
   shouldReturnPaidOut,
   shouldReturnHardDeposits,
   shouldReturnTotalHardDeposit,
@@ -559,8 +558,8 @@ module.exports = {
   shouldNotDecreaseHardDeposit,
   shouldIncreaseHardDeposit,
   shouldNotIncreaseHardDeposit,
-  shouldSetCustomHardDepositDecreaseTimeout,
-  shouldNotSetCustomHardDepositDecreaseTimeout,
+  shouldSetCustomHardDepositTimeout,
+  shouldNotSetCustomHardDepositTimeout,
   shouldWithdraw,
   shouldNotWithdraw,
   shouldDeposit,

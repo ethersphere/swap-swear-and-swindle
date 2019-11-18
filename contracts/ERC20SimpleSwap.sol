@@ -26,15 +26,15 @@ contract ERC20SimpleSwap {
   event ChequeBounced();
   event HardDepositAmountChanged(address indexed beneficiary, uint amount);
   event HardDepositDecreasePrepared(address indexed beneficiary, uint decreaseAmount);
-  event HardDepositDecreaseTimeoutChanged(address indexed beneficiary, uint decreaseTimeout);
+  event HardDepositTimeoutChanged(address indexed beneficiary, uint timeout);
   event Withdraw(uint amount);
 
-  uint public DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT;
+  uint public defaultHardDepositTimeout;
   /* structure to keep track of the hard deposits (on-chain guarantee of solvency) per beneficiary*/
   struct HardDeposit {
     uint amount; /* hard deposit amount allocated */
     uint decreaseAmount; /* decreaseAmount substranced from amount when decrease is requested */
-    uint decreaseTimeout; /* issuer has to wait decreaseTimeout seconds after decrease is requested to decrease hardDeposit */
+    uint timeout; /* issuer has to wait timeout seconds to decrease hardDeposit, 0 implies applying defaultHardDepositTimeout */
     uint canBeDecreasedAt; /* point in time after which harddeposit can be decreased*/
   }
 
@@ -52,15 +52,15 @@ contract ERC20SimpleSwap {
   /* issuer of the contract, set at construction */
   address public issuer;
   /**
-  @notice sets the issuer, defaultHardDepositTimeoutDuration and receives an initial deposit
+  @notice sets the issuer, defaultHardDepositTimeout and receives an initial deposit
   @param _issuer the issuer of cheques from this chequebook (needed as an argument for "Setting up a chequebook as a payment").
   _issuer must be an Externally Owned Account, or it must support calling the function cashCheque
-  @param defaultHardDepositTimeoutDuration duration in seconds which by default will be used to reduce hardDeposit allocations
+  @param _defaultHardDepositTimeout duration in seconds which by default will be used to reduce hardDeposit allocations
   */
-  constructor(address _issuer, address _token, uint defaultHardDepositTimeoutDuration) public {
+  constructor(address _issuer, address _token, uint _defaultHardDepositTimeout) public {
     issuer = _issuer;
     token = ERC20(_token);
-    DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT = defaultHardDepositTimeoutDuration;
+    defaultHardDepositTimeout = _defaultHardDepositTimeout;
   }
 
   /// @return the balance of the chequebook
@@ -185,9 +185,9 @@ contract ERC20SimpleSwap {
     HardDeposit storage hardDeposit = hardDeposits[beneficiary];
     /* cannot decrease it by more than the deposit */
     require(decreaseAmount <= hardDeposit.amount, "SimpleSwap: hard deposit not sufficient");
-    // if hardDeposit.decreaseTimeout was never set, we DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT. Otherwise we use the one which was set.
-    uint decreaseTimeout = hardDeposit.decreaseTimeout == 0 ? DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT : hardDeposit.decreaseTimeout;
-    hardDeposit.canBeDecreasedAt = now + decreaseTimeout;
+    // if hardDeposit.timeout was never set, apply defaultHardDepositTimeout
+    uint timeout = hardDeposit.timeout == 0 ? defaultHardDepositTimeout : hardDeposit.timeout;
+    hardDeposit.canBeDecreasedAt = now + timeout;
     hardDeposit.decreaseAmount = decreaseAmount;
     emit HardDepositDecreasePrepared(beneficiary, decreaseAmount);
   }
@@ -221,7 +221,7 @@ contract ERC20SimpleSwap {
 
     HardDeposit storage hardDeposit = hardDeposits[beneficiary];
     hardDeposit.amount = hardDeposit.amount.add(amount);
-    // we don't explicitely set decreaseTimeout, as zero means using the DEFAULT_HARDDEPOSIT_TIMEOUT_DURATION
+    // we don't explicitely set hardDepositTimout, as zero means using defaultHardDepositTimeout
     totalHardDeposit = totalHardDeposit.add(amount);
     /* disable any pending decrease */
     hardDeposit.canBeDecreasedAt = 0;
@@ -232,21 +232,21 @@ contract ERC20SimpleSwap {
   @notice allows for setting a custom hardDepositDecreaseTimeout per beneficiary
   @dev this is required when solvency must be guaranteed for a period longer than the defaultHardDepositDecreaseTimeout
   @param beneficiary beneficiary whose hard deposit decreaseTimeout must be changed
-  @param decreaseTimeout new decreaseTimeout for beneficiary
+  @param hardDepositTimeout new hardDeposit.timeout for beneficiary
   @param beneficiarySig beneficiary must give explicit approval by giving his signature on the new decreaseTimeout
   */
-  function setCustomHardDepositDecreaseTimeout(
+  function setCustomHardDepositTimeout(
     address beneficiary,
-    uint decreaseTimeout,
+    uint hardDepositTimeout,
     bytes memory beneficiarySig
   ) public {
     require(msg.sender == issuer, "SimpleSwap: not issuer");
     require(
-      beneficiary == recover(customDecreaseTimeoutHash(address(this), beneficiary, decreaseTimeout), beneficiarySig),
+      beneficiary == recover(customDecreaseTimeoutHash(address(this), beneficiary, hardDepositTimeout), beneficiarySig),
       "SimpleSwap: invalid beneficiarySig"
     );
-    hardDeposits[beneficiary].decreaseTimeout = decreaseTimeout;
-    emit HardDepositDecreaseTimeoutChanged(beneficiary, hardDeposits[beneficiary].decreaseTimeout);
+    hardDeposits[beneficiary].timeout = hardDepositTimeout;
+    emit HardDepositTimeoutChanged(beneficiary, hardDepositTimeout);
   }
 
   /// @notice withdraw ether
