@@ -25,6 +25,7 @@ do
     @openzeppelin=$(pwd)/node_modules/@openzeppelin\
     --allow-paths node_modules/@openzeppelin/contracts/\
     --combined-json=bin,abi,userdoc,devdoc,metadata,bin-runtime\
+    --optimize --optimize-runs 200 --evm-version petersburg\
     contracts/$CONTRACT.sol > "$COMPILED_JSON"
 
   # generate the bindings
