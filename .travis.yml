@@ -39,7 +39,8 @@ jobs:
     - git add .
     - git commit -m "add bindings for ${TRAVIS_TAG}"
     - git tag ${TRAVIS_TAG}
-    - git push origin master --tags
+    - git push origin master 
+    - git push -f --tags
 env:
   global:
   - USER="ralph-pichler"
