@@ -31,7 +31,7 @@ jobs:
     # bindings is owned by root at this point
     - sudo chown -R $(id -u) bindings
     - git clone "https://${GH_TOKEN}@${GH_REPO}"
-    - cp -rf bindings/ ${REPO}/${DIRECTORY}
+    - cp -rTf bindings/ ${REPO}/${DIRECTORY}
     - cd ${REPO}
     - git remote
     - git config user.email ${EMAIL}
