@@ -38,7 +38,7 @@ jobs:
     - git config user.name ${USER}
     - git add .
     - git commit -m "add bindings for ${TRAVIS_TAG}"
-    - git tag ${TRAVIS_TAG}
+    - git tag -f ${TRAVIS_TAG}
     - git push origin master 
     - git push origin -f --tags
 env:
