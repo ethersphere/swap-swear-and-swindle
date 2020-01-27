@@ -3,6 +3,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20Mintable.sol";
+import "./SimpleSwapFactory.sol";
 
 /**
 @title Chequebook contract without waivers
@@ -49,6 +50,9 @@ contract ERC20SimpleSwap {
   /* sum of all hard deposits */
   uint public totalHardDeposit;
 
+  /* the factory that deployed this smart-contract. NOTE: set as the account that deployed this contract */
+  address public factory;
+
   /* issuer of the contract, set at construction */
   address public issuer;
   /**
@@ -58,6 +62,7 @@ contract ERC20SimpleSwap {
   @param _defaultHardDepositTimeout duration in seconds which by default will be used to reduce hardDeposit allocations
   */
   constructor(address _issuer, address _token, uint _defaultHardDepositTimeout) public {
+    factory = msg.sender;
     issuer = _issuer;
     token = ERC20(_token);
     defaultHardDepositTimeout = _defaultHardDepositTimeout;
@@ -120,11 +125,10 @@ contract ERC20SimpleSwap {
     paidOut[beneficiary] = paidOut[beneficiary].add(totalPayout);
     totalPaidOut = totalPaidOut.add(totalPayout);
     /* do the actual payments */
-
-    require(token.transfer(recipient, totalPayout.sub(callerPayout)), "SimpleSwap: SimpleSwap: transfer failed");
+    transfer(recipient, totalPayout.sub(callerPayout));
     /* do a transfer to the caller if specified*/
     if (callerPayout != 0) {
-      require(token.transfer(msg.sender, callerPayout), "SimpleSwap: SimpleSwap: transfer failed");
+      transfer(msg.sender, callerPayout);
     }
     emit ChequeCashed(beneficiary, recipient, msg.sender, totalPayout, cumulativePayout, callerPayout);
     /* let the world know that the issuer has over-promised on outstanding cheques */
@@ -249,7 +253,7 @@ contract ERC20SimpleSwap {
     emit HardDepositTimeoutChanged(beneficiary, hardDepositTimeout);
   }
 
-  /// @notice withdraw ether
+  /// @notice withdraw value
   /// @param amount amount to withdraw
   // solhint-disable-next-line no-simple-event-func-name
   function withdraw(uint amount) public {
@@ -257,7 +261,29 @@ contract ERC20SimpleSwap {
     require(msg.sender == issuer, "SimpleSwap: not issuer");
     /* ensure we don't take anything from the hard deposit */
     require(amount <= liquidBalance(), "SimpleSwap: liquidBalance not sufficient");
-    require(token.transfer(issuer, amount), "SimpleSwap: SimpleSwap: transfer failed");
+    transfer(issuer, amount);
+  }
+
+  /**
+  @notice transfers value to the specified address and a tax to the taxCollector (as specified by the factory)
+  @param to recipient of the value transfer 
+  @param amount requested amount to transfer. We transfer amount - tax to to and tax to the taxCollector
+  @dev
+      - make sure the PPMBase of the factory is not 0 
+      - make sure that any function that calls this function can adjust the amount (down), 
+      such that no deadlock is possible due to factory.tax().mul(amount)) throwing
+  **/
+  function transfer(address to, uint amount) internal {
+    SimpleSwapFactory factoryC = SimpleSwapFactory(factory);
+    // no need to pay tax if transfer of money stays "inside" Swarm
+    if(factoryC.isDeployedChequebook(to)) {
+      require(token.transfer(to, amount), "SimpleSwap: SimpleSwap: transfer failed");
+    } else {
+      uint256 taxDue = factoryC.tax().mul(amount) / factoryC.PPMBase(); 
+      require(token.transfer(factoryC.taxCollector(), taxDue), "SimpleSwap: SimpleSwap: transfer of tax failed");
+      require(token.transfer(to, amount - taxDue), "SimpleSwap: SimpleSwap: transfer failed");
+    }
+    
   }
 
   function recover(bytes32 hash, bytes memory sig) internal pure returns (address) {
