@@ -12,6 +12,10 @@ contract SimpleSwapFactory is Ownable {
   /* a tax that is paid (in PPM) on any withdrawal of chequebook profits */
   uint256 public tax;
 
+  /* the address to which tax is paid */
+  address public taxCollector;
+
+
   /* event fired on every new SimpleSwap deployment */
   event SimpleSwapDeployed(address contractAddress);
 
@@ -21,9 +25,10 @@ contract SimpleSwapFactory is Ownable {
   /* address of the ERC20-token, to be used by the to-be-deployed chequebooks */
   address public ERC20Address;
 
-  constructor(address _ERC20Address, uint256 initialTax) public {
+  constructor(address _ERC20Address, uint256 initialTax, address _taxCollector) public {
     ERC20Address = _ERC20Address;
     tax = initialTax;
+    taxCollecter = _taxCollector;
   }
 
   /**
@@ -45,5 +50,13 @@ contract SimpleSwapFactory is Ownable {
   */
   function setTax(uint256 newTax) public onlyOwner {
     tax = newTax;
+  }
+
+  /**
+  @notice sets the taxCollector
+  @param taxCollector the beneficiary of all tax payments, paid by chequebooks deployed by this factory
+   */
+  function setNewTaxCollector(address newTaxCollector) public onlyOwner {
+    taxCollector = newTaxCollector;
   }
 }
