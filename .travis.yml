@@ -10,7 +10,6 @@ jobs:
   - stage: lint
     script:
     - docker build -t sw3-travis .
-    - docker run -it --rm sw3-travis npm run ethlint
     - docker run -it --rm sw3-travis npm run solhint
   - stage: test
     script:

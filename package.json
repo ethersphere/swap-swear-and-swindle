@@ -14,21 +14,19 @@
     "@openzeppelin/contracts": "^2.4.0"
   },
   "devDependencies": {
+    "@openzeppelin/test-helpers": "^0.5.3",
     "bn-chai": "^1.0.1",
     "chai": "^4.2.0",
     "ethereumjs-abi": "^0.6.7",
-    "ethlint": "^1.2.4",
-    "@openzeppelin/test-helpers": "^0.5.3",
     "solhint": "^2.1.2",
-    "solidity-coverage": "^0.6.0-beta.5",
+    "solidity-coverage": "^0.7.2",
     "truffle": "^5.0.24"
   },
   "scripts": {
     "test": "truffle test",
     "abigen": "./abigen/gen.sh ERC20SimpleSwap SimpleSwapFactory",
-    "solhint": "solhint contracts/ERC20SimpleSwap.sol contracts/SimpleSwapFactory.sol",
-    "ethlint": "solium -d contracts",
-    "coverage": "solidity-coverage"
+    "solhint": "solhint contracts/ERC20SimpleSwap.sol contracts/SimpleSwapFactory.sol",    
+    "coverage": "truffle run coverage"
   },
   "keywords": [],
   "author": "",
