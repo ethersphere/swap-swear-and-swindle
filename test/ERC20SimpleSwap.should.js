@@ -181,6 +181,14 @@ function cashChequeInternal(beneficiary, recipient, cumulativePayout, callerPayo
       expect(events.length > 0).to.equal(false, `There is a ChequeBounced event`)
     }
   })
+
+  it('should only set the bounced field when insufficient funds', function() {
+    if(this.totalPayout.lt(cumulativePayout.sub(this.preconditions.paidOut))) {
+      expect(this.postconditions.bounced).to.be.true
+    } else {
+      expect(this.postconditions.bounced).to.be.false
+    }
+  })
 }
 
 function shouldCashChequeBeneficiary(recipient, cumulativePayout, signee, from) {
@@ -212,7 +220,8 @@ function shouldCashChequeBeneficiary(recipient, cumulativePayout, signee, from) 
       liquidBalanceFor: await this.ERC20SimpleSwap.liquidBalanceFor(from),
       chequebookBalance: await this.ERC20SimpleSwap.balance(),
       paidOut: await this.ERC20SimpleSwap.paidOut(from),
-      totalPaidOut: await this.ERC20SimpleSwap.totalPaidOut()
+      totalPaidOut: await this.ERC20SimpleSwap.totalPaidOut(),
+      bounced: await this.ERC20SimpleSwap.bounced()
     }
   })
   cashChequeInternal(from, recipient, cumulativePayout, new BN(0), from)
@@ -259,7 +268,8 @@ function shouldCashCheque(beneficiary, recipient, cumulativePayout, callerPayout
       liquidBalanceFor: await this.ERC20SimpleSwap.liquidBalanceFor(beneficiary),
       chequebookBalance: await this.ERC20SimpleSwap.balance(),
       paidOut: await this.ERC20SimpleSwap.paidOut(beneficiary),
-      totalPaidOut: await this.ERC20SimpleSwap.totalPaidOut()
+      totalPaidOut: await this.ERC20SimpleSwap.totalPaidOut(),
+      bounced: await this.ERC20SimpleSwap.bounced()
     }
   })
   cashChequeInternal(beneficiary, recipient, cumulativePayout, callerPayout, from)
