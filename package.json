@@ -18,7 +18,6 @@
     "bn-chai": "^1.0.1",
     "chai": "^4.2.0",
     "ethereumjs-abi": "^0.6.7",
-    "ethlint": "^1.2.4",
     "solhint": "^2.1.2",
     "solidity-coverage": "^0.7.2",
     "truffle": "^5.0.24"
@@ -26,8 +25,7 @@
   "scripts": {
     "test": "truffle test",
     "abigen": "./abigen/gen.sh ERC20SimpleSwap SimpleSwapFactory",
-    "solhint": "solhint contracts/ERC20SimpleSwap.sol contracts/SimpleSwapFactory.sol",
-    "ethlint": "solium -d contracts",
+    "solhint": "solhint contracts/ERC20SimpleSwap.sol contracts/SimpleSwapFactory.sol",    
     "coverage": "truffle run coverage"
   },
   "keywords": [],
