@@ -176,10 +176,16 @@ function cashChequeInternal(beneficiary, recipient, cumulativePayout, callerPayo
   it('should only emit a chequeBounced event when insufficient funds', function() {
     if(this.totalPayout.lt(cumulativePayout.sub(this.preconditions.paidOut))) {
       expectEvent.inLogs(this.logs, "ChequeBounced", {})
-      expect(this.postconditions.bounced).to.be.true
     } else {
       const events = this.logs.filter(e => e.event === 'ChequeBounced');
       expect(events.length > 0).to.equal(false, `There is a ChequeBounced event`)
+    }
+  })
+
+  it('should only set the bounced field when insufficient funds', function() {
+    if(this.totalPayout.lt(cumulativePayout.sub(this.preconditions.paidOut))) {
+      expect(this.postconditions.bounced).to.be.true
+    } else {
       expect(this.postconditions.bounced).to.be.false
     }
   })
