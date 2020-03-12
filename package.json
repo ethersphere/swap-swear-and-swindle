@@ -28,7 +28,7 @@
     "abigen": "./abigen/gen.sh ERC20SimpleSwap SimpleSwapFactory",
     "solhint": "solhint contracts/ERC20SimpleSwap.sol contracts/SimpleSwapFactory.sol",
     "ethlint": "solium -d contracts",
-    "coverage": "solidity-coverage"
+    "coverage": "truffle run coverage"
   },
   "keywords": [],
   "author": "",
