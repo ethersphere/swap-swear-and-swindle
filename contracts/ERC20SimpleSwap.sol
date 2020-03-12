@@ -48,9 +48,11 @@ contract ERC20SimpleSwap {
   mapping (address => HardDeposit) public hardDeposits;
   /* sum of all hard deposits */
   uint public totalHardDeposit;
-
   /* issuer of the contract, set at construction */
   address public issuer;
+  /* indicates wether a cheque bounced in the past */
+  bool public bounced;
+
   /**
   @notice sets the issuer, defaultHardDepositTimeout and receives an initial deposit
   @param _issuer the issuer of cheques from this chequebook (needed as an argument for "Setting up a chequebook as a payment").
@@ -129,6 +131,7 @@ contract ERC20SimpleSwap {
     emit ChequeCashed(beneficiary, recipient, msg.sender, totalPayout, cumulativePayout, callerPayout);
     /* let the world know that the issuer has over-promised on outstanding cheques */
     if (requestPayout != totalPayout) {
+      bounced = true;
       emit ChequeBounced();
     }
   }
