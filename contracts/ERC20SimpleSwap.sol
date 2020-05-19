@@ -1,8 +1,8 @@
-pragma solidity =0.5.15;
+pragma solidity =0.6.8;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20Mintable.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 /**
 @title Chequebook contract without waivers
