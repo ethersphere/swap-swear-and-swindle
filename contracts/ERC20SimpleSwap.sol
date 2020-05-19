@@ -29,7 +29,7 @@ contract ERC20SimpleSwap {
   event HardDepositTimeoutChanged(address indexed beneficiary, uint timeout);
   event Withdraw(uint amount);
 
-  uint public defaultHardDepositTimeout;
+  uint public immutable defaultHardDepositTimeout;
   /* structure to keep track of the hard deposits (on-chain guarantee of solvency) per beneficiary*/
   struct HardDeposit {
     uint amount; /* hard deposit amount allocated */
@@ -39,7 +39,7 @@ contract ERC20SimpleSwap {
   }
 
   /* The token against which this chequebook writes cheques */
-  ERC20 public token;
+  ERC20 public immutable token;
   /* associates every beneficiary with how much has been paid out to them */
   mapping (address => uint) public paidOut;
   /* total amount paid out */
@@ -49,7 +49,7 @@ contract ERC20SimpleSwap {
   /* sum of all hard deposits */
   uint public totalHardDeposit;
   /* issuer of the contract, set at construction */
-  address public issuer;
+  address public immutable issuer;
   /* indicates wether a cheque bounced in the past */
   bool public bounced;
 

@@ -15,7 +15,7 @@ contract SimpleSwapFactory {
   mapping (address => bool) public deployedContracts;
 
   /* address of the ERC20-token, to be used by the to-be-deployed chequebooks */
-  address public ERC20Address;
+  address public immutable ERC20Address;
 
   constructor(address _ERC20Address) public {
     ERC20Address = _ERC20Address;
