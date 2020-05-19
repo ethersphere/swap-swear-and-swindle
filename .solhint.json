@@ -3,6 +3,6 @@
   "rules": {
     "indent": [4],
     "not-rely-on-time": "off",
-    "mark-callable-contracts": "off"
+    "compiler-version": "off"
   }
 }

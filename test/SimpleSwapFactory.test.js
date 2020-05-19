@@ -8,20 +8,20 @@ const {
 const { expect } = require('chai');
 const SimpleSwapFactory = artifacts.require('./SimpleSwapFactory')
 const ERC20SimpleSwap = artifacts.require('./ERC20SimpleSwap')
-const ERC20Mintable = artifacts.require("ERC20Mintable")
+const ERC20PresetMinterPauser = artifacts.require("ERC20PresetMinterPauser")
 
 contract('SimpleSwapFactory', function([issuer]) {
 
   function shouldDeployERC20SimpleSwap(issuer, DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT, value) {
     beforeEach(async function() {
-      this.ERC20Mintable = await ERC20Mintable.new(issuer, value)
-      this.simpleSwapFactory = await SimpleSwapFactory.new(this.ERC20Mintable.address)
+      this.ERC20PresetMinterPauser = await ERC20PresetMinterPauser.new("TestToken", "TEST", {from: issuer})
+      this.simpleSwapFactory = await SimpleSwapFactory.new(this.ERC20PresetMinterPauser.address)
       let { logs } = await this.simpleSwapFactory.deploySimpleSwap(issuer, DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT)
       this.ERC20SimpleSwapAddress = logs[0].args.contractAddress
       this.ERC20SimpleSwap = await ERC20SimpleSwap.at(this.ERC20SimpleSwapAddress)
       if(value != 0) {
-        await this.ERC20Mintable.mint(issuer, value) // mint tokens
-        await this.ERC20Mintable.transfer(this.ERC20SimpleSwap.address, value, {from: issuer}); // deposit those tokens in chequebook
+        await this.ERC20PresetMinterPauser.mint(issuer, value) // mint tokens
+        await this.ERC20PresetMinterPauser.transfer(this.ERC20SimpleSwap.address, value, {from: issuer}); // deposit those tokens in chequebook
       }
     })
 
@@ -48,7 +48,7 @@ contract('SimpleSwapFactory', function([issuer]) {
     })
 
     it('should have set the ERC20 address correctly', async function() {
-      expect(await this.ERC20SimpleSwap.token()).to.be.equal(this.ERC20Mintable.address)
+      expect(await this.ERC20SimpleSwap.token()).to.be.equal(this.ERC20PresetMinterPauser.address)
     })
   }
   

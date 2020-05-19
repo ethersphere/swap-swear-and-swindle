@@ -19,9 +19,8 @@ To also generate coverage information use `npm run coverage` instead.
 
 ## Linting
 
-This repo currently uses both `solhint` and `ethlint` as linters. Both can be called through npm:
+This repo currently uses `solhint` as linter. It can be called through npm:
 ```sh
-npm run ethlint
 npm run solhint
 ```
 

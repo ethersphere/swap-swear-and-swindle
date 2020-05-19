@@ -11,21 +11,21 @@
     "url": "https://github.com/ethersphere/swap-swear-and-swindle.git"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^2.4.0"
+    "@openzeppelin/contracts": "^3.0.1"
   },
   "devDependencies": {
     "@openzeppelin/test-helpers": "^0.5.3",
     "bn-chai": "^1.0.1",
     "chai": "^4.2.0",
     "ethereumjs-abi": "^0.6.7",
-    "solhint": "^2.1.2",
-    "solidity-coverage": "^0.7.2",
-    "truffle": "^5.0.24"
+    "solhint": "^3.0.0",
+    "solidity-coverage": "^0.7.5",
+    "truffle": "^5.1.26"
   },
   "scripts": {
     "test": "truffle test",
-    "abigen": "./abigen/gen.sh ERC20SimpleSwap SimpleSwapFactory",
-    "solhint": "solhint contracts/ERC20SimpleSwap.sol contracts/SimpleSwapFactory.sol",    
+    "abigen": "./abigen/gen.sh ERC20SimpleSwap SimpleSwapFactory Migrations",
+    "solhint": "solhint contracts/ERC20SimpleSwap.sol contracts/SimpleSwapFactory.sol",
     "coverage": "truffle run coverage"
   },
   "keywords": [],
