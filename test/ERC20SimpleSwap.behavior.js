@@ -432,7 +432,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
           const caller = issuer
           const callerPayout = new BN(0)
           const beneficiarySignee = beneficiary
-          const issuerSignee = beneficiary // on purpose not the correct signee, as it is not needed
+          const issuerSignee = issuer
           describe(describeTest + 'shouldCashCheque', function() {
             shouldCashCheque(beneficiary, recipient, firstCumulativePayout, callerPayout, caller, beneficiarySignee, issuerSignee)
           })

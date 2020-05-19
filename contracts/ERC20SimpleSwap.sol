@@ -93,18 +93,16 @@ contract ERC20SimpleSwap {
     uint callerPayout,
     bytes memory issuerSig
   ) internal {
-    /* The issuer must have given explicit approval to the cumulativePayout, either by being the caller or by signature*/
-    if (msg.sender != issuer) {
-      require(
-        issuer == recover(
-          chequeHash(
-            address(this),
-            beneficiary,
-            cumulativePayout
-          ), issuerSig
-        ), "SimpleSwap: invalid issuerSig"
-      );
-    }
+    /* The issuer must have given explicit approval to the cumulativePayout by signature */
+    require(
+      issuer == recover(
+        chequeHash(
+          address(this),
+          beneficiary,
+          cumulativePayout
+        ), issuerSig
+      ), "SimpleSwap: invalid issuerSig"
+    );
     /* the requestPayout is the amount requested for payment processing */
     uint requestPayout = cumulativePayout.sub(paidOut[beneficiary]);
     /* calculates acutal payout */
