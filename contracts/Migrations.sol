@@ -1,4 +1,4 @@
-pragma solidity =0.6.8;
+pragma solidity =0.6.12;
 import "@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol";
 
 contract Migrations {
