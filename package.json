@@ -11,16 +11,16 @@
     "url": "https://github.com/ethersphere/swap-swear-and-swindle.git"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^3.0.1"
+    "@openzeppelin/contracts": "^3.1.0"
   },
   "devDependencies": {
-    "@openzeppelin/test-helpers": "^0.5.3",
+    "@openzeppelin/test-helpers": "^0.5.6",
     "bn-chai": "^1.0.1",
     "chai": "^4.2.0",
-    "ethereumjs-abi": "^0.6.7",
-    "solhint": "^3.0.0",
-    "solidity-coverage": "^0.7.5",
-    "truffle": "^5.1.26"
+    "ethereumjs-abi": "^0.6.8",
+    "solhint": "^3.2.0",
+    "solidity-coverage": "^0.7.10",
+    "truffle": "^5.1.42"
   },
   "scripts": {
     "test": "truffle test",
