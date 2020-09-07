@@ -26,7 +26,9 @@
     "test": "truffle test",
     "abigen": "./abigen/gen.sh ERC20SimpleSwap SimpleSwapFactory Migrations",
     "solhint": "solhint contracts/ERC20SimpleSwap.sol contracts/SimpleSwapFactory.sol",
-    "coverage": "truffle run coverage"
+    "coverage": "truffle run coverage",
+    "docker:build": "docker build -t sw3 -f Dockerfile.abigen .",
+    "docker:abigen": "docker run -v $(pwd)/bindings:/sw3/bindings sw3 npm run abigen"
   },
   "keywords": [],
   "author": "",
