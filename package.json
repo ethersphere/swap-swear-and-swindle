@@ -28,7 +28,7 @@
     "solhint": "solhint contracts/ERC20SimpleSwap.sol contracts/SimpleSwapFactory.sol",
     "coverage": "truffle run coverage",
     "docker:build": "docker build -t sw3 -f Dockerfile.abigen .",
-    "docker:abigen": "docker run -v $(pwd)/bindings:/sw3/bindings sw3 npm run abigen"
+    "docker:abigen": "docker run -v $(pwd)/bindings:/sw3/bindings sw3 ./scripts/abigen"
   },
   "keywords": [],
   "author": "",

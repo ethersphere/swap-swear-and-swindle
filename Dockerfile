@@ -1,6 +1,15 @@
-FROM node:10.16.0-stretch as builder
+FROM alpine:latest as build
 
-WORKDIR /sw3
-ADD . /sw3
+ARG GETH_VERSION="1.9.20-979fc968"
+ARG SOLIDITY_VERSION="0.6.12"
 
-RUN npm install
+RUN apk update
+RUN apk add jq
+
+WORKDIR sw3
+COPY ./scripts/get-deps.sh /sw3/scripts/
+RUN ./scripts/get-deps.sh
+
+COPY . /sw3/
+
+CMD ./scripts/abigen.sh ERC20SimpleSwap SimpleSwapFactory Migrations

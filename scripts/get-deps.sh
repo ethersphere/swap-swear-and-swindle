@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Download and install dependencies for abigen.
 set -e
@@ -19,9 +19,7 @@ checkDep() {
 }
 
 # Script must be run as root to install dependencies.
-if [[ $(id -u) -ne 0 ]] ; then
-  fatal "must run as root"
-fi
+[ "$(id -u)" -ne 0 ] && fatal "must run as root"
 
 # Try and get the versions from the environment.
 GETH_VERSION="${GETH_VERSION:=1.9.20-979fc968}"
@@ -39,7 +37,7 @@ mv solc-static-linux /usr/local/bin/solc
 # Get geth.
 wget -q "https://gethstore.blob.core.windows.net/builds/geth-alltools-linux-amd64-$GETH_VERSION.tar.gz" ||
   fatal "failed to download geth $GETH_VERSION"
-tar xvzf "geth-alltools-linux-amd64-$GETH_VERSION.tar.gz"
+tar xvzf "geth-alltools-linux-amd64-$GETH_VERSION.tar.gz" > /dev/null
 mv "geth-alltools-linux-amd64-$GETH_VERSION/abigen" /usr/local/bin/abigen
 rm -rf "geth-alltools-linux-amd64-$GETH_VERSION"
 rm "geth-alltools-linux-amd64-$GETH_VERSION.tar.gz"

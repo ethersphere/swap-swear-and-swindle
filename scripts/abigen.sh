@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Generate the go-ethereum bind ABI code for all contracts.
 set -e
@@ -28,18 +28,21 @@ checkDep abigen
 checkDep jq
 
 # Get script directory.
-scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+scriptDir="$( cd "$( dirname "$0" )" >/dev/null 2>&1 && pwd )"
 rootDir=$( dirname "$scriptDir" )
 
+# Ensure the build directory exists.
+mkdir -p "$rootDir/build"
+
 # Create a temp compilation directory.
-tempDir=$(mktemp -d build/solc-compile.XXXXX) || fatal "Failed to make temp dir"
+tempDir="$( mktemp -d )" || fatal "Failed to make temp dir"
 
 # Create the outputDir.
 outDir="$rootDir/build/go-sw3"
 
 # Locate the code emplate file.
 templateFile="$rootDir/templates/code-template.txt"
-[[ -f "$templateFile" ]] || fatal "$templateFile not found"
+[ -f "$templateFile" ] || fatal "$templateFile not found"
 
 # Parse all contracts.
 for contractName in "$@"; do
@@ -66,7 +69,7 @@ for contractName in "$@"; do
   binRuntime=$( jq -r "$jqSelector" < "$tempDir/$contractName.json" )
 
   # Substitute the templates using envsubst.
-  package="$package" contractName="$contractName" binRuntime="$binRuntime" \
+  packageName="$package" contractName="$contractName" binRuntime="$binRuntime" \
     envsubst < "$templateFile" \
     > "$outDir/$package/code.go"
 

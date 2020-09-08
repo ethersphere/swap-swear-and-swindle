@@ -1,0 +1,7 @@
+# Exclude everything by default.
+*
+
+# Allow folders relevant to build bindings.
+!contracts/
+!scripts/
+!templates/
