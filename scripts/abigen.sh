@@ -38,7 +38,7 @@ mkdir -p "$rootDir/build"
 tempDir="$( mktemp -d )" || fatal "Failed to make temp dir"
 
 # Create the outputDir.
-outDir="$rootDir/build/go-sw3"
+outDir="$rootDir/build/gosw3"
 
 # Locate the code emplate file.
 templateFile="$rootDir/templates/code-template.txt"

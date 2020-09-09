@@ -5,3 +5,6 @@
 !contracts/
 !scripts/
 !templates/
+
+# Add openzeppelin as an exception from node_modules.
+!node_modules/@openzeppelin

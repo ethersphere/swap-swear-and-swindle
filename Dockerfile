@@ -7,8 +7,8 @@ RUN apk update
 RUN apk add jq
 
 WORKDIR sw3
-COPY ./scripts/get-deps.sh /sw3/scripts/
-RUN ./scripts/get-deps.sh
+COPY ./scripts/install-deps.sh /sw3/scripts/
+RUN ./scripts/install-deps.sh
 
 COPY . /sw3/
 

@@ -24,11 +24,13 @@
   },
   "scripts": {
     "test": "truffle test",
-    "abigen": "./abigen/gen.sh ERC20SimpleSwap SimpleSwapFactory Migrations",
+    "abigen": "./scripts/abigen.sh ERC20SimpleSwap SimpleSwapFactory Migrations",
     "solhint": "solhint contracts/ERC20SimpleSwap.sol contracts/SimpleSwapFactory.sol",
     "coverage": "truffle run coverage",
-    "docker:build": "docker build -t sw3 -f Dockerfile.abigen .",
-    "docker:abigen": "docker run -v $(pwd)/bindings:/sw3/bindings sw3 ./scripts/abigen"
+    "docker:build": "docker build -t sw3 .",
+    "docker:abigen": "docker run -v $(pwd)/build/gosw3:/sw3/build/gosw3 sw3",
+    "deps:install": "./scripts/install-deps.sh",
+    "deps:uninstall": "./scripts/uninstall-deps.sh"
   },
   "keywords": [],
   "author": "",
