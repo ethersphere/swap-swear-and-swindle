@@ -1,0 +1,40 @@
+FROM debian:jessie-slim
+
+# Geth and solidity version to use.
+ARG GETH_VERSION="1.9.20-979fc968"
+ARG SOLIDITY_VERSION="0.6.12"
+
+# Tell apt-get we're not giving interactive feedback.
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Set workdir (to unpack downloads).
+WORKDIR sw3
+
+# Install Debian dependencies with apt-get.
+RUN set -ex \
+  \
+  && apt-get -qq update && apt-get -y install --no-install-recommends > /dev/null \
+    ca-certificates \
+    wget \
+    jq \
+    gettext-base \
+  \
+  && wget -q \
+    "https://github.com/ethereum/solidity/releases/download/v$SOLIDITY_VERSION/solc-static-linux" \
+  && chmod +x solc-static-linux > /dev/null \
+  && mv solc-static-linux /usr/local/bin/solc \
+  \
+  && wget -q \
+    "https://gethstore.blob.core.windows.net/builds/geth-alltools-linux-amd64-$GETH_VERSION.tar.gz" \
+  && tar xvzf "geth-alltools-linux-amd64-$GETH_VERSION.tar.gz" > /dev/null \
+  && mv "geth-alltools-linux-amd64-$GETH_VERSION/abigen" /usr/local/bin/abigen \
+  && chmod +x /usr/local/bin/abigen > /dev/null \
+  && rm -rf "geth-alltools-linux-amd64-$GETH_VERSION" \
+  && rm "geth-alltools-linux-amd64-$GETH_VERSION.tar.gz" \
+  \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY . /sw3/
+
+ENTRYPOINT []
