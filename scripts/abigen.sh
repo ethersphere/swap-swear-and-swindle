@@ -68,7 +68,7 @@ for contractName in "$@"; do
     @openzeppelin="$rootDir/node_modules/@openzeppelin" \
     --allow-paths node_modules/@openzeppelin/contracts/ \
     --combined-json=bin,abi,userdoc,devdoc,metadata,bin-runtime \
-    --optimize --optimize-runs 200 --evm-version petersburg \
+    --optimize --optimize-runs 200 --evm-version istanbul \
     "$contractPath" > "$tempDir/$contractName.json"
 
   # Generate the abigen bind code.
