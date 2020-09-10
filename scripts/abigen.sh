@@ -3,6 +3,13 @@
 # Generate the go-ethereum bind ABI code for all contracts.
 set -e
 
+# Print a log-formatted message to STDOUT.
+# Arguments:
+#   Message to print
+log() {
+  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*"
+}
+
 # Print a log-formatted error to the STDERR, then quit.
 # Arguments:
 #   Error to print.
@@ -46,6 +53,12 @@ templateFile="$rootDir/templates/code-template.txt"
 
 # Parse all contracts.
 for contractName in "$@"; do
+  contractPath="contracts/$contractName.sol"
+
+  log "processing $contractPath"
+
+  # Ensure contract exists.
+  [ -f "$contractPath" ] || fatal "$contractPath" not found
 
   # Define the package name for the contract (all lower case).
   package=$(echo "$contractName" | tr '[:upper:]' '[:lower:]')
@@ -56,7 +69,7 @@ for contractName in "$@"; do
     --allow-paths node_modules/@openzeppelin/contracts/ \
     --combined-json=bin,abi,userdoc,devdoc,metadata,bin-runtime \
     --optimize --optimize-runs 200 --evm-version petersburg \
-    contracts/"$contractName".sol > "$tempDir/$contractName.json"
+    "$contractPath" > "$tempDir/$contractName.json"
 
   # Generate the abigen bind code.
   mkdir -p "$outDir/$package"
