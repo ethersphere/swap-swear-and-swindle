@@ -11,7 +11,7 @@
     "url": "https://github.com/ethersphere/swap-swear-and-swindle.git"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^3.1.0"
+    "@openzeppelin/contracts": "^3.2.0"
   },
   "devDependencies": {
     "@openzeppelin/test-helpers": "^0.5.6",
@@ -20,14 +20,14 @@
     "ethereumjs-abi": "^0.6.8",
     "solhint": "^3.2.0",
     "solidity-coverage": "^0.7.10",
-    "truffle": "^5.1.43"
+    "truffle": "^5.1.44"
   },
   "scripts": {
     "test": "truffle test",
     "abigen": "./scripts/abigen.sh ERC20SimpleSwap SimpleSwapFactory Migrations",
     "solhint": "solhint contracts/ERC20SimpleSwap.sol contracts/SimpleSwapFactory.sol",
     "coverage": "truffle run coverage",
-    "docker:build": "docker build -t sw3 .",
+    "docker:build": "docker build -f $(pwd)/docker/Dockerfile.abigen -t sw3 .",
     "docker:abigen": "docker run -v $(pwd)/build/gosw3:/sw3/build/gosw3 sw3",
     "deps:install": "./scripts/install-deps.sh",
     "deps:uninstall": "./scripts/uninstall-deps.sh"
