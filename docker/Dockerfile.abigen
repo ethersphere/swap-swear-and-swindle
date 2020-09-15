@@ -15,6 +15,7 @@ RUN set -ex \
   \
   && apt-get -qq update && apt-get -y install --no-install-recommends > /dev/null \
     ca-certificates \
+    git \
     wget \
     jq \
     gettext-base \
