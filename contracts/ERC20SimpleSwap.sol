@@ -46,6 +46,8 @@ contract ERC20SimpleSwap {
 
   bytes32 public constant EIP712DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,string version,uint256 chainId)");
   bytes32 public constant CHEQUE_TYPEHASH = keccak256("Cheque(address swap,address beneficiary,uint256 cumulativePayout)");
+  bytes32 public constant CASHOUT_TYPEHASH = keccak256("Cashout(address swap,address sender,uint256 requestPayout,address recipient,uint256 callerPayout)");
+  bytes32 public constant CUSTOMDECREASETIMEOUT_TYPEHASH = keccak256("CustomDecreaseTimeout(address swap,address beneficiary,uint256 decreaseTimeout)");
 
   // the EIP712 domain this contract uses
   function domain() internal pure returns (EIP712Domain memory) {
@@ -190,7 +192,7 @@ contract ERC20SimpleSwap {
     bytes memory issuerSig
   ) public {
     require(
-      beneficiary == recover(
+      beneficiary == recoverEIP712(
         cashOutHash(
           address(this),
           msg.sender,
@@ -280,7 +282,7 @@ contract ERC20SimpleSwap {
   ) public {
     require(msg.sender == issuer, "SimpleSwap: not issuer");
     require(
-      beneficiary == recover(customDecreaseTimeoutHash(address(this), beneficiary, hardDepositTimeout), beneficiarySig),
+      beneficiary == recoverEIP712(customDecreaseTimeoutHash(address(this), beneficiary, hardDepositTimeout), beneficiarySig),
       "SimpleSwap: invalid beneficiarySig"
     );
     hardDeposits[beneficiary].timeout = hardDepositTimeout;
@@ -298,10 +300,6 @@ contract ERC20SimpleSwap {
     require(token.transfer(issuer, amount), "SimpleSwap: SimpleSwap: transfer failed");
   }
 
-  function recover(bytes32 hash, bytes memory sig) internal pure returns (address) {
-    return ECDSA.recover(ECDSA.toEthSignedMessageHash(hash), sig);
-  }  
-
   function chequeHash(address swap, address beneficiary, uint cumulativePayout)
   internal pure returns (bytes32) {
     return keccak256(abi.encode(
@@ -310,16 +308,28 @@ contract ERC20SimpleSwap {
       beneficiary,
       cumulativePayout
     ));
-  }
+  }  
 
   function cashOutHash(address swap, address sender, uint requestPayout, address recipient, uint callerPayout)
   internal pure returns (bytes32) {
-    return keccak256(abi.encodePacked(swap, sender, requestPayout, recipient, callerPayout));
+    return keccak256(abi.encode(
+      CASHOUT_TYPEHASH,
+      swap,
+      sender,
+      requestPayout,
+      recipient,
+      callerPayout
+    ));
   }
 
   function customDecreaseTimeoutHash(address swap, address beneficiary, uint decreaseTimeout)
   internal pure returns (bytes32) {
-    return keccak256(abi.encodePacked(swap, beneficiary, decreaseTimeout));
+    return keccak256(abi.encode(
+      CUSTOMDECREASETIMEOUT_TYPEHASH,
+      swap,
+      beneficiary,
+      decreaseTimeout
+    ));
   }
 }
 

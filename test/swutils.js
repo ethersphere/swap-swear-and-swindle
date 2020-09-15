@@ -12,6 +12,20 @@ const ChequeType = [
   { name: 'cumulativePayout', type: 'uint256' }
 ]
 
+const CashoutType = [
+  { name: 'swap', type: 'address' },
+  { name: 'sender', type: 'address' },
+  { name: 'requestPayout', type: 'uint256' },
+  { name: 'recipient', type: 'address' },
+  { name: 'callerPayout', type: 'uint256' }
+]
+
+const CustomDecreaseTimeoutType = [
+  { name: 'swap', type: 'address' },
+  { name: 'beneficiary', type: 'address' },
+  { name: 'decreaseTimeout', type: 'uint256' }
+]
+
 async function sign(hash, signer) {
   let signature = await web3.eth.sign(hash, signer)
 
@@ -55,23 +69,49 @@ async function signCheque(swap, beneficiary, cumulativePayout, signee, chainId =
   return signTypedData(eip712data, signee)
 }
 
-async function signCashOut(swap, sender, cumulativePayout, beneficiaryAgent, calleePayout, signee) {
-  const encodedCashOut = abi.solidityPack(
-    ['address', 'address', 'uint256', 'address', 'uint256'],
-    [swap.address, sender, cumulativePayout, beneficiaryAgent, calleePayout]
-  )
-  const hash = web3.utils.keccak256(encodedCashOut)
-  return await sign(hash, signee)
+async function signCashOut(swap, sender, cumulativePayout, beneficiaryAgent, callerPayout, signee, chainId = 1) {
+  const eip712data = {
+    types: {
+      EIP712Domain,
+      Cashout: CashoutType
+    },
+    domain: {
+      name: "ERC20SimpleSwap",
+      version: "1.0",
+      chainId
+    },
+    primaryType: 'Cashout',
+    message: {
+      swap: swap.address,
+      sender,
+      requestPayout: cumulativePayout.toNumber(),
+      recipient: beneficiaryAgent,
+      callerPayout: callerPayout.toNumber()
+    }
+  }
+
+  return signTypedData(eip712data, signee)
 }
 
-async function signCustomDecreaseTimeout(swap, beneficiary, decreaseTimeout, signee) {
-  const encodedCustomDecreaseTimeout = abi.solidityPack(
-    ['address', 'address', 'uint256'],
-    [swap.address, beneficiary, decreaseTimeout]
-  )
-  const hash = web3.utils.keccak256(encodedCustomDecreaseTimeout)
-
-  return await sign(hash, signee)
+async function signCustomDecreaseTimeout(swap, beneficiary, decreaseTimeout, signee, chainId = 1) {
+  const eip712data = {
+    types: {
+      EIP712Domain,
+      CustomDecreaseTimeout: CustomDecreaseTimeoutType
+    },
+    domain: {
+      name: "ERC20SimpleSwap",
+      version: "1.0",
+      chainId
+    },
+    primaryType: 'CustomDecreaseTimeout',
+    message: {
+      swap: swap.address,
+      beneficiary,
+      decreaseTimeout: decreaseTimeout.toNumber()
+    }
+  }
+  return signTypedData(eip712data, signee)
 }
 
 module.exports = {
