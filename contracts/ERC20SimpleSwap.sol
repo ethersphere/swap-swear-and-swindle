@@ -64,7 +64,7 @@ contract ERC20SimpleSwap {
       chainId := chainid()
     }
     return EIP712Domain({
-      name: "ERC20SimpleSwap",
+      name: "Chequebook",
       version: "1.0",
       chainId: chainId
     });

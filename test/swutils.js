@@ -59,7 +59,7 @@ async function signCheque(swap, beneficiary, cumulativePayout, signee, chainId =
       Cheque: ChequeType
     },
     domain: {
-      name: "ERC20SimpleSwap",
+      name: "Chequebook",
       version: "1.0",
       chainId
     },
@@ -77,7 +77,7 @@ async function signCashOut(swap, sender, cumulativePayout, beneficiaryAgent, cal
       Cashout: CashoutType
     },
     domain: {
-      name: "ERC20SimpleSwap",
+      name: "Chequebook",
       version: "1.0",
       chainId
     },
@@ -101,7 +101,7 @@ async function signCustomDecreaseTimeout(swap, beneficiary, decreaseTimeout, sig
       CustomDecreaseTimeout: CustomDecreaseTimeoutType
     },
     domain: {
-      name: "ERC20SimpleSwap",
+      name: "Chequebook",
       version: "1.0",
       chainId
     },
