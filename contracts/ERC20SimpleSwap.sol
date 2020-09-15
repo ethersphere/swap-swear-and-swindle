@@ -44,10 +44,18 @@ contract ERC20SimpleSwap {
     uint256 chainId;
   }
 
-  bytes32 public constant EIP712DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,string version,uint256 chainId)");
-  bytes32 public constant CHEQUE_TYPEHASH = keccak256("Cheque(address swap,address beneficiary,uint256 cumulativePayout)");
-  bytes32 public constant CASHOUT_TYPEHASH = keccak256("Cashout(address swap,address sender,uint256 requestPayout,address recipient,uint256 callerPayout)");
-  bytes32 public constant CUSTOMDECREASETIMEOUT_TYPEHASH = keccak256("CustomDecreaseTimeout(address swap,address beneficiary,uint256 decreaseTimeout)");
+  bytes32 public constant EIP712DOMAIN_TYPEHASH = keccak256(
+    "EIP712Domain(string name,string version,uint256 chainId)"
+  );
+  bytes32 public constant CHEQUE_TYPEHASH = keccak256(
+    "Cheque(address chequebook,address beneficiary,uint256 cumulativePayout)"
+  );
+  bytes32 public constant CASHOUT_TYPEHASH = keccak256(
+    "Cashout(address chequebook,address sender,uint256 requestPayout,address recipient,uint256 callerPayout)"
+  );
+  bytes32 public constant CUSTOMDECREASETIMEOUT_TYPEHASH = keccak256(
+    "CustomDecreaseTimeout(address chequebook,address beneficiary,uint256 decreaseTimeout)"
+  );
 
   // the EIP712 domain this contract uses
   function domain() internal pure returns (EIP712Domain memory) {
@@ -140,7 +148,7 @@ contract ERC20SimpleSwap {
     /* The issuer must have given explicit approval to the cumulativePayout, either by being the caller or by signature*/
     if (msg.sender != issuer) {
       require(issuer == recoverEIP712(chequeHash(address(this), beneficiary, cumulativePayout), issuerSig),
-      "SimpleSwap: invalid issuerSig");
+      "SimpleSwap: invalid issuer signature");
     }
     /* the requestPayout is the amount requested for payment processing */
     uint requestPayout = cumulativePayout.sub(paidOut[beneficiary]);
@@ -200,7 +208,7 @@ contract ERC20SimpleSwap {
           recipient,
           callerPayout
         ), beneficiarySig
-      ), "SimpleSwap: invalid beneficiarySig");
+      ), "SimpleSwap: invalid beneficiary signature");
     _cashChequeInternal(beneficiary, recipient, cumulativePayout, callerPayout, issuerSig);
   }
 
@@ -283,7 +291,7 @@ contract ERC20SimpleSwap {
     require(msg.sender == issuer, "SimpleSwap: not issuer");
     require(
       beneficiary == recoverEIP712(customDecreaseTimeoutHash(address(this), beneficiary, hardDepositTimeout), beneficiarySig),
-      "SimpleSwap: invalid beneficiarySig"
+      "SimpleSwap: invalid beneficiary signature"
     );
     hardDeposits[beneficiary].timeout = hardDepositTimeout;
     emit HardDepositTimeoutChanged(beneficiary, hardDepositTimeout);
@@ -300,21 +308,21 @@ contract ERC20SimpleSwap {
     require(token.transfer(issuer, amount), "SimpleSwap: SimpleSwap: transfer failed");
   }
 
-  function chequeHash(address swap, address beneficiary, uint cumulativePayout)
+  function chequeHash(address chequebook, address beneficiary, uint cumulativePayout)
   internal pure returns (bytes32) {
     return keccak256(abi.encode(
       CHEQUE_TYPEHASH,
-      swap,
+      chequebook,
       beneficiary,
       cumulativePayout
     ));
   }  
 
-  function cashOutHash(address swap, address sender, uint requestPayout, address recipient, uint callerPayout)
+  function cashOutHash(address chequebook, address sender, uint requestPayout, address recipient, uint callerPayout)
   internal pure returns (bytes32) {
     return keccak256(abi.encode(
       CASHOUT_TYPEHASH,
-      swap,
+      chequebook,
       sender,
       requestPayout,
       recipient,
@@ -322,11 +330,11 @@ contract ERC20SimpleSwap {
     ));
   }
 
-  function customDecreaseTimeoutHash(address swap, address beneficiary, uint decreaseTimeout)
+  function customDecreaseTimeoutHash(address chequebook, address beneficiary, uint decreaseTimeout)
   internal pure returns (bytes32) {
     return keccak256(abi.encode(
       CUSTOMDECREASETIMEOUT_TYPEHASH,
-      swap,
+      chequebook,
       beneficiary,
       decreaseTimeout
     ));

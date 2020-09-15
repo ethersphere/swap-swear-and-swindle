@@ -7,13 +7,13 @@ const EIP712Domain = [
 ]
 
 const ChequeType = [
-  { name: 'swap', type: 'address' },
+  { name: 'chequebook', type: 'address' },
   { name: 'beneficiary', type: 'address' },
   { name: 'cumulativePayout', type: 'uint256' }
 ]
 
 const CashoutType = [
-  { name: 'swap', type: 'address' },
+  { name: 'chequebook', type: 'address' },
   { name: 'sender', type: 'address' },
   { name: 'requestPayout', type: 'uint256' },
   { name: 'recipient', type: 'address' },
@@ -21,7 +21,7 @@ const CashoutType = [
 ]
 
 const CustomDecreaseTimeoutType = [
-  { name: 'swap', type: 'address' },
+  { name: 'chequebook', type: 'address' },
   { name: 'beneficiary', type: 'address' },
   { name: 'decreaseTimeout', type: 'uint256' }
 ]
@@ -48,7 +48,7 @@ function signTypedData(eip712data, signee) {
 // the chainId is set to 1 due to bug in ganache where the wrong id is reported via rpc
 async function signCheque(swap, beneficiary, cumulativePayout, signee, chainId = 1) {
   const cheque = {
-    swap: swap.address,
+    chequebook: swap.address,
     beneficiary,
     cumulativePayout: cumulativePayout.toNumber()
   }
@@ -83,7 +83,7 @@ async function signCashOut(swap, sender, cumulativePayout, beneficiaryAgent, cal
     },
     primaryType: 'Cashout',
     message: {
-      swap: swap.address,
+      chequebook: swap.address,
       sender,
       requestPayout: cumulativePayout.toNumber(),
       recipient: beneficiaryAgent,
@@ -107,7 +107,7 @@ async function signCustomDecreaseTimeout(swap, beneficiary, decreaseTimeout, sig
     },
     primaryType: 'CustomDecreaseTimeout',
     message: {
-      swap: swap.address,
+      chequebook: swap.address,
       beneficiary,
       decreaseTimeout: decreaseTimeout.toNumber()
     }
