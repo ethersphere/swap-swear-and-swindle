@@ -370,7 +370,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
               context('when the issuer does not provide the issuerSig', function () {
                 const issuerSignee = alice
                 const callerPayout = defaults.firstCumulativePayout.div(new BN(100))
-                const revertMessage = 'SimpleSwap: invalid issuerSig'
+                const revertMessage = 'SimpleSwap: invalid issuer signature'
                 const beneficiaryToSign = {
                   cumulativePayout: firstCumulativePayout,
                   recipient,
@@ -391,7 +391,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
               const beneficiarySignee = alice
               const issuerSignee = issuer
               const callerPayout = defaults.firstCumulativePayout.div(new BN(100))
-              const revertMessage = 'SimpleSwap: invalid beneficiarySig'
+              const revertMessage = 'SimpleSwap: invalid beneficiary signature'
               const beneficiaryToSign = {
                 cumulativePayout: firstCumulativePayout,
                 recipient,
@@ -541,7 +541,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
               })
             })
             context('when the signee does not sign the correct fields', function () {
-              const revertMessage = "SimpleSwap: invalid issuerSig"
+              const revertMessage = "SimpleSwap: invalid issuer signature"
               const recipient = defaults.recipient
               const toSubmitCumulativePayment = defaults.firstCumulativePayout
               const toSignCumulativePayment = new BN(1)
@@ -550,7 +550,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
             })
           })
           context('when the issuer is not a signee', function () {
-            const revertMessage = "SimpleSwap: invalid issuerSig"
+            const revertMessage = "SimpleSwap: invalid issuer signature"
             const signee = alice
             const recipient = defaults.recipient
             const toSubmitCumulativePayment = defaults.firstCumulativePayout
@@ -785,7 +785,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
                 describe(describeTest + 'shouldNotSetCustomHardDepositTimeout', function () {
                   const toSubmit = { beneficiary, timeout }
                   const toSign = { beneficiary, timeout: timeout.sub(new BN(1)) }
-                  const revertMessage = "SimpleSwap: invalid beneficiarySig"
+                  const revertMessage = "SimpleSwap: invalid beneficiary signature"
                   shouldNotSetCustomHardDepositTimeout(toSubmit, toSign, signee, sender, value, revertMessage)
                 })
               })
@@ -795,7 +795,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
               describe(describeTest + 'shouldNotSetCustomHardDepositTimeout', function () {
                 const toSubmit = { beneficiary, timeout }
                 const toSign = toSubmit
-                const revertMessage = "SimpleSwap: invalid beneficiarySig"
+                const revertMessage = "SimpleSwap: invalid beneficiary signature"
                 shouldNotSetCustomHardDepositTimeout(toSubmit, toSign, signee, sender, value, revertMessage)
               })
             })
