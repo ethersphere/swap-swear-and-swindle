@@ -45,6 +45,7 @@ function signTypedData(eip712data, signee) {
   )
 }
 
+// the chainId is set to 1 due to bug in ganache where the wrong id is reported via rpc
 async function signCheque(swap, beneficiary, cumulativePayout, signee, chainId = 1) {
   const cheque = {
     swap: swap.address,
