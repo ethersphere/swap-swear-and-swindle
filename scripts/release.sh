@@ -25,6 +25,9 @@ checkDep() {
   command -v "$1" >/dev/null 2>&1 || fatal "dependency $1 not found"
 }
 
+# Read env variables.
+gethVersion="${GETH_VERSION:=1.9.20-979fc968}"
+
 # Get script directory.
 scriptDir="$( cd "$( dirname "$0" )" >/dev/null 2>&1 && pwd )"
 rootDir=$( dirname "$scriptDir" )
@@ -33,9 +36,15 @@ rootDir=$( dirname "$scriptDir" )
 checkDep git
 checkDep go
 
+# Format gethVersion semver string for go get.
+# We assume the version MAY contain a build number after "-".
+gethVersion="v$( echo $gethVersion | cut -d "-" -f1 )"
+
+
 # Print header information.
 log "creating new release"
 log "$(go version)"
+log "geth version: $gethVersion"
 log "git user: $(git config user.name) <$(git config user.email)>"
 
 buildDir="$rootDir/build"
@@ -66,6 +75,8 @@ cp -r "$bindingsDir" "$newVersionDir"
 # Run go mod init in the new module.
 cd "$newVersionDir"
 go mod init "github.com/ethersphere/sw3-bindings/v$majorVersion"
+GO111MODULE=on go get "github.com/ethereum/go-ethereum@$gethVersion"
+go mod tidy
 
 # Run go mod tidy at the top leel
 cd "$repoDir"
