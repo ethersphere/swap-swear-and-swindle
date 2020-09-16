@@ -62,7 +62,7 @@ The balance not covered by hard deposits can be withdrawn by the issuer at any t
 
 #### Signatures
 
-For signing purposes the fields are encoded in **packed encoding** in the order specified below. `SimpleSwap` uses the same signing scheme as `eth_sign` (with the `Ethereum Signed Message` prefix).
+For signing purposes the chequebook uses EIP-712 Ethereum typed structured data hashing and signing. The `EIP712Domain` domain name is `Chequebook` in version `1.0`. The `chainId` field is used, the `verifyingContract` and `salt` fields are omitted.
 
 #### Cheques
 

@@ -38,6 +38,58 @@ contract ERC20SimpleSwap {
     uint canBeDecreasedAt; /* point in time after which harddeposit can be decreased*/
   }
 
+  struct EIP712Domain {
+    string name;
+    string version;
+    uint256 chainId;
+  }
+
+  bytes32 public constant EIP712DOMAIN_TYPEHASH = keccak256(
+    "EIP712Domain(string name,string version,uint256 chainId)"
+  );
+  bytes32 public constant CHEQUE_TYPEHASH = keccak256(
+    "Cheque(address chequebook,address beneficiary,uint256 cumulativePayout)"
+  );
+  bytes32 public constant CASHOUT_TYPEHASH = keccak256(
+    "Cashout(address chequebook,address sender,uint256 requestPayout,address recipient,uint256 callerPayout)"
+  );
+  bytes32 public constant CUSTOMDECREASETIMEOUT_TYPEHASH = keccak256(
+    "CustomDecreaseTimeout(address chequebook,address beneficiary,uint256 decreaseTimeout)"
+  );
+
+  // the EIP712 domain this contract uses
+  function domain() internal pure returns (EIP712Domain memory) {
+    uint256 chainId;
+    assembly {
+      chainId := chainid()
+    }
+    return EIP712Domain({
+      name: "Chequebook",
+      version: "1.0",
+      chainId: chainId
+    });
+  }
+
+  // compute the EIP712 domain separator. this cannot be constant because it depends on chainId
+  function domainSeparator(EIP712Domain memory eip712Domain) internal pure returns (bytes32) {
+    return keccak256(abi.encode(
+        EIP712DOMAIN_TYPEHASH,
+        keccak256(bytes(eip712Domain.name)),
+        keccak256(bytes(eip712Domain.version)),
+        eip712Domain.chainId
+    ));
+  }
+
+  // recover a signature with the EIP712 signing scheme
+  function recoverEIP712(bytes32 hash, bytes memory sig) internal pure returns (address) {
+    bytes32 digest = keccak256(abi.encodePacked(
+        "\x19\x01",
+        domainSeparator(domain()),
+        hash
+    ));
+    return ECDSA.recover(digest, sig);
+  }
+
   /* The token against which this chequebook writes cheques */
   ERC20 public token;
   /* associates every beneficiary with how much has been paid out to them */
@@ -95,15 +147,8 @@ contract ERC20SimpleSwap {
   ) internal {
     /* The issuer must have given explicit approval to the cumulativePayout, either by being the caller or by signature*/
     if (msg.sender != issuer) {
-      require(
-        issuer == recover(
-          chequeHash(
-            address(this),
-            beneficiary,
-            cumulativePayout
-          ), issuerSig
-        ), "SimpleSwap: invalid issuerSig"
-      );
+      require(issuer == recoverEIP712(chequeHash(address(this), beneficiary, cumulativePayout), issuerSig),
+      "SimpleSwap: invalid issuer signature");
     }
     /* the requestPayout is the amount requested for payment processing */
     uint requestPayout = cumulativePayout.sub(paidOut[beneficiary]);
@@ -155,7 +200,7 @@ contract ERC20SimpleSwap {
     bytes memory issuerSig
   ) public {
     require(
-      beneficiary == recover(
+      beneficiary == recoverEIP712(
         cashOutHash(
           address(this),
           msg.sender,
@@ -163,7 +208,7 @@ contract ERC20SimpleSwap {
           recipient,
           callerPayout
         ), beneficiarySig
-      ), "SimpleSwap: invalid beneficiarySig");
+      ), "SimpleSwap: invalid beneficiary signature");
     _cashChequeInternal(beneficiary, recipient, cumulativePayout, callerPayout, issuerSig);
   }
 
@@ -245,8 +290,8 @@ contract ERC20SimpleSwap {
   ) public {
     require(msg.sender == issuer, "SimpleSwap: not issuer");
     require(
-      beneficiary == recover(customDecreaseTimeoutHash(address(this), beneficiary, hardDepositTimeout), beneficiarySig),
-      "SimpleSwap: invalid beneficiarySig"
+      beneficiary == recoverEIP712(customDecreaseTimeoutHash(address(this), beneficiary, hardDepositTimeout), beneficiarySig),
+      "SimpleSwap: invalid beneficiary signature"
     );
     hardDeposits[beneficiary].timeout = hardDepositTimeout;
     emit HardDepositTimeoutChanged(beneficiary, hardDepositTimeout);
@@ -263,23 +308,36 @@ contract ERC20SimpleSwap {
     require(token.transfer(issuer, amount), "SimpleSwap: SimpleSwap: transfer failed");
   }
 
-  function recover(bytes32 hash, bytes memory sig) internal pure returns (address) {
-    return ECDSA.recover(ECDSA.toEthSignedMessageHash(hash), sig);
+  function chequeHash(address chequebook, address beneficiary, uint cumulativePayout)
+  internal pure returns (bytes32) {
+    return keccak256(abi.encode(
+      CHEQUE_TYPEHASH,
+      chequebook,
+      beneficiary,
+      cumulativePayout
+    ));
+  }  
+
+  function cashOutHash(address chequebook, address sender, uint requestPayout, address recipient, uint callerPayout)
+  internal pure returns (bytes32) {
+    return keccak256(abi.encode(
+      CASHOUT_TYPEHASH,
+      chequebook,
+      sender,
+      requestPayout,
+      recipient,
+      callerPayout
+    ));
   }
 
-  function chequeHash(address swap, address beneficiary, uint cumulativePayout)
+  function customDecreaseTimeoutHash(address chequebook, address beneficiary, uint decreaseTimeout)
   internal pure returns (bytes32) {
-    return keccak256(abi.encodePacked(swap, beneficiary, cumulativePayout));
-  }
-
-  function cashOutHash(address swap, address sender, uint requestPayout, address recipient, uint callerPayout)
-  internal pure returns (bytes32) {
-    return keccak256(abi.encodePacked(swap, sender, requestPayout, recipient, callerPayout));
-  }
-
-  function customDecreaseTimeoutHash(address swap, address beneficiary, uint decreaseTimeout)
-  internal pure returns (bytes32) {
-    return keccak256(abi.encodePacked(swap, beneficiary, decreaseTimeout));
+    return keccak256(abi.encode(
+      CUSTOMDECREASETIMEOUT_TYPEHASH,
+      chequebook,
+      beneficiary,
+      decreaseTimeout
+    ));
   }
 }
 
