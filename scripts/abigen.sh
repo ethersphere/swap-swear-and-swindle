@@ -61,7 +61,7 @@ for contractName in "$@"; do
   [ -f "$contractPath" ] || fatal "$contractPath" not found
 
   # Define the package name for the contract (all lower case).
-  package=$(echo "$contractName" | tr '[:upper:]' '[:lower:]')
+  package=$( echo "$contractName" | tr '[:upper:]' '[:lower:]' )
 
   # Compile the contract allowing imports from openzeppelin-solidity.
   solc \

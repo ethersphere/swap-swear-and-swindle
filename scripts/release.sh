@@ -64,29 +64,51 @@ rm -rf "$repoDir"
 git clone "git@github.com:ethersphere/sw3-bindings.git"
 cd "$repoDir"
 
-# Count the number of "v.." dirs to get the major version.
-majorVersion=$( ls -p | grep "v[0-9]*/" | wc -l )
+# Determine major package version from tag.
+tag=$( git describe --tags --always | cut -d "." -f 1 )
+
+# By convention, if there is no git tag, version is 0.
+majorVersion=0
+
+# If we've found a git version tag (starting with "v"), parse the major version.
+[ "$( echo "$tag" | cut -c1 )" = "v" ] \
+  && majorVersion=$( echo "$tag" | cut -d "v" -f 2 )
+
+# Increment the major version.
 majorVersion=$((majorVersion + 1))
 
-# Create a new ../v<MAJOR_VERSION> directory as a copy of the abigen bindings.
-newVersionDir="$repoDir/v$majorVersion"
-cp -r "$bindingsDir" "$newVersionDir"
+log "incrementing bindings version to v$majorVersion"
 
-# Run go mod init in the new module.
-cd "$newVersionDir"
-go mod init "github.com/ethersphere/sw3-bindings/v$majorVersion"
-GO111MODULE=on go get "github.com/ethereum/go-ethereum@$gethVersion"
-go mod tidy
+# Verstion 1 is a special case.
+if [ "$majorVersion" -eq 1 ]; then
+  # Copy the code into the root of the repo.
+  cp -R "$bindingsDir"/* "$repoDir"
+
+  log "fetching 'go-ethereum@$gethVersion' on base module"
+  GO111MODULE=on go get "github.com/ethereum/go-ethereum@$gethVersion"
+else
+  # Create a new ../v<MAJOR_VERSION> directory as a copy of the abigen bindings.
+  newVersionDir="$repoDir/v$majorVersion"
+  cp -R "$bindingsDir" "$newVersionDir"
+
+  # Run go mod init in the new module.
+  cd "$newVersionDir"
+
+  log "init go module in $newVersionDir"
+  go mod init "github.com/ethersphere/sw3-bindings/v$majorVersion"
+
+  log "fetching 'go-ethereum@$gethVersion' on base $newVersionDir"
+  GO111MODULE=on go get "github.com/ethereum/go-ethereum@$gethVersion"
+
+  go mod tidy
+fi
 
 # Run go mod tidy at the top leel
 cd "$repoDir"
 go mod tidy
 
-# Commit the changes (new version and version file).
-git add "$newVersionDir"
+git add . 
 git commit --message="Release v$majorVersion.0.0"
-
-# Tag the new release and push to remote.
 git tag "v$majorVersion.0.0"
 git push --tags origin master
 
