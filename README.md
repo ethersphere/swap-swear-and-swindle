@@ -43,6 +43,14 @@ In addition to the file from `abigen` this will also generate a go file that inc
 
 The go bindings are automatically generated on every release git tag and the pushed to the [ethersphere/go-sw3](https://github.com/ethersphere/go-sw3) repository.
 
+## Test Deployments
+
+Swap is deployed on the following testnets:
+
+| Network | Factory | Token |
+| ------- | -------- | ------- |
+| Goerli | [0xA6B88705036F2a56807af157c116b7dfCDabf968](https://goerli.etherscan.io/address/0xA6B88705036F2a56807af157c116b7dfCDabf968) | [0xe1927106821db21c8657b8eb483705e95903ee93](https://goerli.etherscan.io/address/0xe1927106821db21c8657b8eb483705e95903ee93) |
+
 ## Overview
 
 ### SimpleSwap
