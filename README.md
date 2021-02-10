@@ -49,7 +49,7 @@ Swap is deployed on the following testnets:
 
 | Network | Factory | Token |
 | ------- | -------- | ------- |
-| Goerli | [0xA6B88705036F2a56807af157c116b7dfCDabf968](https://goerli.etherscan.io/address/0xA6B88705036F2a56807af157c116b7dfCDabf968) | [0xe1927106821db21c8657b8eb483705e95903ee93](https://goerli.etherscan.io/address/0xe1927106821db21c8657b8eb483705e95903ee93) |
+| Goerli | [0xf0277caffea72734853b834afc9892461ea18474](https://goerli.etherscan.io/address/0xf0277caffea72734853b834afc9892461ea18474) | [0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335](https://goerli.etherscan.io/address/0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335) |
 
 ## Overview
 
