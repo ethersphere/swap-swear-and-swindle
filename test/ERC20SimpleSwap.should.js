@@ -7,16 +7,24 @@ const {
 } = require("@openzeppelin/test-helpers");
 
 const ERC20SimpleSwap = artifacts.require('ERC20SimpleSwap')
+const SimpleSwapFactory = artifacts.require('SimpleSwapFactory')
 const ERC20PresetMinterPauser = artifacts.require("ERC20PresetMinterPauser")
 
 const { signCheque, signCashOut, signCustomDecreaseTimeout } = require("./swutils");
 const { expect } = require('chai');
 
 function shouldDeploy(issuer, defaultHardDepositTimeout, from, value) {
+
+  const salt = "0x000000000000000000000000000000000000000000000000000000000000abcd"
+
   beforeEach(async function() {
     this.ERC20PresetMinterPauser = await ERC20PresetMinterPauser.new("TestToken", "TEST", {from: issuer})
     await this.ERC20PresetMinterPauser.mint(issuer, 1000000000, {from: issuer});
-    this.ERC20SimpleSwap = await ERC20SimpleSwap.new(issuer, this.ERC20PresetMinterPauser.address, defaultHardDepositTimeout, {from: from})   
+    this.master = await ERC20SimpleSwap.new()
+    this.simpleSwapFactory = await SimpleSwapFactory.new(this.ERC20PresetMinterPauser.address, this.master.address)
+    let { logs } = await this.simpleSwapFactory.deploySimpleSwap(issuer, defaultHardDepositTimeout, salt)
+    this.ERC20SimpleSwapAddress = logs[0].args.contractAddress
+    this.ERC20SimpleSwap = await ERC20SimpleSwap.at(this.ERC20SimpleSwapAddress)
     if(value != 0) {
       await this.ERC20PresetMinterPauser.transfer(this.ERC20SimpleSwap.address, value, {from: issuer});
     }
