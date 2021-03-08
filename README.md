@@ -8,27 +8,27 @@ The `master` branch only contains the `SimpleSwap` contract for now. Everything 
 
 ## Tests
 
-This is a regular truffle project. You can either use `truffle test` (if installed) or `npm test` which will use a locally installed truffle.
+This is a hardhat project using the truffle plugin (for tests as this used to be truffle-based). You can run tests using `yarn test`.
 
 ```sh
-npm install
-npm test
+yarn
+yarn test
 ```
 
-To also generate coverage information use `npm run coverage` instead.
+To also generate coverage information use `yarn hardhat coverage` instead.
 
 ## Linting
 
-This repo currently uses `solhint` as linter. It can be called through npm:
+This repo currently uses `solhint` as linter. It can be called through yarn:
 ```sh
-npm run solhint
+yarn lint
 ```
 
 ## Go-bindings
 
 To generate go bindings use
 ```sh
-npm run abigen
+yarn abigen
 ```
 
 This will generate the bindings in the `bindings/` directory. Suitable versions of `solc` and `abigen` have to be installed for this to work.
@@ -36,7 +36,7 @@ Alternatively this can also be done through docker:
 
 ```sh
 docker build -t sw3 -f Dockerfile.abigen .
-docker run -v $(pwd)/bindings:/sw3/bindings sw3 npm run abigen
+docker run -v $(pwd)/bindings:/sw3/bindings sw3 yarn abigen
 ```
 
 In addition to the file from `abigen` this will also generate a go file that includes the runtime bytecode.

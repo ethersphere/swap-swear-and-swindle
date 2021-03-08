@@ -38,15 +38,15 @@ async function sign(hash, signer) {
 function signTypedData(eip712data, signee) {
   return new Promise((resolve, reject) => 
     web3.currentProvider.send({
-      method: 'eth_signTypedData',
+      method: 'eth_signTypedData_v4',
       params: [signee, eip712data]
     },
     (err, result) => err == null ? resolve(result.result) : reject(err))
   )
 }
 
-// the chainId is set to 1 due to bug in ganache where the wrong id is reported via rpc
-async function signCheque(swap, beneficiary, cumulativePayout, signee, chainId = 1) {
+// the chainId is set to 31337 which is the hardhat default
+async function signCheque(swap, beneficiary, cumulativePayout, signee, chainId = 31337) {
   const cheque = {
     chequebook: swap.address,
     beneficiary,
@@ -70,7 +70,7 @@ async function signCheque(swap, beneficiary, cumulativePayout, signee, chainId =
   return signTypedData(eip712data, signee)
 }
 
-async function signCashOut(swap, sender, cumulativePayout, beneficiaryAgent, callerPayout, signee, chainId = 1) {
+async function signCashOut(swap, sender, cumulativePayout, beneficiaryAgent, callerPayout, signee, chainId = 31337) {
   const eip712data = {
     types: {
       EIP712Domain,
@@ -94,7 +94,7 @@ async function signCashOut(swap, sender, cumulativePayout, beneficiaryAgent, cal
   return signTypedData(eip712data, signee)
 }
 
-async function signCustomDecreaseTimeout(swap, beneficiary, decreaseTimeout, signee, chainId = 1) {
+async function signCustomDecreaseTimeout(swap, beneficiary, decreaseTimeout, signee, chainId = 31337) {
   const eip712data = {
     types: {
       EIP712Domain,
