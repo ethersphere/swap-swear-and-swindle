@@ -15,7 +15,7 @@ yarn
 yarn test
 ```
 
-To also generate coverage information use `yarn hardhat coverage` instead.
+To also generate coverage information use `yarn coverage` instead.
 
 ## Linting
 
