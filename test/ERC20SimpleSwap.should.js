@@ -8,7 +8,7 @@ const {
 
 const ERC20SimpleSwap = artifacts.require('ERC20SimpleSwap')
 const SimpleSwapFactory = artifacts.require('SimpleSwapFactory')
-const ERC20PresetMinterPauser = artifacts.require("ERC20PresetMinterPauser")
+const TestToken = artifacts.require("TestToken")
 
 const { signCheque, signCashOut, signCustomDecreaseTimeout } = require("./swutils");
 const { expect } = require('chai');
@@ -18,14 +18,14 @@ function shouldDeploy(issuer, defaultHardDepositTimeout, from, value) {
   const salt = "0x000000000000000000000000000000000000000000000000000000000000abcd"
 
   beforeEach(async function() {
-    this.ERC20PresetMinterPauser = await ERC20PresetMinterPauser.new("TestToken", "TEST", {from: issuer})
-    await this.ERC20PresetMinterPauser.mint(issuer, 1000000000, {from: issuer});    
-    this.simpleSwapFactory = await SimpleSwapFactory.new(this.ERC20PresetMinterPauser.address)
+    this.TestToken = await TestToken.new({from: issuer})
+    await this.TestToken.mint(issuer, 1000000000, {from: issuer});    
+    this.simpleSwapFactory = await SimpleSwapFactory.new(this.TestToken.address)
     let { logs } = await this.simpleSwapFactory.deploySimpleSwap(issuer, defaultHardDepositTimeout, salt)
     this.ERC20SimpleSwapAddress = logs[0].args.contractAddress
     this.ERC20SimpleSwap = await ERC20SimpleSwap.at(this.ERC20SimpleSwapAddress)
     if(value != 0) {
-      await this.ERC20PresetMinterPauser.transfer(this.ERC20SimpleSwap.address, value, {from: issuer});
+      await this.TestToken.transfer(this.ERC20SimpleSwap.address, value, {from: issuer});
     }
     this.postconditions = {
       issuer: await this.ERC20SimpleSwap.issuer(),
@@ -201,8 +201,8 @@ function cashChequeInternal(beneficiary, recipient, cumulativePayout, callerPayo
 function shouldCashChequeBeneficiary(recipient, cumulativePayout, signee, from) {
   beforeEach(async function() {
     this.preconditions = {
-      callerBalance: await this.ERC20PresetMinterPauser.balanceOf(from),
-      recipientBalance: await this.ERC20PresetMinterPauser.balanceOf(recipient),
+      callerBalance: await this.TestToken.balanceOf(from),
+      recipientBalance: await this.TestToken.balanceOf(recipient),
       totalHardDeposit: await this.ERC20SimpleSwap.totalHardDeposit(),
       hardDepositFor: await this.ERC20SimpleSwap.hardDeposits(from),
       liquidBalance: await this.ERC20SimpleSwap.liquidBalance(),
@@ -219,8 +219,8 @@ function shouldCashChequeBeneficiary(recipient, cumulativePayout, signee, from) 
     this.receipt = receipt
   
     this.postconditions = {
-      callerBalance: await this.ERC20PresetMinterPauser.balanceOf(from),
-      recipientBalance: await this.ERC20PresetMinterPauser.balanceOf(recipient),
+      callerBalance: await this.TestToken.balanceOf(from),
+      recipientBalance: await this.TestToken.balanceOf(recipient),
       totalHardDeposit: await this.ERC20SimpleSwap.totalHardDeposit(),
       hardDepositFor: await this.ERC20SimpleSwap.hardDeposits(from),
       liquidBalance: await this.ERC20SimpleSwap.liquidBalance(),
@@ -252,8 +252,8 @@ function shouldCashCheque(beneficiary, recipient, cumulativePayout, callerPayout
     const beneficiarySig = await signCashOut(this.ERC20SimpleSwap, from, cumulativePayout, recipient, callerPayout, beneficiarySignee)
     const issuerSig = await signCheque(this.ERC20SimpleSwap, beneficiary, cumulativePayout, issuerSignee)
     this.preconditions = {
-      callerBalance: await this.ERC20PresetMinterPauser.balanceOf(from),
-      recipientBalance: await this.ERC20PresetMinterPauser.balanceOf(recipient),
+      callerBalance: await this.TestToken.balanceOf(from),
+      recipientBalance: await this.TestToken.balanceOf(recipient),
       totalHardDeposit: await this.ERC20SimpleSwap.totalHardDeposit(),
       hardDepositFor: await this.ERC20SimpleSwap.hardDeposits(beneficiary),
       liquidBalance: await this.ERC20SimpleSwap.liquidBalance(),
@@ -267,8 +267,8 @@ function shouldCashCheque(beneficiary, recipient, cumulativePayout, callerPayout
     this.receipt = receipt
   
     this.postconditions = {
-      callerBalance: await this.ERC20PresetMinterPauser.balanceOf(from),
-      recipientBalance: await this.ERC20PresetMinterPauser.balanceOf(recipient),
+      callerBalance: await this.TestToken.balanceOf(from),
+      recipientBalance: await this.TestToken.balanceOf(recipient),
       totalHardDeposit: await this.ERC20SimpleSwap.totalHardDeposit(),
       hardDepositFor: await this.ERC20SimpleSwap.hardDeposits(beneficiary),
       liquidBalance: await this.ERC20SimpleSwap.liquidBalance(),
@@ -499,14 +499,14 @@ function shouldNotSetCustomHardDepositTimeout(toSubmit, toSign, signee, from, va
 function shouldWithdraw(amount, from) {
   beforeEach(async function() {
     this.preconditions = {
-      callerBalance: await this.ERC20PresetMinterPauser.balanceOf(from),
+      callerBalance: await this.TestToken.balanceOf(from),
       liquidBalance: await this.ERC20SimpleSwap.liquidBalance()
     }
 
     await this.ERC20SimpleSwap.withdraw(amount, {from: from})
 
     this.postconditions = {
-      callerBalance: await  this.ERC20PresetMinterPauser.balanceOf(from),
+      callerBalance: await  this.TestToken.balanceOf(from),
       liquidBalance: await this.ERC20SimpleSwap.liquidBalance()
     }
   })
@@ -536,7 +536,7 @@ function shouldDeposit(amount, from) {
       totalHardDeposit: await this.ERC20SimpleSwap.totalHardDeposit(),
       liquidBalance: await this.ERC20SimpleSwap.liquidBalance()
     }
-    const { logs } = await this.ERC20PresetMinterPauser.transfer(this.ERC20SimpleSwap.address, amount, {from: from})
+    const { logs } = await this.TestToken.transfer(this.ERC20SimpleSwap.address, amount, {from: from})
     this.logs = logs
   })
   it('should update the liquidBalance of the checkbook', async function() {
