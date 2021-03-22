@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-pragma solidity =0.6.12;
+pragma solidity =0.7.6;
 import "./ERC20SimpleSwap.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 
@@ -21,7 +21,7 @@ contract SimpleSwapFactory {
   /* address of the code contract from which all chequebooks are cloned */
   address public master;
 
-  constructor(address _ERC20Address) public {
+  constructor(address _ERC20Address) {
     ERC20Address = _ERC20Address;
     ERC20SimpleSwap _master = new ERC20SimpleSwap();
     // set the issuer of the master contract to prevent misuse
