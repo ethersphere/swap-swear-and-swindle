@@ -19,9 +19,8 @@ function shouldDeploy(issuer, defaultHardDepositTimeout, from, value) {
 
   beforeEach(async function() {
     this.ERC20PresetMinterPauser = await ERC20PresetMinterPauser.new("TestToken", "TEST", {from: issuer})
-    await this.ERC20PresetMinterPauser.mint(issuer, 1000000000, {from: issuer});
-    this.master = await ERC20SimpleSwap.new()
-    this.simpleSwapFactory = await SimpleSwapFactory.new(this.ERC20PresetMinterPauser.address, this.master.address)
+    await this.ERC20PresetMinterPauser.mint(issuer, 1000000000, {from: issuer});    
+    this.simpleSwapFactory = await SimpleSwapFactory.new(this.ERC20PresetMinterPauser.address)
     let { logs } = await this.simpleSwapFactory.deploySimpleSwap(issuer, defaultHardDepositTimeout, salt)
     this.ERC20SimpleSwapAddress = logs[0].args.contractAddress
     this.ERC20SimpleSwap = await ERC20SimpleSwap.at(this.ERC20SimpleSwapAddress)

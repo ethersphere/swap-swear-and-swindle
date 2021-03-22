@@ -17,8 +17,7 @@ contract('SimpleSwapFactory', function([issuer, other]) {
   function shouldDeployERC20SimpleSwap(issuer, DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT, value) {
     beforeEach(async function() {
       this.ERC20PresetMinterPauser = await ERC20PresetMinterPauser.new("TestToken", "TEST", {from: issuer})
-      this.master = await ERC20SimpleSwap.new()
-      this.simpleSwapFactory = await SimpleSwapFactory.new(this.ERC20PresetMinterPauser.address, this.master.address)
+      this.simpleSwapFactory = await SimpleSwapFactory.new(this.ERC20PresetMinterPauser.address)
       let { logs } = await this.simpleSwapFactory.deploySimpleSwap(issuer, DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT, salt)
       this.ERC20SimpleSwapAddress = logs[0].args.contractAddress
       this.ERC20SimpleSwap = await ERC20SimpleSwap.at(this.ERC20SimpleSwapAddress)
