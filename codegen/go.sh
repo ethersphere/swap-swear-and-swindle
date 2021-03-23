@@ -7,6 +7,7 @@ VERSION="$(echo $2 | tr . _)"
 SIMPLESWAP_ABI="$(cat artifacts/contracts/ERC20SimpleSwap.sol/ERC20SimpleSwap.json | jq .abi)"
 SIMPLESWAP_FACTORY_ABI="$(cat artifacts/contracts/SimpleSwapFactory.sol/SimpleSwapFactory.json | jq .abi)"
 SIMPLESWAP_FACTORY_BYTECODE="$(cat artifacts/contracts/SimpleSwapFactory.sol/SimpleSwapFactory.json | jq .bytecode)"
+SIMPLESWAP_FACTORY_DEPLOYED_BYTECODE="$(cat artifacts/contracts/SimpleSwapFactory.sol/SimpleSwapFactory.json | jq .deployedBytecode)"
 ERC20_ABI="$(cat artifacts/@openzeppelin/contracts/token/ERC20/ERC20.sol/ERC20.json | jq .abi)"
 
 cat <<EOF > "$TARGET"
@@ -23,4 +24,5 @@ const SimpleSwapFactoryABI$VERSION = \`$SIMPLESWAP_FACTORY_ABI\`
 const ERC20ABI$VERSION = \`$ERC20_ABI\`
 
 const SimpleSwapFactoryBin$VERSION = $SIMPLESWAP_FACTORY_BYTECODE
+const SimpleSwapFactoryDeployedBin$VERSION = $SIMPLESWAP_FACTORY_DEPLOYED_BYTECODE
 EOF
