@@ -1,7 +1,7 @@
 {
   "extends": "solhint:recommended",
   "rules": {
-    "indent": [4],
+    "func-visibility": ["error",{"ignoreConstructors":true}],
     "not-rely-on-time": "off",
     "compiler-version": "off"
   }

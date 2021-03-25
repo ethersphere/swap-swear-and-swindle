@@ -154,7 +154,7 @@ contract ERC20SimpleSwap {
     /* The issuer must have given explicit approval to the cumulativePayout, either by being the caller or by signature*/
     if (msg.sender != issuer) {
       require(issuer == recoverEIP712(chequeHash(address(this), beneficiary, cumulativePayout), issuerSig),
-      "SimpleSwap: invalid issuer signature");
+      "invalid issuer signature");
     }
     /* the requestPayout is the amount requested for payment processing */
     uint requestPayout = cumulativePayout.sub(paidOut[beneficiary]);
@@ -173,17 +173,17 @@ contract ERC20SimpleSwap {
     paidOut[beneficiary] = paidOut[beneficiary].add(totalPayout);
     totalPaidOut = totalPaidOut.add(totalPayout);
     /* do the actual payments */
-
-    require(token.transfer(recipient, totalPayout.sub(callerPayout)), "SimpleSwap: SimpleSwap: transfer failed");
-    /* do a transfer to the caller if specified*/
-    if (callerPayout != 0) {
-      require(token.transfer(msg.sender, callerPayout), "SimpleSwap: SimpleSwap: transfer failed");
-    }
     emit ChequeCashed(beneficiary, recipient, msg.sender, totalPayout, cumulativePayout, callerPayout);
     /* let the world know that the issuer has over-promised on outstanding cheques */
     if (requestPayout != totalPayout) {
       bounced = true;
       emit ChequeBounced();
+    }
+
+    require(token.transfer(recipient, totalPayout.sub(callerPayout)), "transfer failed");
+    /* do a transfer to the caller if specified*/
+    if (callerPayout != 0) {
+      require(token.transfer(msg.sender, callerPayout), "transfer failed");
     }
   }
   /**
@@ -214,7 +214,7 @@ contract ERC20SimpleSwap {
           recipient,
           callerPayout
         ), beneficiarySig
-      ), "SimpleSwap: invalid beneficiary signature");
+      ), "invalid beneficiary signature");
     _cashChequeInternal(beneficiary, recipient, cumulativePayout, callerPayout, issuerSig);
   }
 
@@ -238,7 +238,7 @@ contract ERC20SimpleSwap {
     require(msg.sender == issuer, "SimpleSwap: not issuer");
     HardDeposit storage hardDeposit = hardDeposits[beneficiary];
     /* cannot decrease it by more than the deposit */
-    require(decreaseAmount <= hardDeposit.amount, "SimpleSwap: hard deposit not sufficient");
+    require(decreaseAmount <= hardDeposit.amount, "hard deposit not sufficient");
     // if hardDeposit.timeout was never set, apply defaultHardDepositTimeout
     uint timeout = hardDeposit.timeout == 0 ? defaultHardDepositTimeout : hardDeposit.timeout;
     hardDeposit.canBeDecreasedAt = block.timestamp + timeout;
@@ -252,7 +252,7 @@ contract ERC20SimpleSwap {
   */
   function decreaseHardDeposit(address beneficiary) public {
     HardDeposit storage hardDeposit = hardDeposits[beneficiary];
-    require(block.timestamp >= hardDeposit.canBeDecreasedAt && hardDeposit.canBeDecreasedAt != 0, "SimpleSwap: deposit not yet timed out");
+    require(block.timestamp >= hardDeposit.canBeDecreasedAt && hardDeposit.canBeDecreasedAt != 0, "deposit not yet timed out");
     /* this throws if decreaseAmount > amount */
     //TODO: if there is a cash-out in between prepareDecreaseHardDeposit and decreaseHardDeposit, decreaseHardDeposit will throw and reducing hard-deposits is impossible.
     hardDeposit.amount = hardDeposit.amount.sub(hardDeposit.decreaseAmount);
@@ -271,7 +271,7 @@ contract ERC20SimpleSwap {
   function increaseHardDeposit(address beneficiary, uint amount) public {
     require(msg.sender == issuer, "SimpleSwap: not issuer");
     /* ensure hard deposits don't exceed the global balance */
-    require(totalHardDeposit.add(amount) <= balance(), "SimpleSwap: hard deposit cannot be more than balance");
+    require(totalHardDeposit.add(amount) <= balance(), "hard deposit exceeds balance");
 
     HardDeposit storage hardDeposit = hardDeposits[beneficiary];
     hardDeposit.amount = hardDeposit.amount.add(amount);
@@ -294,10 +294,10 @@ contract ERC20SimpleSwap {
     uint hardDepositTimeout,
     bytes memory beneficiarySig
   ) public {
-    require(msg.sender == issuer, "SimpleSwap: not issuer");
+    require(msg.sender == issuer, "not issuer");
     require(
       beneficiary == recoverEIP712(customDecreaseTimeoutHash(address(this), beneficiary, hardDepositTimeout), beneficiarySig),
-      "SimpleSwap: invalid beneficiary signature"
+      "invalid beneficiary signature"
     );
     hardDeposits[beneficiary].timeout = hardDepositTimeout;
     emit HardDepositTimeoutChanged(beneficiary, hardDepositTimeout);
@@ -308,10 +308,10 @@ contract ERC20SimpleSwap {
   // solhint-disable-next-line no-simple-event-func-name
   function withdraw(uint amount) public {
     /* only issuer can do this */
-    require(msg.sender == issuer, "SimpleSwap: not issuer");
+    require(msg.sender == issuer, "not issuer");
     /* ensure we don't take anything from the hard deposit */
-    require(amount <= liquidBalance(), "SimpleSwap: liquidBalance not sufficient");
-    require(token.transfer(issuer, amount), "SimpleSwap: SimpleSwap: transfer failed");
+    require(amount <= liquidBalance(), "liquidBalance not sufficient");
+    require(token.transfer(issuer, amount), "transfer failed");
   }
 
   function chequeHash(address chequebook, address beneficiary, uint cumulativePayout)

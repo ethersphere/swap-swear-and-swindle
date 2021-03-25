@@ -344,7 +344,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
                     })                  
                   })
                   context('when no money is deposited', function () {
-                    const revertMessage = 'SimpleSwap: cannot pay caller'
+                    const revertMessage = 'cannot pay caller'
                     const beneficiaryToSign = {
                       cumulativePayout: firstCumulativePayout,
                       recipient,
@@ -370,7 +370,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
               context('when the issuer does not provide the issuerSig', function () {
                 const issuerSignee = alice
                 const callerPayout = defaults.firstCumulativePayout.div(new BN(100))
-                const revertMessage = 'SimpleSwap: invalid issuer signature'
+                const revertMessage = 'invalid issuer signature'
                 const beneficiaryToSign = {
                   cumulativePayout: firstCumulativePayout,
                   recipient,
@@ -391,7 +391,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
               const beneficiarySignee = alice
               const issuerSignee = issuer
               const callerPayout = defaults.firstCumulativePayout.div(new BN(100))
-              const revertMessage = 'SimpleSwap: invalid beneficiary signature'
+              const revertMessage = 'invalid beneficiary signature'
               const beneficiaryToSign = {
                 cumulativePayout: firstCumulativePayout,
                 recipient,
@@ -541,7 +541,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
               })
             })
             context('when the signee does not sign the correct fields', function () {
-              const revertMessage = "SimpleSwap: invalid issuer signature"
+              const revertMessage = "invalid issuer signature"
               const recipient = defaults.recipient
               const toSubmitCumulativePayment = defaults.firstCumulativePayout
               const toSignCumulativePayment = new BN(1)
@@ -550,7 +550,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
             })
           })
           context('when the issuer is not a signee', function () {
-            const revertMessage = "SimpleSwap: invalid issuer signature"
+            const revertMessage = "invalid issuer signature"
             const signee = alice
             const recipient = defaults.recipient
             const toSubmitCumulativePayment = defaults.firstCumulativePayout
@@ -615,7 +615,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
                   })
                   context('when the decreaseAmount is higher than the hardDepositAmount', function () {
                     const decreaseAmount = hardDepositAmount.add(new BN(1))
-                    const revertMessage = "SimpleSwap: hard deposit not sufficient"
+                    const revertMessage = "hard deposit not sufficient"
                     describe(describeTest + 'shouldNotPrepareDecreaseHardDeposit', function () {
                       shouldNotPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, sender, value, revertMessage)
                     })
@@ -623,7 +623,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
                 })
                 context('when the sender is the issuer', function () {
                   const sender = alice
-                  const revertMessage = "SimpleSwap: not issuer"
+                  const revertMessage = "not issuer"
                   const decreaseAmount = hardDepositAmount
                   describe(describeTest + 'shouldNotPrepareDecreaseHardDeposit', function () {
                     shouldNotPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, sender, value, revertMessage)
@@ -632,7 +632,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
               })
               context('when there are no hardDeposits', function () {
                 const sender = issuer
-                const revertMessage = "SimpleSwap: hard deposit not sufficient"
+                const revertMessage = "hard deposit not sufficient"
                 const decreaseAmount = new BN(50)
                 describe(describeTest + 'shouldNotPrepareDecreaseHardDeposit', function () {
                   shouldNotPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, sender, value, revertMessage)
@@ -678,7 +678,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
                     })
                     context('when we have not waited more than defaultHardDepositTimeout time', function () {
                       describe(describeTest + 'shouldNotDecreaseHardDeposit', function () {
-                        const revertMessage = "SimpleSwap: deposit not yet timed out"
+                        const revertMessage = "deposit not yet timed out"
                         shouldNotDecreaseHardDeposit(beneficiary, sender, value, revertMessage)
                       })
                     })
@@ -688,7 +688,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
             })
             context('when we have not prepared the decreaseHardDeposit', function () {
               describe(describeTest + 'shouldNotDecreaseHardDeposit', function () {
-                const revertMessage = "SimpleSwap: deposit not yet timed out"
+                const revertMessage = "deposit not yet timed out"
                 shouldNotDecreaseHardDeposit(beneficiary, sender, value, revertMessage)
               })
             })
@@ -740,7 +740,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
             })
             context('when the liquidBalance is less than the requested hardDepositIncrease', function () {
               describe(describeTest + 'shouldNotIncreaseHardDeposit', function () {
-                const revertMessage = "SimpleSwap: hard deposit cannot be more than balance"
+                const revertMessage = "hard deposit exceeds balance"
                 shouldNotIncreaseHardDeposit(beneficiary, hardDepositIncrease, sender, value, revertMessage)
               })
             })
@@ -748,7 +748,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
           context('when the sender is not the issuer', function () {
             const sender = alice
             describe(describeTest + 'shouldNotIncreaseHardDeposit', function () {
-              const revertMessage = "SimpleSwap: not issuer"
+              const revertMessage = "not issuer"
               shouldNotIncreaseHardDeposit(beneficiary, hardDepositIncrease, sender, value, revertMessage)
             })
           })
@@ -785,7 +785,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
                 describe(describeTest + 'shouldNotSetCustomHardDepositTimeout', function () {
                   const toSubmit = { beneficiary, timeout }
                   const toSign = { beneficiary, timeout: timeout.sub(new BN(1)) }
-                  const revertMessage = "SimpleSwap: invalid beneficiary signature"
+                  const revertMessage = "invalid beneficiary signature"
                   shouldNotSetCustomHardDepositTimeout(toSubmit, toSign, signee, sender, value, revertMessage)
                 })
               })
@@ -795,7 +795,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
               describe(describeTest + 'shouldNotSetCustomHardDepositTimeout', function () {
                 const toSubmit = { beneficiary, timeout }
                 const toSign = toSubmit
-                const revertMessage = "SimpleSwap: invalid beneficiary signature"
+                const revertMessage = "invalid beneficiary signature"
                 shouldNotSetCustomHardDepositTimeout(toSubmit, toSign, signee, sender, value, revertMessage)
               })
             })
@@ -806,7 +806,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
               const toSubmit = { beneficiary, timeout }
               const toSign = toSubmit
               const signee = beneficiary
-              const revertMessage = "SimpleSwap: not issuer"
+              const revertMessage = "not issuer"
               shouldNotSetCustomHardDepositTimeout(toSubmit, toSign, signee, sender, value, revertMessage)
             })
           })
@@ -851,13 +851,13 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
               })
             })
             context('when the liquidBalance is less than the withdrawAmount', function () {
-              const revertMessage = "SimpleSwap: liquidBalance not sufficient"
+              const revertMessage = "liquidBalance not sufficient"
               shouldNotWithdraw(withdrawAmount, sender, value, revertMessage)
             })
           })
           context('when the sender is not the issuer', function () {
             const sender = alice
-            const revertMessage = "SimpleSwap: not issuer"
+            const revertMessage = "not issuer"
             shouldNotWithdraw(withdrawAmount, sender, value, revertMessage)
           })
         })
