@@ -2,7 +2,8 @@ const {
   BN,
   balance,
   constants,
-  expectEvent
+  expectEvent,
+  expectRevert
 } = require("@openzeppelin/test-helpers");
 
 const { expect } = require('chai');
@@ -61,6 +62,14 @@ contract('SimpleSwapFactory', function([issuer, other]) {
   
     describe("when we deposit while deploying SimpleSwap", function() {
       shouldDeployERC20SimpleSwap(issuer, new BN(86400), new BN(10))
+    })
+
+    describe("when we deposit while issuer 0", function() {
+      it('should fail', async function() {
+        this.TestToken = await TestToken.new({from: issuer})
+        this.simpleSwapFactory = await SimpleSwapFactory.new(this.TestToken.address)
+        await expectRevert(this.simpleSwapFactory.deploySimpleSwap(constants.ZERO_ADDRESS, 0, salt), 'invalid issuer')
+      })
     })
   })
 })
