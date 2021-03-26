@@ -32,6 +32,11 @@ function shouldDeploy(issuer, defaultHardDepositTimeout, from, value) {
       defaultHardDepositTimeout: await this.ERC20SimpleSwap.defaultHardDepositTimeout()
     }
   })
+
+  it('should not allow a second init', async function() {
+    await expectRevert(this.ERC20SimpleSwap.init(issuer, this.TestToken.address, 0), "already initialized")
+  })
+
   it('should set the issuer', function() {
     expect(this.postconditions.issuer).to.be.equal(issuer)
   })
