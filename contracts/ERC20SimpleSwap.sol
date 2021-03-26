@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-pragma solidity =0.6.12;
+pragma solidity =0.7.6;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
@@ -241,7 +241,7 @@ contract ERC20SimpleSwap {
     require(decreaseAmount <= hardDeposit.amount, "SimpleSwap: hard deposit not sufficient");
     // if hardDeposit.timeout was never set, apply defaultHardDepositTimeout
     uint timeout = hardDeposit.timeout == 0 ? defaultHardDepositTimeout : hardDeposit.timeout;
-    hardDeposit.canBeDecreasedAt = now + timeout;
+    hardDeposit.canBeDecreasedAt = block.timestamp + timeout;
     hardDeposit.decreaseAmount = decreaseAmount;
     emit HardDepositDecreasePrepared(beneficiary, decreaseAmount);
   }
@@ -252,7 +252,7 @@ contract ERC20SimpleSwap {
   */
   function decreaseHardDeposit(address beneficiary) public {
     HardDeposit storage hardDeposit = hardDeposits[beneficiary];
-    require(now >= hardDeposit.canBeDecreasedAt && hardDeposit.canBeDecreasedAt != 0, "SimpleSwap: deposit not yet timed out");
+    require(block.timestamp >= hardDeposit.canBeDecreasedAt && hardDeposit.canBeDecreasedAt != 0, "SimpleSwap: deposit not yet timed out");
     /* this throws if decreaseAmount > amount */
     //TODO: if there is a cash-out in between prepareDecreaseHardDeposit and decreaseHardDeposit, decreaseHardDeposit will throw and reducing hard-deposits is impossible.
     hardDeposit.amount = hardDeposit.amount.sub(hardDeposit.decreaseAmount);
