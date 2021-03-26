@@ -116,6 +116,7 @@ contract ERC20SimpleSwap {
   @param _defaultHardDepositTimeout duration in seconds which by default will be used to reduce hardDeposit allocations
   */
   function init(address _issuer, address _token, uint _defaultHardDepositTimeout) public {
+    require(_issuer != address(0), "invalid issuer");
     require(issuer == address(0), "already initialized");
     issuer = _issuer;
     token = ERC20(_token);
