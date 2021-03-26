@@ -1,8 +1,11 @@
+// SPDX-License-Identifier: BSD-3-Clause
 pragma solidity =0.6.12;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol";
+
 
 /**
 @title Chequebook contract without waivers
@@ -106,12 +109,15 @@ contract ERC20SimpleSwap {
   bool public bounced;
 
   /**
-  @notice sets the issuer, defaultHardDepositTimeout and receives an initial deposit
+  @notice sets the issuer, token and the defaultHardDepositTimeout. can only be called once.
   @param _issuer the issuer of cheques from this chequebook (needed as an argument for "Setting up a chequebook as a payment").
   _issuer must be an Externally Owned Account, or it must support calling the function cashCheque
+  @param _token the token this chequebook uses
   @param _defaultHardDepositTimeout duration in seconds which by default will be used to reduce hardDeposit allocations
   */
-  constructor(address _issuer, address _token, uint _defaultHardDepositTimeout) public {
+  function init(address _issuer, address _token, uint _defaultHardDepositTimeout) public {
+    require(_issuer != address(0), "invalid issuer");
+    require(issuer == address(0), "already initialized");
     issuer = _issuer;
     token = ERC20(_token);
     defaultHardDepositTimeout = _defaultHardDepositTimeout;
