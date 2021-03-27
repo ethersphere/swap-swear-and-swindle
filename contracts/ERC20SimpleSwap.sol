@@ -172,19 +172,23 @@ contract ERC20SimpleSwap {
     /* increase the stored paidOut amount to avoid double payout */
     paidOut[beneficiary] = paidOut[beneficiary].add(totalPayout);
     totalPaidOut = totalPaidOut.add(totalPayout);
-    /* do the actual payments */
-    emit ChequeCashed(beneficiary, recipient, msg.sender, totalPayout, cumulativePayout, callerPayout);
+
     /* let the world know that the issuer has over-promised on outstanding cheques */
     if (requestPayout != totalPayout) {
       bounced = true;
       emit ChequeBounced();
     }
 
-    require(token.transfer(recipient, totalPayout.sub(callerPayout)), "transfer failed");
     /* do a transfer to the caller if specified*/
     if (callerPayout != 0) {
       require(token.transfer(msg.sender, callerPayout), "transfer failed");
+      require(token.transfer(recipient, totalPayout.sub(callerPayout)), "transfer failed");
+    } else {
+      require(token.transfer(recipient, totalPayout), "transfer failed");
     }
+
+    /* do the actual payments */
+    emit ChequeCashed(beneficiary, recipient, msg.sender, totalPayout, cumulativePayout, callerPayout);
   }
   /**
   @notice cash a cheque of the beneficiary by a non-beneficiary and reward the sender for doing so with callerPayout
