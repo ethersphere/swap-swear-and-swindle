@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 pragma solidity =0.7.6;
+pragma abicoder v2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
