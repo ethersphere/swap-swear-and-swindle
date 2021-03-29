@@ -21,9 +21,10 @@ function shouldDeploy(issuer, defaultHardDepositTimeout, from, value) {
     this.TestToken = await TestToken.new({from: issuer})
     await this.TestToken.mint(issuer, 1000000000, {from: issuer});    
     this.simpleSwapFactory = await SimpleSwapFactory.new(this.TestToken.address)
-    let { logs } = await this.simpleSwapFactory.deploySimpleSwap(issuer, defaultHardDepositTimeout, salt)
+    let { logs, receipt } = await this.simpleSwapFactory.deploySimpleSwap(issuer, defaultHardDepositTimeout, salt)
     this.ERC20SimpleSwapAddress = logs[0].args.contractAddress
     this.ERC20SimpleSwap = await ERC20SimpleSwap.at(this.ERC20SimpleSwapAddress)
+    this.receipt = receipt
     if(value != 0) {
       await this.TestToken.transfer(this.ERC20SimpleSwap.address, value, {from: issuer});
     }
@@ -31,6 +32,10 @@ function shouldDeploy(issuer, defaultHardDepositTimeout, from, value) {
       issuer: await this.ERC20SimpleSwap.issuer(),
       defaultHardDepositTimeout: await this.ERC20SimpleSwap.defaultHardDepositTimeout()
     }
+  })
+
+  it('gas used for transaction', async function() {
+    console.log(`used ${this.receipt.gasUsed} gas`)
   })
 
   it('should not allow a second init', async function() {
