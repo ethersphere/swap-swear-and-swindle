@@ -179,15 +179,16 @@ contract ERC20SimpleSwap {
       emit ChequeBounced();
     }
 
-    /* do a transfer to the caller if specified*/
     if (callerPayout != 0) {
+    /* do a transfer to the caller if specified*/
       require(token.transfer(msg.sender, callerPayout), "transfer failed");
+      /* do the actual payment */
       require(token.transfer(recipient, totalPayout.sub(callerPayout)), "transfer failed");
     } else {
+      /* do the actual payment */
       require(token.transfer(recipient, totalPayout), "transfer failed");
     }
 
-    /* do the actual payments */
     emit ChequeCashed(beneficiary, recipient, msg.sender, totalPayout, cumulativePayout, callerPayout);
   }
   /**
