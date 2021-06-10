@@ -49,7 +49,8 @@ Swap is deployed on the following testnets:
 
 | Network | Factory | Token |
 | ------- | -------- | ------- |
-| Goerli | [0xf0277caffea72734853b834afc9892461ea18474](https://goerli.etherscan.io/address/0xf0277caffea72734853b834afc9892461ea18474) | [0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335](https://goerli.etherscan.io/address/0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335) |
+| Goerli | [0x73c412512E1cA0be3b89b77aB3466dA6A1B9d273](https://goerli.etherscan.io/address/0x73c412512E1cA0be3b89b77aB3466dA6A1B9d273)| [0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335](https://goerli.etherscan.io/address/0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335) |
+| Goerli (Legacy) | [0xf0277caffea72734853b834afc9892461ea18474](https://goerli.etherscan.io/address/0xf0277caffea72734853b834afc9892461ea18474) | [0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335](https://goerli.etherscan.io/address/0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335) |
 
 ## Overview
 
