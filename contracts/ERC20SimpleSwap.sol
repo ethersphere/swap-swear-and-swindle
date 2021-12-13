@@ -56,15 +56,11 @@ contract ERC20SimpleSwap {
   );
 
   // the EIP712 domain this contract uses
-  function domain() internal view returns (EIP712Domain memory) {
-    uint256 chainId;
-    assembly {
-      chainId := chainid()
-    }
+  function domain() internal view returns (EIP712Domain memory) {    
     return EIP712Domain({
       name: "Chequebook",
       version: "1.0",
-      chainId: chainId
+      chainId: block.chainid
     });
   }
 
