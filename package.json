@@ -11,7 +11,8 @@
     "url": "https://github.com/ethersphere/swap-swear-and-swindle.git"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^4.4.1"
+    "@openzeppelin/contracts": "^4.4.1",
+    "dotenv": "^16.0.3"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-truffle5": "^2.0.2",
