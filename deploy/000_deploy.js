@@ -5,6 +5,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   const { deploy, log } = deployments;
   const { deployer } = await getNamedAccounts();
 
+  // This code is just used for Sepolia testnet deployment
   const waitBlockConfirmations = network.name != "testnet" ? 1 : 6;
 
   log("----------------------------------------------------");
@@ -19,7 +20,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   log("Factory deployed at address " + factory.address);
 
   // Verify the deployment
-  if (network.name == "testnet" && process.env.ETHERSCAN_API_KEY) {
+  if (network.name == "testnet" && process.env.TESTNET_ETHERSCAN_KEY) {
     log("Verifying...");
     await verify(factory.address, arguments);
   }
