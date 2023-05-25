@@ -1,6 +1,8 @@
 require("@nomiclabs/hardhat-truffle5");
 require("solidity-coverage")
 require('dotenv/config');
+require('hardhat-deploy');
+require("@nomicfoundation/hardhat-verify");
 
 const PRIVATE_RPC_MAINNET = !process.env.PRIVATE_RPC_MAINNET ? undefined : process.env.PRIVATE_RPC_MAINNET;
 const PRIVATE_RPC_TESTNET = !process.env.PRIVATE_RPC_TESTNET ? undefined : process.env.PRIVATE_RPC_TESTNET;
@@ -9,6 +11,9 @@ const walletSecret = process.env.WALLET_SECRET === undefined ? 'undefined' : pro
 if (walletSecret === 'undefined') {
   console.log('Please set your WALLET_SECRET in a .env file');
 }
+
+const mainnetEtherscanKey = process.env.MAINNET_ETHERSCAN_KEY;
+const testnetEtherscanKey = process.env.TESTNET_ETHERSCAN_KEY;
 const accounts = walletSecret.length === 64 ? [walletSecret] : { mnemonic: walletSecret };
 
 // Config for hardhat.
@@ -38,6 +43,30 @@ module.exports = {
       accounts,
       chainId: 100,
     },
+  },
+    etherscan: {
+    apiKey: {
+      mainnet: mainnetEtherscanKey || '',
+      testnet: testnetEtherscanKey || '',
+    },
+    customChains: [
+      {
+        network: 'testnet',
+        chainId: 11155111,
+        urls: {
+          apiURL: 'https://api-sepolia.etherscan.io/api',
+          browserURL: 'https://sepolia.etherscan.io/address/',
+        },
+      },
+      {
+        network: 'mainnet',
+        chainId: 100,
+        urls: {
+          apiURL: 'https://api.gnosisscan.io/',
+          browserURL: 'https://gnosisscan.io/address/',
+        },
+      },
+    ],
   },
   paths: {
     sources: 'contracts',
