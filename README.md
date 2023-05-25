@@ -20,6 +20,7 @@ To also generate coverage information use `yarn coverage` instead.
 ## Linting
 
 This repo currently uses `solhint` as linter. It can be called through yarn:
+
 ```sh
 yarn lint
 ```
@@ -27,6 +28,7 @@ yarn lint
 ## Go-bindings
 
 To generate go bindings use
+
 ```sh
 yarn abigen
 ```
@@ -42,22 +44,25 @@ docker run -v $(pwd)/bindings:/sw3/bindings sw3 yarn abigen
 In addition to the file from `abigen` this will also generate a go file that includes the runtime bytecode.
 
 The go bindings are automatically generated on every release git tag and the pushed to the [ethersphere/go-sw3](https://github.com/ethersphere/go-sw3) repository.
+
 ## Deployments
 
 Swap is deployed on the following networks:
 
-| Network | Factory | Token |
-| ------- | -------- | ------- |
-| Mainnet | - | [0x19062190B1925b5b6689D7073fDfC8c2976EF8Cb](https://etherscan.io/address/0x19062190b1925b5b6689d7073fdfc8c2976ef8cb) |
-| XDai | [0xc2d5a532cf69aa9a1378737d8ccdef884b6e7420](https://blockscout.com/xdai/mainnet/address/0xC2d5A532cf69AA9A1378737D8ccDEF884B6E7420)| [0xdbf3ea6f5bee45c02255b2c26a16f300502f68da (bridged)](https://blockscout.com/xdai/mainnet/address/0xdbf3ea6f5bee45c02255b2c26a16f300502f68da) |
+| Network | Factory                                                                                                                              | Token                                                                                                                                          |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mainnet | -                                                                                                                                    | [0x19062190B1925b5b6689D7073fDfC8c2976EF8Cb](https://etherscan.io/address/0x19062190b1925b5b6689d7073fdfc8c2976ef8cb)                          |
+| XDai    | [0xc2d5a532cf69aa9a1378737d8ccdef884b6e7420](https://blockscout.com/xdai/mainnet/address/0xC2d5A532cf69AA9A1378737D8ccDEF884B6E7420) | [0xdbf3ea6f5bee45c02255b2c26a16f300502f68da (bridged)](https://blockscout.com/xdai/mainnet/address/0xdbf3ea6f5bee45c02255b2c26a16f300502f68da) |
+
 ## Test Deployments
 
 Swap is deployed on the following testnets:
 
-| Network | Factory | Token |
-| ------- | -------- | ------- |
-| Goerli | [0x73c412512E1cA0be3b89b77aB3466dA6A1B9d273](https://goerli.etherscan.io/address/0x73c412512E1cA0be3b89b77aB3466dA6A1B9d273)| [0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335](https://goerli.etherscan.io/address/0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335) |
-| Goerli (Legacy) | [0xf0277caffea72734853b834afc9892461ea18474](https://goerli.etherscan.io/address/0xf0277caffea72734853b834afc9892461ea18474) | [0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335](https://goerli.etherscan.io/address/0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335) |
+| Network         | Factory                                                                                                                       | Token                                                                                                                         |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Sepolia         | [0x9B3C8D7f0994A336B71b5d35FC0Cff8AEC95DEDA](https://sepolia.etherscan.io/address/0x9B3C8D7f0994A336B71b5d35FC0Cff8AEC95DEDA) | [0xa66be4A7De4DfA5478Cb2308469D90115C45aA23](https://sepolia.etherscan.io/address/0xa66be4A7De4DfA5478Cb2308469D90115C45aA23) |
+| Goerli          | [0x73c412512E1cA0be3b89b77aB3466dA6A1B9d273](https://goerli.etherscan.io/address/0x73c412512E1cA0be3b89b77aB3466dA6A1B9d273)  | [0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335](https://goerli.etherscan.io/address/0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335)  |
+| Goerli (Legacy) | [0xf0277caffea72734853b834afc9892461ea18474](https://goerli.etherscan.io/address/0xf0277caffea72734853b834afc9892461ea18474)  | [0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335](https://goerli.etherscan.io/address/0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335)  |
 
 ## Overview
 
@@ -82,33 +87,33 @@ For signing purposes the chequebook uses EIP-712 Ethereum typed structured data 
 
 #### Cheques
 
-| Field            | Type         | Description   |
-| ---------------- | ------------ | ------------- |
-| swap             | address      | the swap contract this is for |
-| beneficiary      | address      | beneficiary of the cheque |
-| cumulativePayout | uint256      | cumulative amount |
+| Field            | Type    | Description                    |
+| ---------------- | ------- | ------------------------------ |
+| swap             | address |  the swap contract this is for |
+| beneficiary      | address |  beneficiary of the cheque     |
+| cumulativePayout | uint256 | cumulative amount              |
 
 #### CashOut
 
-| Field            | Type         | Description   |
-| ---------------- | ------------ | ------------- |
-| swap             | address      | the swap contract this is for |
-| sender           | address      | the address allowed to submit this cheque |
-| requestPayout    | uint256      | the maximum amount that should be paid out |
-| recipient        | address      | the target of the payment |
-| calleePayout     | uint256      | amount of the payout that should go the caller |
+| Field         | Type    | Description                                    |
+| ------------- | ------- | ---------------------------------------------- |
+| swap          | address |  the swap contract this is for                 |
+| sender        | address | the address allowed to submit this cheque      |
+| requestPayout | uint256 | the maximum amount that should be paid out     |
+| recipient     | address | the target of the payment                      |
+| calleePayout  | uint256 | amount of the payout that should go the caller |
 
 #### CustomHardDepositDecreaseTimeout
 
-| Field            | Type         | Description   |
-| ---------------- | ------------ | ------------- |
-| swap             | address      | the swap contract this is for |
-| beneficiary      | address      | beneficiary of the hard deposit |
-| decreaseTimeout  | uint256      | new timeout |
+| Field           | Type    | Description                      |
+| --------------- | ------- | -------------------------------- |
+| swap            | address |  the swap contract this is for   |
+| beneficiary     | address |  beneficiary of the hard deposit |
+| decreaseTimeout | uint256 | new timeout                      |
 
 #### Factory
 
-`SimpleSwap` has an accompanying factory contract `SimpleSwapFactory`. Deploying through the factory guarantees that the `SimpleSwap `contract was deployed with the correct init code.
+`SimpleSwap` has an accompanying factory contract `SimpleSwapFactory`. Deploying through the factory guarantees that the `SimpleSwap`contract was deployed with the correct init code.
 
 ## Swap
 
