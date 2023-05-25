@@ -32,7 +32,7 @@
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",
-    "abigen": "./abigen/gen.sh ERC20SimpleSwap SimpleSwapFactory Migrations",
+    "abigen": "./abigen/gen.sh ERC20SimpleSwap SimpleSwapFactory",
     "lint": "solhint contracts/ERC20SimpleSwap.sol contracts/SimpleSwapFactory.sol",
     "coverage": "hardhat coverage"
   },
