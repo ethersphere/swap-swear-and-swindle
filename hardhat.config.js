@@ -2,16 +2,12 @@ require("@nomiclabs/hardhat-truffle5");
 require("solidity-coverage")
 
 
-// Define mnemonic for accounts.
-let mnemonic = process.env.MNEMONIC;
-if (!mnemonic) {
-  // NOTE: this fallback is for development only!
-  // When using other networks, set the secret in .env.
-  // DO NOT commit or share your mnemonic with others!
-  mnemonic = 'test test test test test test test test test test test test';
+const walletSecret = process.env.WALLET_SECRET === undefined ? 'undefined' : process.env.WALLET_SECRET;
+if (walletSecret === 'undefined') {
+  console.log('Please set your WALLET_SECRET in a .env file');
 }
+const accounts = walletSecret.length === 64 ? [walletSecret] : { mnemonic: walletSecret };
 
-const accounts = { mnemonic };
 
 // Config for hardhat.
 module.exports = {
@@ -22,7 +18,7 @@ module.exports = {
         runs: 200
       },
     }
-  },  
+  },
   networks: {
     hardhat: {
       accounts,
