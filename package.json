@@ -11,7 +11,10 @@
     "url": "https://github.com/ethersphere/swap-swear-and-swindle.git"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^4.4.1"
+    "@nomicfoundation/hardhat-verify": "^1.0.0",
+    "@nomiclabs/hardhat-etherscan": "^3.1.7",
+    "@openzeppelin/contracts": "^4.4.1",
+    "dotenv": "^16.0.3"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-truffle5": "^2.0.2",
@@ -21,6 +24,7 @@
     "chai": "^4.2.0",
     "ethereumjs-abi": "^0.6.8",
     "hardhat": "^2.6.8",
+    "hardhat-deploy": "^0.11.29",
     "solhint": "^3.3.6",
     "solidity-coverage": "^0.7.17",
     "web3": "^1.6.1"
@@ -28,7 +32,7 @@
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",
-    "abigen": "./abigen/gen.sh ERC20SimpleSwap SimpleSwapFactory Migrations",
+    "abigen": "./abigen/gen.sh ERC20SimpleSwap SimpleSwapFactory",
     "lint": "solhint contracts/ERC20SimpleSwap.sol contracts/SimpleSwapFactory.sol",
     "coverage": "hardhat coverage"
   },

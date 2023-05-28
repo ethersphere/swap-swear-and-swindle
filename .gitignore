@@ -1,6 +1,32 @@
 build
-node_modules
-.DS_Store
 *.go
 coverage
 coverage.json
+
+# @nomiclabs/hardhat
+cache/
+artifacts/
+
+# solidity-coverage
+coverage*
+
+# vscode
+.vscode*
+
+# Node
+node_modules/
+
+# Idea
+.idea/
+.idea/*
+
+# Env
+.env
+
+# hardhat-deploy
+deployments/hardhat
+deployments/localhost
+
+# Misc
+contractsInfo.json
+.DS_Store
