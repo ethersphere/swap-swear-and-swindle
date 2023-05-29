@@ -58,6 +58,6 @@ jobs:
       with:
         repository: ethersphere/go-sw3-abi
         directory: go
-        github_token: ${{ secrets.GH_TOKEN }}
+        github_token: ${{ secrets.GHA_PAT_BASIC }}
         branch: master
         tags: true
