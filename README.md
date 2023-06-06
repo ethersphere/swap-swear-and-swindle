@@ -43,7 +43,7 @@ docker run -v $(pwd)/bindings:/sw3/bindings sw3 yarn abigen
 
 In addition to the file from `abigen` this will also generate a go file that includes the runtime bytecode.
 
-The go bindings are automatically generated on every release git tag and the pushed to the [ethersphere/go-sw3](https://github.com/ethersphere/go-sw3) repository.
+The go bindings are automatically generated on every release git tag and the pushed to the [ethersphere/go-sw3-abi](https://github.com/ethersphere/go-sw3-abi) repository.
 
 ## Deployments
 
