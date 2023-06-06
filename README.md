@@ -49,16 +49,16 @@ The go bindings are automatically generated on every release git tag and the pus
 
 Swap is deployed on the following networks:
 
-| Network | Factory                                                                                                                              | Token                                                                                                                                          |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Mainnet | -                                                                                                                                    | [0x19062190B1925b5b6689D7073fDfC8c2976EF8Cb](https://etherscan.io/address/0x19062190b1925b5b6689d7073fdfc8c2976ef8cb)                          |
-| XDai    | [0xc2d5a532cf69aa9a1378737d8ccdef884b6e7420](https://blockscout.com/xdai/mainnet/address/0xC2d5A532cf69AA9A1378737D8ccDEF884B6E7420) | [0xdbf3ea6f5bee45c02255b2c26a16f300502f68da (bridged)](https://blockscout.com/xdai/mainnet/address/0xdbf3ea6f5bee45c02255b2c26a16f300502f68da) |
+| Network      | Factory                                                                                                                             | BZZ Token                                                                                                                             |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Mainnet      | -                                                                                                                                   | [0x19062190B1925b5b6689D7073fDfC8c2976EF8Cb](https://etherscan.io/address/0x19062190b1925b5b6689d7073fdfc8c2976ef8cb)                 |
+| Gnosis Chain | [0xc2d5a532cf69aa9a1378737d8ccdef884b6e7420](https://gnosisscan.io/address/0xC2d5A532cf69AA9A1378737D8ccDEF884B6E7420#readContract) | [0xdbf3ea6f5bee45c02255b2c26a16f300502f68da (bridged)](https://gnosisscan.io/address/0xdBF3Ea6F5beE45c02255B2c26a16F300502F68da#code) |
 
 ## Test Deployments
 
 Swap is deployed on the following testnets:
 
-| Network         | Factory                                                                                                                       | Token                                                                                                                         |
+| Network         | Factory                                                                                                                       | BZZ Token                                                                                                                     |
 | --------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | Sepolia         | [0x9B3C8D7f0994A336B71b5d35FC0Cff8AEC95DEDA](https://sepolia.etherscan.io/address/0x9B3C8D7f0994A336B71b5d35FC0Cff8AEC95DEDA) | [0xa66be4A7De4DfA5478Cb2308469D90115C45aA23](https://sepolia.etherscan.io/address/0xa66be4A7De4DfA5478Cb2308469D90115C45aA23) |
 | Goerli          | [0x73c412512E1cA0be3b89b77aB3466dA6A1B9d273](https://goerli.etherscan.io/address/0x73c412512E1cA0be3b89b77aB3466dA6A1B9d273)  | [0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335](https://goerli.etherscan.io/address/0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335)  |
@@ -113,7 +113,7 @@ For signing purposes the chequebook uses EIP-712 Ethereum typed structured data 
 
 #### Factory
 
-`SimpleSwap` has an accompanying factory contract `SimpleSwapFactory`. Deploying through the factory guarantees that the `SimpleSwap`contract was deployed with the correct init code.
+`SimpleSwap` has an accompanying factory contract `SimpleSwapFactory`. Deploying through the factory guarantees that the `SimpleSwap` contract was deployed with the correct init code.
 
 ## Swap
 
