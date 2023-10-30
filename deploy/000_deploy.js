@@ -9,7 +9,8 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   const waitBlockConfirmations = network.name != "testnet" ? 1 : 6;
 
   log("----------------------------------------------------");
-  const arguments = ["0xa66be4A7De4DfA5478Cb2308469D90115C45aA23"];
+  // sBZZ token address
+  const arguments = ["0x543dDb01Ba47acB11de34891cD86B675F04840db"];
   const factory = await deploy("SimpleSwapFactory", {
     from: deployer,
     args: arguments,
@@ -26,4 +27,4 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   }
 };
 
-module.exports.tags = ["all", "factory"];
+module.exports.tags = ["factory"];

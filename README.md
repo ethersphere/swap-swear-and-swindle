@@ -58,11 +58,10 @@ Swap is deployed on the following networks:
 
 Swap is deployed on the following testnets:
 
-| Network         | Factory                                                                                                                       | Token                                                                                                                         |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Sepolia         | [0x9B3C8D7f0994A336B71b5d35FC0Cff8AEC95DEDA](https://sepolia.etherscan.io/address/0x9B3C8D7f0994A336B71b5d35FC0Cff8AEC95DEDA) | [0xa66be4A7De4DfA5478Cb2308469D90115C45aA23](https://sepolia.etherscan.io/address/0xa66be4A7De4DfA5478Cb2308469D90115C45aA23) |
-| Goerli          | [0x73c412512E1cA0be3b89b77aB3466dA6A1B9d273](https://goerli.etherscan.io/address/0x73c412512E1cA0be3b89b77aB3466dA6A1B9d273)  | [0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335](https://goerli.etherscan.io/address/0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335)  |
-| Goerli (Legacy) | [0xf0277caffea72734853b834afc9892461ea18474](https://goerli.etherscan.io/address/0xf0277caffea72734853b834afc9892461ea18474)  | [0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335](https://goerli.etherscan.io/address/0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335)  |
+| Network | Factory                                                                                                                       | Token                                                                                                                         |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Sepolia | [0x989F4d301d7333249362B2484BeE0D501AB01DCa](https://sepolia.etherscan.io/address/0x989F4d301d7333249362B2484BeE0D501AB01DCa) | [0x543dDb01Ba47acB11de34891cD86B675F04840db](https://sepolia.etherscan.io/address/0x543dDb01Ba47acB11de34891cD86B675F04840db) |
+| Goerli  | [0x73c412512E1cA0be3b89b77aB3466dA6A1B9d273](https://goerli.etherscan.io/address/0x73c412512E1cA0be3b89b77aB3466dA6A1B9d273)  | [0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335](https://goerli.etherscan.io/address/0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335)  |
 
 ## Overview
 
@@ -122,3 +121,9 @@ For signing purposes the chequebook uses EIP-712 Ethereum typed structured data 
 ## Swear and Swindle
 
 `Swear` and `Swindle` are the contracts for the trial system of sw3. You can find them in the `experimental` branch.
+
+## Releasing
+
+To release a new stable version, tag the commit without the `-rcX` suffix.
+For example, to release `v0.4.0`, execute the following command: `git tag v0.4.0 && git push origin v0.4.0`.
+This will generate Golang source code for the smart contracts and publish it to the [`ethersphere/go-sw3-abi/`](https://github.com/ethersphere/go-sw3-abi/) repository.
