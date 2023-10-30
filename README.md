@@ -112,7 +112,7 @@ For signing purposes the chequebook uses EIP-712 Ethereum typed structured data 
 
 #### Factory
 
-`SimpleSwap` has an accompanying factory contract `SimpleSwapFactory`. Deploying through the factory guarantees that the `SimpleSwap`contract was deployed with the correct init code.
+`SimpleSwap` has an accompanying factory contract `SimpleSwapFactory`. Deploying through the factory guarantees that the `SimpleSwap` contract was deployed with the correct init code.
 
 ## Swap
 
