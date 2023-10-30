@@ -28,7 +28,7 @@ const accounts =
 module.exports = {
   defaultNetwork: "hardhat",
   solidity: {
-    version: "0.8.10",
+    version: "0.8.19",
     settings: {
       optimizer: {
         enabled: true,
@@ -44,7 +44,7 @@ module.exports = {
     testnet: {
       url: PRIVATE_RPC_TESTNET
         ? PRIVATE_RPC_TESTNET
-        : "https://rpc2.sepolia.org",
+        : "https://1rpc.io/sepolia",
       accounts,
       chainId: 11155111,
     },
@@ -74,7 +74,7 @@ module.exports = {
         network: "mainnet",
         chainId: 100,
         urls: {
-          apiURL: "https://api.gnosisscan.io/",
+          apiURL: "https://api.gnosisscan.io/api",
           browserURL: "https://gnosisscan.io/address/",
         },
       },

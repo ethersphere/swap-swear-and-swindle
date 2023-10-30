@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-pragma solidity =0.8.10;
+pragma solidity =0.8.19;
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
