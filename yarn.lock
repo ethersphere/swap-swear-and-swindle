@@ -862,6 +862,11 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
+"@nomicfoundation/hardhat-toolbox@^4.0.0":
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/@nomicfoundation/hardhat-toolbox/-/hardhat-toolbox-4.0.0.tgz#eb1f619218dd1414fa161dfec92d3e5e53a2f407"
+  integrity sha512-jhcWHp0aHaL0aDYj8IJl80v4SZXWMS1A2XxXa1CA6pBiFfJKuZinCkO6wb+POAt0LIfXB3gA3AgdcOccrcwBwA==
+
 "@nomicfoundation/hardhat-verify@^1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@nomicfoundation/hardhat-verify/-/hardhat-verify-1.0.0.tgz#f18be34f5e7fdb2ffd4f55e8516108568b99da5c"

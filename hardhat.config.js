@@ -4,6 +4,7 @@ require("dotenv/config");
 require("hardhat-deploy");
 require("@nomicfoundation/hardhat-verify");
 
+
 const PRIVATE_RPC_MAINNET = !process.env.PRIVATE_RPC_MAINNET
   ? undefined
   : process.env.PRIVATE_RPC_MAINNET;
@@ -11,18 +12,15 @@ const PRIVATE_RPC_TESTNET = !process.env.PRIVATE_RPC_TESTNET
   ? undefined
   : process.env.PRIVATE_RPC_TESTNET;
 
-const walletSecret =
-  process.env.WALLET_SECRET === undefined
-    ? "undefined"
-    : process.env.WALLET_SECRET;
-if (walletSecret === "undefined") {
-  console.log("Please set your WALLET_SECRET in a .env file");
-}
+  const walletSecret = process.env.WALLET_SECRET === undefined ? 'undefined' : process.env.WALLET_SECRET;
+  if (walletSecret === 'undefined') {
+    console.log('Please set your WALLET_SECRET in a .env file');
+  }
+  const accounts = walletSecret.length === 64 ? [walletSecret] : { mnemonic: walletSecret };
+  
 
-const mainnetEtherscanKey = process.env.MAINNET_ETHERSCAN_KEY;
+  const mainnetEtherscanKey = process.env.MAINNET_ETHERSCAN_KEY;
 const testnetEtherscanKey = process.env.TESTNET_ETHERSCAN_KEY;
-const accounts =
-  walletSecret.length === 64 ? [walletSecret] : { mnemonic: walletSecret };
 
 // Config for hardhat.
 module.exports = {
