@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-pragma solidity =0.8.19;
+pragma solidity =0.7.6;
+pragma abicoder v2;
 import "./ERC20SimpleSwap.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 

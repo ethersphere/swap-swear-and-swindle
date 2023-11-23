@@ -10,7 +10,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 
   log("----------------------------------------------------");
   // sBZZ token address
-  const arguments = ["0x543dDb01Ba47acB11de34891cD86B675F04840db"];
+  const arguments = ["0x543ddb01ba47acb11de34891cd86b675f04840db"];
   const factory = await deploy("SimpleSwapFactory", {
     from: deployer,
     args: arguments,
