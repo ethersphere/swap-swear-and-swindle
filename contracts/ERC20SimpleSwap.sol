@@ -1,12 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
-pragma solidity =0.7.6;
-pragma abicoder v2;
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/math/Math.sol";
-import "@openzeppelin/contracts/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol";
-
+pragma solidity =0.8.19;
+import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
 @title Chequebook contract without waivers
@@ -17,8 +13,6 @@ Furthermore, solvency can be guaranteed via hardDeposits
 as a beneficiary, we should always take into account the possibility that a cheque bounces (when no hardDeposits are assigned)
 */
 contract ERC20SimpleSwap {
-  using SafeMath for uint;
-
   event ChequeCashed(
     address indexed beneficiary,
     address indexed recipient,
@@ -62,15 +56,11 @@ contract ERC20SimpleSwap {
   );
 
   // the EIP712 domain this contract uses
-  function domain() internal pure returns (EIP712Domain memory) {
-    uint256 chainId;
-    assembly {
-      chainId := chainid()
-    }
+  function domain() internal view returns (EIP712Domain memory) {    
     return EIP712Domain({
       name: "Chequebook",
       version: "1.0",
-      chainId: chainId
+      chainId: block.chainid
     });
   }
 
@@ -85,7 +75,7 @@ contract ERC20SimpleSwap {
   }
 
   // recover a signature with the EIP712 signing scheme
-  function recoverEIP712(bytes32 hash, bytes memory sig) internal pure returns (address) {
+  function recoverEIP712(bytes32 hash, bytes memory sig) internal view returns (address) {
     bytes32 digest = keccak256(abi.encodePacked(
         "\x19\x01",
         domainSeparator(domain()),
@@ -95,7 +85,7 @@ contract ERC20SimpleSwap {
   }
 
   /* The token against which this chequebook writes cheques */
-  ERC20 public token;
+  IERC20 public token;
   /* associates every beneficiary with how much has been paid out to them */
   mapping (address => uint) public paidOut;
   /* total amount paid out */
@@ -120,7 +110,7 @@ contract ERC20SimpleSwap {
     require(_issuer != address(0), "invalid issuer");
     require(issuer == address(0), "already initialized");
     issuer = _issuer;
-    token = ERC20(_token);
+    token = IERC20(_token);
     defaultHardDepositTimeout = _defaultHardDepositTimeout;
   }
 
@@ -130,12 +120,12 @@ contract ERC20SimpleSwap {
   }
   /// @return the part of the balance that is not covered by hard deposits
   function liquidBalance() public view returns(uint) {
-    return balance().sub(totalHardDeposit);
+    return balance() - totalHardDeposit;
   }
 
   /// @return the part of the balance available for a specific beneficiary
   function liquidBalanceFor(address beneficiary) public view returns(uint) {
-    return liquidBalance().add(hardDeposits[beneficiary].amount);
+    return liquidBalance() + hardDeposits[beneficiary].amount;
   }
   /**
   @dev internal function responsible for checking the issuerSignature, updating hardDeposit balances and doing transfers.
@@ -158,7 +148,7 @@ contract ERC20SimpleSwap {
       "invalid issuer signature");
     }
     /* the requestPayout is the amount requested for payment processing */
-    uint requestPayout = cumulativePayout.sub(paidOut[beneficiary]);
+    uint requestPayout = cumulativePayout - paidOut[beneficiary];
     /* calculates acutal payout */
     uint totalPayout = Math.min(requestPayout, liquidBalanceFor(beneficiary));
     /* calculates hard-deposit usage */
@@ -166,13 +156,12 @@ contract ERC20SimpleSwap {
     require(totalPayout >= callerPayout, "SimpleSwap: cannot pay caller");
     /* if there are some of the hard deposit used, update hardDeposits*/
     if (hardDepositUsage != 0) {
-      hardDeposits[beneficiary].amount = hardDeposits[beneficiary].amount.sub(hardDepositUsage);
-
-      totalHardDeposit = totalHardDeposit.sub(hardDepositUsage);
+      hardDeposits[beneficiary].amount = hardDeposits[beneficiary].amount - hardDepositUsage;
+      totalHardDeposit = totalHardDeposit - hardDepositUsage;
     }
     /* increase the stored paidOut amount to avoid double payout */
-    paidOut[beneficiary] = paidOut[beneficiary].add(totalPayout);
-    totalPaidOut = totalPaidOut.add(totalPayout);
+    paidOut[beneficiary] = paidOut[beneficiary] + totalPayout;
+    totalPaidOut = totalPaidOut + totalPayout;
 
     /* let the world know that the issuer has over-promised on outstanding cheques */
     if (requestPayout != totalPayout) {
@@ -184,7 +173,7 @@ contract ERC20SimpleSwap {
     /* do a transfer to the caller if specified*/
       require(token.transfer(msg.sender, callerPayout), "transfer failed");
       /* do the actual payment */
-      require(token.transfer(recipient, totalPayout.sub(callerPayout)), "transfer failed");
+      require(token.transfer(recipient, totalPayout - callerPayout), "transfer failed");
     } else {
       /* do the actual payment */
       require(token.transfer(recipient, totalPayout), "transfer failed");
@@ -261,11 +250,11 @@ contract ERC20SimpleSwap {
     require(block.timestamp >= hardDeposit.canBeDecreasedAt && hardDeposit.canBeDecreasedAt != 0, "deposit not yet timed out");
     /* this throws if decreaseAmount > amount */
     //TODO: if there is a cash-out in between prepareDecreaseHardDeposit and decreaseHardDeposit, decreaseHardDeposit will throw and reducing hard-deposits is impossible.
-    hardDeposit.amount = hardDeposit.amount.sub(hardDeposit.decreaseAmount);
+    hardDeposit.amount = hardDeposit.amount - hardDeposit.decreaseAmount;
     /* reset the canBeDecreasedAt to avoid a double decrease */
     hardDeposit.canBeDecreasedAt = 0;
     /* keep totalDeposit in sync */
-    totalHardDeposit = totalHardDeposit.sub(hardDeposit.decreaseAmount);
+    totalHardDeposit = totalHardDeposit - hardDeposit.decreaseAmount;
     emit HardDepositAmountChanged(beneficiary, hardDeposit.amount);
   }
 
@@ -277,12 +266,12 @@ contract ERC20SimpleSwap {
   function increaseHardDeposit(address beneficiary, uint amount) public {
     require(msg.sender == issuer, "SimpleSwap: not issuer");
     /* ensure hard deposits don't exceed the global balance */
-    require(totalHardDeposit.add(amount) <= balance(), "hard deposit exceeds balance");
+    require(totalHardDeposit + amount <= balance(), "hard deposit exceeds balance");
 
     HardDeposit storage hardDeposit = hardDeposits[beneficiary];
-    hardDeposit.amount = hardDeposit.amount.add(amount);
+    hardDeposit.amount = hardDeposit.amount + amount;
     // we don't explicitely set hardDepositTimout, as zero means using defaultHardDepositTimeout
-    totalHardDeposit = totalHardDeposit.add(amount);
+    totalHardDeposit = totalHardDeposit + amount;
     /* disable any pending decrease */
     hardDeposit.canBeDecreasedAt = 0;
     emit HardDepositAmountChanged(beneficiary, hardDeposit.amount);
@@ -352,3 +341,4 @@ contract ERC20SimpleSwap {
     ));
   }
 }
+
