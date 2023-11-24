@@ -49,10 +49,10 @@ The go bindings are automatically generated on every release git tag and the pus
 
 Swap is deployed on the following networks:
 
-| Network | Factory                                                                                                                              | Token                                                                                                                                          |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Mainnet | -                                                                                                                                    | [0x19062190B1925b5b6689D7073fDfC8c2976EF8Cb](https://etherscan.io/address/0x19062190b1925b5b6689d7073fdfc8c2976ef8cb)                          |
-| XDai    | [0xc2d5a532cf69aa9a1378737d8ccdef884b6e7420](https://blockscout.com/xdai/mainnet/address/0xC2d5A532cf69AA9A1378737D8ccDEF884B6E7420) | [0xdbf3ea6f5bee45c02255b2c26a16f300502f68da (bridged)](https://blockscout.com/xdai/mainnet/address/0xdbf3ea6f5bee45c02255b2c26a16f300502f68da) |
+| Network | Factory                                                                                                                | Token                                                                                                                            |
+| ------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Mainnet | -                                                                                                                      | [0x19062190B1925b5b6689D7073fDfC8c2976EF8Cb](https://etherscan.io/address/0x19062190b1925b5b6689d7073fdfc8c2976ef8cb)            |
+| XDai    | [0xc2d5a532cf69aa9a1378737d8ccdef884b6e7420](https://gnosisscan.io/address/0xC2d5A532cf69AA9A1378737D8ccDEF884B6E7420) | [0xdbf3ea6f5bee45c02255b2c26a16f300502f68da (bridged)](https://gnosisscan.io/address/0xdbf3ea6f5bee45c02255b2c26a16f300502f68da) |
 
 ## Test Deployments
 
@@ -60,7 +60,7 @@ Swap is deployed on the following testnets:
 
 | Network | Factory                                                                                                                       | Token                                                                                                                         |
 | ------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Sepolia | [0x989F4d301d7333249362B2484BeE0D501AB01DCa](https://sepolia.etherscan.io/address/0x989F4d301d7333249362B2484BeE0D501AB01DCa) | [0x543dDb01Ba47acB11de34891cD86B675F04840db](https://sepolia.etherscan.io/address/0x543dDb01Ba47acB11de34891cD86B675F04840db) |
+| Sepolia | [0x989F4d301d7333249362B2484BeE0D501AB01DCa](https://sepolia.etherscan.io/address/0x0fF044F6bB4F684a5A149B46D7eC03ea659F98A1) | [0x543dDb01Ba47acB11de34891cD86B675F04840db](https://sepolia.etherscan.io/address/0x543dDb01Ba47acB11de34891cD86B675F04840db) |
 | Goerli  | [0x73c412512E1cA0be3b89b77aB3466dA6A1B9d273](https://goerli.etherscan.io/address/0x73c412512E1cA0be3b89b77aB3466dA6A1B9d273)  | [0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335](https://goerli.etherscan.io/address/0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335)  |
 
 ## Overview
