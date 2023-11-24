@@ -268,7 +268,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
         const beneficiary = defaults.beneficiary
         const firstCumulativePayout = defaults.firstCumulativePayout
         const recipient = defaults.recipient
-        context('when the sender is not the issuer', function() {
+        context('when the sender is not the issuer', function () {
           const caller = alice
           context("when we don't send value along", function () {
             const value = new BN(0)
@@ -279,31 +279,31 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
                 context('when the callerPayout is non-zero', function () {
                   const callerPayout = defaults.firstCumulativePayout.div(new BN(100))
                   context('when there is some money deposited', function () {
-                    context('when the money fully covers the cheque', function() {
+                    context('when the money fully covers the cheque', function () {
                       const depositAmount = firstCumulativePayout.add(defaults.secondCumulativePayout)
                       describe(describePreCondition + 'shouldDeposit', function () {
                         shouldDeposit(depositAmount, issuer)
-                        context('when there are hardDeposits assigned to the beneficiary', function() {
-                          context('when the hardDeposits fully cover the cheque', function() {
-                            describe(describePreCondition + 'shouldIncreaseHardDeposit', function() {
+                        context('when there are hardDeposits assigned to the beneficiary', function () {
+                          context('when the hardDeposits fully cover the cheque', function () {
+                            describe(describePreCondition + 'shouldIncreaseHardDeposit', function () {
                               shouldIncreaseHardDeposit(beneficiary, firstCumulativePayout, issuer)
-                              context('when we submit one cheque', function() {
-                                describe(describeTest + 'shouldCashCheque', function() {
+                              context('when we submit one cheque', function () {
+                                describe(describeTest + 'shouldCashCheque', function () {
                                   shouldCashCheque(beneficiary, recipient, firstCumulativePayout, callerPayout, caller, beneficiarySignee, issuerSignee)
                                 })
                               })
-                              context('when we attempt to submit two cheques', function() {
-                                describe(describePreCondition + 'shouldCashCheque', function() {
+                              context('when we attempt to submit two cheques', function () {
+                                describe(describePreCondition + 'shouldCashCheque', function () {
                                   shouldCashCheque(beneficiary, recipient, firstCumulativePayout, callerPayout, caller, beneficiarySignee, issuerSignee)
-                                  context('when the second cumulativePayout is higher than the first cumulativePayout', function() {
+                                  context('when the second cumulativePayout is higher than the first cumulativePayout', function () {
                                     const secondCumulativePayout = defaults.secondCumulativePayout
-                                    describe(describeTest + 'shouldCashCheque', function() {
+                                    describe(describeTest + 'shouldCashCheque', function () {
                                       shouldCashCheque(beneficiary, recipient, secondCumulativePayout, callerPayout, caller, beneficiarySignee, issuerSignee)
                                     })
                                   })
-                                  context('when the second cumulativePayout is lower than the first cumulativePayout', function() {
+                                  context('when the second cumulativePayout is lower than the first cumulativePayout', function () {
                                     const secondCumulativePayout = firstCumulativePayout.sub(new BN(1))
-                                    const revertMessage = 'Arithmetic operation underflowed'
+                                    const revertMessage = 'SafeMath: subtraction overflow'
                                     const beneficiaryToSign = {
                                       cumulativePayout: secondCumulativePayout,
                                       recipient,
@@ -314,7 +314,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
                                       cumulativePayout: secondCumulativePayout,
                                     }
                                     const toSubmit = Object.assign({}, beneficiaryToSign, issuerToSign)
-                                    describe(describeTest + 'shouldNotCashCheque', function() {
+                                    describe(describeTest + 'shouldNotCashCheque', function () {
                                       shouldNotCashCheque(beneficiaryToSign, issuerToSign, toSubmit, value, caller, beneficiarySignee, issuerSignee, revertMessage)
                                     })
                                   })
@@ -322,10 +322,10 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
                               })
                             })
                           })
-                          context('when the hardDeposits partly cover the cheque', function() {
-                            describe(describePreCondition + 'shouldIncreaseHardDeposit', function() {
+                          context('when the hardDeposits partly cover the cheque', function () {
+                            describe(describePreCondition + 'shouldIncreaseHardDeposit', function () {
                               shouldIncreaseHardDeposit(beneficiary, firstCumulativePayout.div(new BN(2)), issuer)
-                              describe(describeTest + 'shouldCashCheque', function() {
+                              describe(describeTest + 'shouldCashCheque', function () {
                                 shouldCashCheque(beneficiary, recipient, firstCumulativePayout, callerPayout, caller, beneficiarySignee, issuerSignee)
                               })
                             })
@@ -333,15 +333,15 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
                         })
                       })
                     })
-                    context('when the money partly covers the cheque', function() {
+                    context('when the money partly covers the cheque', function () {
                       const depositAmount = firstCumulativePayout.div(new BN(2))
                       describe(describePreCondition + 'shouldDeposit', function () {
                         shouldDeposit(depositAmount, issuer)
-                        describe(describeTest + 'shouldCashCheque', function() {
+                        describe(describeTest + 'shouldCashCheque', function () {
                           shouldCashCheque(beneficiary, recipient, firstCumulativePayout, callerPayout, caller, beneficiarySignee, issuerSignee)
                         })
                       })
-                    })                  
+                    })
                   })
                   context('when no money is deposited', function () {
                     const revertMessage = 'cannot pay caller'
@@ -355,14 +355,14 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
                       cumulativePayout: firstCumulativePayout,
                     }
                     const toSubmit = Object.assign({}, beneficiaryToSign, issuerToSign)
-                    describe(describeTest + 'shouldNotCashCheque', function() {
+                    describe(describeTest + 'shouldNotCashCheque', function () {
                       shouldNotCashCheque(beneficiaryToSign, issuerToSign, toSubmit, value, caller, beneficiarySignee, issuerSignee, revertMessage)
                     })
                   })
                 })
                 context('when the callerPayout is zero', function () {
                   const callerPayout = new BN(0)
-                  describe(describeTest + 'shouldCashCheque', function() {
+                  describe(describeTest + 'shouldCashCheque', function () {
                     shouldCashCheque(beneficiary, recipient, firstCumulativePayout, callerPayout, caller, beneficiarySignee, issuerSignee)
                   })
                 })
@@ -381,11 +381,11 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
                   cumulativePayout: firstCumulativePayout,
                 }
                 const toSubmit = Object.assign({}, beneficiaryToSign, issuerToSign)
-                describe(describeTest + 'shouldNotCashCheque', function() {
+                describe(describeTest + 'shouldNotCashCheque', function () {
                   shouldNotCashCheque(beneficiaryToSign, issuerToSign, toSubmit, value, caller, beneficiarySignee, issuerSignee, revertMessage)
                 })
               })
-  
+
             })
             context('when the beneficiary does not provide the beneficiarySig', function () {
               const beneficiarySignee = alice
@@ -402,7 +402,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
                 cumulativePayout: firstCumulativePayout,
               }
               const toSubmit = Object.assign({}, beneficiaryToSign, issuerToSign)
-              describe(describeTest + 'shouldNotCashCheque', function() {
+              describe(describeTest + 'shouldNotCashCheque', function () {
                 shouldNotCashCheque(beneficiaryToSign, issuerToSign, toSubmit, value, caller, beneficiarySignee, issuerSignee, revertMessage)
               })
             })
@@ -423,21 +423,21 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
               cumulativePayout: firstCumulativePayout,
             }
             const toSubmit = Object.assign({}, beneficiaryToSign, issuerToSign)
-            describe(describeTest + 'shouldNotCashCheque', function() {
+            describe(describeTest + 'shouldNotCashCheque', function () {
               shouldNotCashCheque(beneficiaryToSign, issuerToSign, toSubmit, value, caller, beneficiarySignee, issuerSignee, revertMessage)
             })
           })
         })
-        context('when the sender is the issuer', function() {
+        context('when the sender is the issuer', function () {
           const caller = issuer
           const callerPayout = new BN(0)
           const beneficiarySignee = beneficiary
           const issuerSignee = beneficiary // on purpose not the correct signee, as it is not needed
-          describe(describeTest + 'shouldCashCheque', function() {
+          describe(describeTest + 'shouldCashCheque', function () {
             shouldCashCheque(beneficiary, recipient, firstCumulativePayout, callerPayout, caller, beneficiarySignee, issuerSignee)
           })
         })
-        
+
       }
     })
 
