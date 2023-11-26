@@ -48,6 +48,11 @@ module.exports = {
       accounts,
       chainId: 11155111,
     },
+    goerli: {
+      url: "https://go.getblock.io/3ce184cf4bf44236b537fdb3b6d53a29",
+      accounts,
+      chainId: 5,
+    },
     mainnet: {
       url: PRIVATE_RPC_MAINNET
         ? PRIVATE_RPC_MAINNET
@@ -60,6 +65,7 @@ module.exports = {
     apiKey: {
       mainnet: mainnetEtherscanKey || "",
       testnet: testnetEtherscanKey || "",
+      goerli: testnetEtherscanKey || "",
     },
     customChains: [
       {
@@ -68,6 +74,14 @@ module.exports = {
         urls: {
           apiURL: "https://api-sepolia.etherscan.io/api",
           browserURL: "https://sepolia.etherscan.io/address/",
+        },
+      },
+      {
+        network: 'goerli',
+        chainId: 5,
+        urls: {
+          apiURL: 'https://api-goerli.etherscan.io/api',
+          browserURL: 'https://goerli.etherscan.io/address/',
         },
       },
       {
