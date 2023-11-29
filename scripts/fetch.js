@@ -7,14 +7,15 @@ const fs = require("fs/promises");
 async function decodeTransactionInput(transactionHash, provider) {
   try {
     // Get the transaction
-
     const transaction = await provider.getTransaction(transactionHash);
     if (!transaction) {
       console.log("Transaction not found!");
       return null;
     }
+
     const contractABI =
       await require("../artifacts/contracts/SimpleSwapFactory.sol/SimpleSwapFactory.json");
+
     // Create an interface from the ABI to decode the data
     const contractInterface = new ethers.Interface(contractABI.abi);
 
@@ -24,15 +25,14 @@ async function decodeTransactionInput(transactionHash, provider) {
     });
 
     // Convert decoded data to a more readable format
-    return {
-      functionName: decodedInput.name,
-      args: decodedInput.args,
-    };
+    // Return only the args
+    return decodedInput.args;
   } catch (error) {
     console.error("Error decoding transaction input:", error);
     return null;
   }
 }
+
 // Custom replacer function to handle BigInt serialization
 function replacer(key, value) {
   if (typeof value === "bigint") {
