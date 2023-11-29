@@ -1,3 +1,5 @@
+// This is SCRIPT for MIGRATION of Swaps, it fetches created contracts from SimpleSwapDeployed EVENT
+
 const hre = require("hardhat");
 const fs = require("fs/promises");
 
