@@ -3,6 +3,7 @@ require("solidity-coverage");
 require("dotenv/config");
 require("hardhat-deploy");
 require("@nomicfoundation/hardhat-verify");
+require("@nomicfoundation/hardhat-ethers");
 
 const PRIVATE_RPC_MAINNET = !process.env.PRIVATE_RPC_MAINNET
   ? undefined
@@ -77,11 +78,11 @@ module.exports = {
         },
       },
       {
-        network: 'goerli',
+        network: "goerli",
         chainId: 5,
         urls: {
-          apiURL: 'https://api-goerli.etherscan.io/api',
-          browserURL: 'https://goerli.etherscan.io/address/',
+          apiURL: "https://api-goerli.etherscan.io/api",
+          browserURL: "https://goerli.etherscan.io/address/",
         },
       },
       {
