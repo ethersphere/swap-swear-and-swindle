@@ -16,6 +16,9 @@ contract SimpleSwapFactory {
     /* mapping to keep track of which contracts were deployed by this factory */
     mapping(address => bool) public deployedContracts;
 
+    /* mapping to keep track of migrations, pair is issuer => newContractAddress */
+    mapping(address => address) public migratedContracts;
+
     /* address of the ERC20-token, to be used by the to-be-deployed chequebooks */
     address public ERC20Address;
     /* address of the code contract from which all chequebooks are cloned */
@@ -50,6 +53,7 @@ contract SimpleSwapFactory {
             defaultHardDepositTimeoutDuration
         );
         deployedContracts[contractAddress] = true;
+        migratedContracts[issuer] = contractAddress;
         emit SimpleSwapDeployed(contractAddress);
         return contractAddress;
     }
@@ -66,17 +70,17 @@ contract SimpleSwapFactory {
         bytes32 salt,
         address _master
     ) public returns (address) {
-        address contractAddress = Clones.cloneDeterministic(
+        address newContractAddress = Clones.cloneDeterministic(
             _master,
             keccak256(abi.encode(issuer, salt))
         );
-        ERC20SimpleSwap(contractAddress).init(
+        ERC20SimpleSwap(newContractAddress).init(
             issuer,
             ERC20Address,
             defaultHardDepositTimeoutDuration
         );
-        deployedContracts[contractAddress] = true;
-        emit SimpleSwapDeployed(contractAddress);
-        return contractAddress;
+        deployedContracts[newContractAddress] = true;
+        emit SimpleSwapDeployed(newContractAddress);
+        return newContractAddress;
     }
 }
