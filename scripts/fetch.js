@@ -63,7 +63,29 @@ async function decodeTransactionOutput(transactionHash, provider) {
 
     return newContract;
   } catch (error) {
-    console.error("Error decoding transaction input:", error);
+    console.error("Error decoding transaction output:", error);
+    return null;
+  }
+}
+
+async function getBalanceOutput(contractAddress, provider) {
+  try {
+    const contractABI = await require("../artifacts/contracts/ERC20SimpleSwap.sol/ERC20SimpleSwap.json");
+
+    // Create a contract instance
+    const contract = new ethers.Contract(
+      contractAddress,
+      contractABI.abi,
+      provider
+    );
+
+    // Call the balance() function
+    const balance = await contract.balance();
+
+    // Store the value
+    return balance.toString();
+  } catch (error) {
+    console.error("Error getting balance:", error);
     return null;
   }
 }
@@ -80,7 +102,7 @@ async function main() {
   const provider = ethers.provider;
 
   // Specify the starting block
-  const startBlock = 10196505; // Replace with the block number from where you want to start
+  const startBlock = 10012821; // Replace with the block number from where you want to start
 
   const contractAddress = "0x73c412512E1cA0be3b89b77aB3466dA6A1B9d273";
   const myContract = await ethers.getContractAt(
@@ -123,10 +145,9 @@ async function main() {
         provider
       );
 
-      //decodedData.push(decodedDataOutput);
-      // console.log(decodedDataInput);
-      console.log(decodedDataOutput);
-      let mergedArray = [...decodedDataInput, decodedDataOutput];
+      const getBalance = await getBalanceOutput(decodedDataOutput, provider);
+
+      let mergedArray = [...decodedDataInput, decodedDataOutput, getBalance];
       if (decodedDataInput) {
         decodedDataArray.push(mergedArray);
       }
