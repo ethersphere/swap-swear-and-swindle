@@ -13,8 +13,7 @@ async function decodeTransactionInput(transactionHash, provider) {
       return null;
     }
 
-    const contractABI =
-      await require("../artifacts/contracts/SimpleSwapFactory.sol/SimpleSwapFactory.json");
+    const contractABI = await require("../artifacts/contracts/SimpleSwapFactory.sol/SimpleSwapFactory.json");
 
     // Create an interface from the ABI to decode the data
     const contractInterface = new ethers.Interface(contractABI.abi);
@@ -27,6 +26,42 @@ async function decodeTransactionInput(transactionHash, provider) {
     // Convert decoded data to a more readable format
     // Return only the args
     return decodedInput.args;
+  } catch (error) {
+    console.error("Error decoding transaction input:", error);
+    return null;
+  }
+}
+async function decodeTransactionOutput(transactionHash, provider) {
+  try {
+    // Get the transaction
+    const transaction = await provider.getTransaction(transactionHash);
+    if (!transaction) {
+      console.log("Transaction not found!");
+      return null;
+    }
+
+    const contractABI = await require("../artifacts/contracts/SimpleSwapFactory.sol/SimpleSwapFactory.json");
+
+    // Create an interface from the ABI to decode the data
+    const contractInterface = new ethers.Interface(contractABI.abi);
+
+    // Get the transaction receipt
+    const receipt = await provider.getTransactionReceipt(transactionHash);
+
+    // Decode the logs using the contract interface
+    const decodedLogs = receipt.logs.map((log) =>
+      contractInterface.parseLog(log)
+    );
+    let newContract;
+
+    // Process the decoded logs to extract the information you need
+    decodedLogs.forEach((log) => {
+      if (log.name == "SimpleSwapDeployed") {
+        newContract = log.args[0];
+      }
+    });
+
+    return newContract;
   } catch (error) {
     console.error("Error decoding transaction input:", error);
     return null;
@@ -45,7 +80,7 @@ async function main() {
   const provider = ethers.provider;
 
   // Specify the starting block
-  const startBlock = 10012821; // Replace with the block number from where you want to start
+  const startBlock = 10196505; // Replace with the block number from where you want to start
 
   const contractAddress = "0x73c412512E1cA0be3b89b77aB3466dA6A1B9d273";
   const myContract = await ethers.getContractAt(
@@ -78,12 +113,22 @@ async function main() {
       endBlock
     );
     for (let event of events) {
-      const decodedData = await decodeTransactionInput(
+      const decodedDataInput = await decodeTransactionInput(
         event.transactionHash,
         provider
       );
-      if (decodedData) {
-        decodedDataArray.push(decodedData);
+
+      const decodedDataOutput = await decodeTransactionOutput(
+        event.transactionHash,
+        provider
+      );
+
+      //decodedData.push(decodedDataOutput);
+      // console.log(decodedDataInput);
+      console.log(decodedDataOutput);
+      let mergedArray = [...decodedDataInput, decodedDataOutput];
+      if (decodedDataInput) {
+        decodedDataArray.push(mergedArray);
       }
     }
 
