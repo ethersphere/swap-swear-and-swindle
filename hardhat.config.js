@@ -50,7 +50,7 @@ module.exports = {
       chainId: 11155111,
     },
     goerli: {
-      url: "https://go.getblock.io/3ce184cf4bf44236b537fdb3b6d53a29",
+      url: "https://eth-goerli.g.alchemy.com/v2/UbKbbJpAxim12srTJ5vUo3DdQy0WPdHK",
       accounts,
       chainId: 5,
     },

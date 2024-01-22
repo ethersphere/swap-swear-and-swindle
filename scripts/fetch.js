@@ -102,7 +102,7 @@ async function main() {
   const provider = ethers.provider;
 
   // Specify the starting block
-  const startBlock = 10012821; // Replace with the block number from where you want to start
+  const startBlock = 4526243; // Replace with the block number from where you want to start
 
   const contractAddress = "0x73c412512E1cA0be3b89b77aB3466dA6A1B9d273";
   const myContract = await ethers.getContractAt(
@@ -115,14 +115,14 @@ async function main() {
 
   // Define batch size and delay (in milliseconds)
   const batchSize = 10000; // Adjust based on your needs
-  const delay = 20; // Delay of 0.02 seconds
+  const delay = 200; // Delay of 0.02 seconds
 
   // Get the latest block number
   const latestBlock = await provider.getBlockNumber();
 
   for (
     let currentBlock = startBlock;
-    currentBlock < latestBlock;
+    currentBlock < 4806243;
     currentBlock += batchSize
   ) {
     // Calculate the end block for the current batch
@@ -163,7 +163,7 @@ async function main() {
   // Save the decoded data array to a JSON file
   try {
     await fs.writeFile(
-      "scripts/decodedData.json",
+      "scripts/decodedData2.json",
       JSON.stringify(decodedDataArray, replacer, 2)
     );
     console.log("Successfully wrote decoded data to decodedData.json");
