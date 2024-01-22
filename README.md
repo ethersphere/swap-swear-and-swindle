@@ -60,7 +60,7 @@ Swap is deployed on the following testnets:
 
 | Network | Factory                                                                                                                       | Token                                                                                                                         |
 | ------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Sepolia | [0x989F4d301d7333249362B2484BeE0D501AB01DCa](https://sepolia.etherscan.io/address/0x0fF044F6bB4F684a5A149B46D7eC03ea659F98A1) | [0x543dDb01Ba47acB11de34891cD86B675F04840db](https://sepolia.etherscan.io/address/0x543dDb01Ba47acB11de34891cD86B675F04840db) |
+| Sepolia | [0x0fF044F6bB4F684a5A149B46D7eC03ea659F98A1](https://sepolia.etherscan.io/address/0x0fF044F6bB4F684a5A149B46D7eC03ea659F98A1) | [0x543dDb01Ba47acB11de34891cD86B675F04840db](https://sepolia.etherscan.io/address/0x543dDb01Ba47acB11de34891cD86B675F04840db) |
 | Goerli  | [0x73c412512E1cA0be3b89b77aB3466dA6A1B9d273](https://goerli.etherscan.io/address/0x73c412512E1cA0be3b89b77aB3466dA6A1B9d273)  | [0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335](https://goerli.etherscan.io/address/0x2aC3c1d3e24b45c6C310534Bc2Dd84B5ed576335)  |
 
 ## Overview
