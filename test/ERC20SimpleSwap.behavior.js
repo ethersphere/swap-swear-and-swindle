@@ -303,9 +303,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol], defaultHar
                                   })
                                   context('when the second cumulativePayout is lower than the first cumulativePayout', function () {
                                     const secondCumulativePayout = firstCumulativePayout.sub(new BN(1))
-
-                                    const revertMessage = 'reverted with panic code 0x11 (Arithmetic operation underflowed or overflowed outside of an unchecked block)';
-
+                                    const revertMessage = 'SafeMath: subtraction overflow'
                                     const beneficiaryToSign = {
                                       cumulativePayout: secondCumulativePayout,
                                       recipient,
