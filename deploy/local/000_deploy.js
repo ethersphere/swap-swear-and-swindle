@@ -15,7 +15,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 
   log("Token deployed at address " + token.address);
 
-  const arguments = [token];
+  const arguments = [token.address];
   const factory = await deploy("SimpleSwapFactory", {
     from: deployer,
     args: arguments,

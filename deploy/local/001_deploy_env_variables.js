@@ -12,7 +12,7 @@ const func = async function({ deployments }) {
   content += `echo "----- USE THE COMMANDS BELOW TO SETUP YOUR TERMINALS -----" >&2\n\n`;
   content += `export BEE_SWAP_FACTORY_ADDRESS=${SimpleSwapFactory.address}\n`;
   content += `export BEE_SWAP_LEGACY_FACTORY_ADDRESSES=${SimpleSwapFactory.address}\n`;
-  content += `export BEE_SWAP_ENDPOINT=${networks.localhost.url}\n`;
+  content += `export BEE_SWAP_ENDPOINT=${config.networks.localhost.url}\n`;
 
   const envFilePath = path.join(__dirname, "../../deployedContracts.sh");
 

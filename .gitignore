@@ -26,6 +26,7 @@ node_modules/
 # hardhat-deploy
 deployments/hardhat
 deployments/localhost
+deployedContracts.sh
 
 # Misc
 contractsInfo.json

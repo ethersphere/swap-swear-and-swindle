@@ -1,8 +1,9 @@
-require("@nomiclabs/hardhat-truffle5");
-require("solidity-coverage");
-require("dotenv/config");
-require("hardhat-deploy");
-require("@nomicfoundation/hardhat-verify");
+require('dotenv/config');
+require('solidity-coverage');
+require('hardhat-deploy');
+require('hardhat-deploy-ethers');
+require('@nomiclabs/hardhat-etherscan');
+require('hardhat-gas-reporter');
 
 const PRIVATE_RPC_MAINNET = !process.env.PRIVATE_RPC_MAINNET
   ? undefined
