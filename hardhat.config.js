@@ -37,9 +37,14 @@ module.exports = {
     },
   },
   networks: {
+    hardhat: {
+      deploy: ["deploy/local/"],
+    },
     localhost: {
       url: "http://localhost:8545",
       accounts,
+      chainId: 31337,
+      deploy: ["deploy/local/"],
     },
     testnet: {
       url: PRIVATE_RPC_TESTNET
@@ -47,6 +52,7 @@ module.exports = {
         : "https://1rpc.io/sepolia",
       accounts,
       chainId: 11155111,
+      deploy: ["deploy/test/"],
     },
     mainnet: {
       url: PRIVATE_RPC_MAINNET
@@ -54,6 +60,7 @@ module.exports = {
         : "https://rpc.gnosischain.com",
       accounts,
       chainId: 100,
+      deploy: ["deploy/main/"],
     },
   },
   etherscan: {
