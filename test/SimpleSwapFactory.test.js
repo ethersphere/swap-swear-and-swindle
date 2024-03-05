@@ -1,75 +1,100 @@
 const {
-  BN,
   balance,
   constants,
   expectEvent,
   expectRevert
 } = require("@openzeppelin/test-helpers");
-
 const { expect } = require('chai');
-const SimpleSwapFactory = artifacts.require('./SimpleSwapFactory')
-const ERC20SimpleSwap = artifacts.require('./ERC20SimpleSwap')
-const TestToken = artifacts.require("./TestToken")
+const { ethers, deployments, getNamedAccounts } = require("hardhat");
+const { BigNumber } = ethers;
 
-contract('SimpleSwapFactory', function([issuer, other]) {
+let issuer, other, TestToken, SimpleSwapFactory, ERC20SimpleSwap;
+    let testToken, simpleSwapFactory, erc20SimpleSwap;
 
-  const salt = "0x000000000000000000000000000000000000000000000000000000000000abcd"
+before(async function () {
+  const namedAccounts = await getNamedAccounts();
+  issuer = namedAccounts.deployer;
+  console.log(issuer);
+  TestToken = await ethers.getContractFactory("TestToken");
+  SimpleSwapFactory = await ethers.getContractFactory("SimpleSwapFactory");
+  ERC20SimpleSwap = await ethers.getContractFactory('ERC20SimpleSwap');
+});
 
-  function shouldDeployERC20SimpleSwap(issuer, DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT, value) {
-    beforeEach(async function() {
-      this.TestToken = await TestToken.new({from: issuer})
-      this.simpleSwapFactory = await SimpleSwapFactory.new(this.TestToken.address)
-      let { logs } = await this.simpleSwapFactory.deploySimpleSwap(issuer, DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT, salt)
-      this.ERC20SimpleSwapAddress = logs[0].args.contractAddress
-      this.ERC20SimpleSwap = await ERC20SimpleSwap.at(this.ERC20SimpleSwapAddress)
-      if(value != 0) {
-        await this.TestToken.mint(issuer, value) // mint tokens
-        await this.TestToken.transfer(this.ERC20SimpleSwap.address, value, {from: issuer}); // deposit those tokens in chequebook
+describe('SimpleSwapFactory', function () {
+
+  const salt = "0x000000000000000000000000000000000000000000000000000000000000abcd";
+
+  async function shouldDeployERC20SimpleSwap(deployer, DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT, value) {
+
+    beforeEach(async function () {
+      testToken = await TestToken.deploy();
+      await testToken.deployed();
+
+      simpleSwapFactory = await SimpleSwapFactory.deploy(testToken.address);
+      await simpleSwapFactory.deployed();
+
+      const deployTx = await simpleSwapFactory.deploySimpleSwap(deployer, DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT, salt);
+      const receipt = await deployTx.wait();
+      const event = receipt.events.find(e => e.event === "SimpleSwapDeployed");
+      const erc20SimpleSwapAddress = event.args.contractAddress;
+
+      erc20SimpleSwap = ERC20SimpleSwap.attach(erc20SimpleSwapAddress);
+
+      if (value.gt(0)) {
+        await testToken.mint(deployer.address, value);
+        await testToken.connect(deployer).transfer(erc20SimpleSwap.address, value);
       }
-    })
+    });
 
-    it('should allow other addresses to deploy with same salt', async function() {
-      await this.simpleSwapFactory.deploySimpleSwap(issuer, DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT, salt, { from: other })
-    })
+    it('should allow other addresses to deploy with the same salt', async function () {
+      await expect(simpleSwapFactory.connect(other).deploySimpleSwap(other.address, DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT, salt))
+        .to.emit(simpleSwapFactory, 'SimpleSwapDeployed');
+    });
 
-    it('should deploy with the right issuer', async function() {
-      expect(await this.ERC20SimpleSwap.issuer()).to.be.equal(issuer)
-    })
+    it('should deploy with the right issuer', async function () {
+      expect(await erc20SimpleSwap.issuer()).to.equal(deployer.address);
+    });
 
-    it('should deploy with the right DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT', async function() {
-      expect(await this.ERC20SimpleSwap.defaultHardDepositTimeout()).to.be.bignumber.equal(DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT)
-    })
+    it('should deploy with the right DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT', async function () {
+      expect(await erc20SimpleSwap.defaultHardDepositTimeout()).to.equal(DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT);
+    });
 
-    if(value.gtn(0)) {
-      it('should forward the deposit to SimpleSwap', async function() {
-        expect(await this.ERC20SimpleSwap.balance()).to.bignumber.equal(value)
-      })
+    if (value.gt(0)) {
+      it('should forward the deposit to SimpleSwap', async function () {
+        expect(await balance.current(erc20SimpleSwap.address)).to.equal(value);
+      });
     }
 
-    it('should record the deployed address', async function() {
-      expect(await this.simpleSwapFactory.deployedContracts(this.ERC20SimpleSwapAddress)).to.be.true
-    })
+    it('should record the deployed address', async function () {
+      expect(await simpleSwapFactory.deployedContracts(erc20SimpleSwapAddress)).to.be.true;
+    });
 
-    it('should have set the ERC20 address correctly', async function() {
-      expect(await this.ERC20SimpleSwap.token()).to.be.equal(this.TestToken.address)
-    })
+    it('should have set the ERC20 address correctly', async function () {
+      expect(await erc20SimpleSwap.token()).to.equal(testToken.address);
+    });
   }
-  
-  describe('when we deploy ERC20 SimpleSwap', function() {
-    describe("when we don't deposit while deploying SimpleSwap", function() {
-      shouldDeployERC20SimpleSwap(issuer, new BN(86400), new BN(0))
-    })
-  
-    describe("when we deposit while deploying SimpleSwap", function() {
-      shouldDeployERC20SimpleSwap(issuer, new BN(86400), new BN(10))
-    })
 
-    describe("when we deposit while issuer 0", function() {
-      it('should fail', async function() {
-        this.TestToken = await TestToken.new({from: issuer})
-        this.simpleSwapFactory = await SimpleSwapFactory.new(this.TestToken.address)
-        await expectRevert(this.simpleSwapFactory.deploySimpleSwap(constants.ZERO_ADDRESS, 0, salt), 'invalid issuer')
-      })
-    })
-  })
-})
+  describe('when we deploy ERC20 SimpleSwap', function () {
+    describe("without depositing during deployment", function () {
+      shouldDeployERC20SimpleSwap(issuer, 86400, BigNumber.from(0));
+    });
+
+    describe("with deposit during deployment", function () {
+  console.log(issuer);
+      shouldDeployERC20SimpleSwap(issuer, 86400, ethers.utils.parseUnits("10", 18));
+    });
+
+    describe("with issuer being zero address", function () {
+      it('should fail', async function () {
+        testToken = await TestToken.deploy();
+        await testToken.deployed();
+
+        simpleSwapFactory = await SimpleSwapFactory.deploy(testToken.address);
+        await simpleSwapFactory.deployed();
+
+        await expect(simpleSwapFactory.deploySimpleSwap(constants.ZERO_ADDRESS, 0, salt))
+          .to.be.revertedWith('invalid issuer');
+      });
+    });
+  });
+});

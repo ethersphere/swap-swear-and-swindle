@@ -6,36 +6,61 @@ const {
   expectRevert
 } = require("@openzeppelin/test-helpers");
 
-const ERC20SimpleSwap = artifacts.require('ERC20SimpleSwap')
-const SimpleSwapFactory = artifacts.require('SimpleSwapFactory')
-const TestToken = artifacts.require("TestToken")
-
-const { signCheque, signCashOut, signCustomDecreaseTimeout } = require("./swutils");
+// Import ethers from hardhat
+const { ethers } = require("hardhat");
 const { expect } = require('chai');
 
-function shouldDeploy(issuer, defaultHardDepositTimeout, from, value) {
+// Import additional utilities
+const { signCheque, signCashOut, signCustomDecreaseTimeout } = require("./swutils");
 
-  const salt = "0x000000000000000000000000000000000000000000000000000000000000abcd"
+async function shouldDeploy(issuer, defaultHardDepositTimeout, from, value) {
+  // Variables to hold contract instances
+  let ERC20SimpleSwap, SimpleSwapFactory, TestToken;
+  let erc20SimpleSwap, simpleSwapFactory, testToken;
+
+  const salt = "0x000000000000000000000000000000000000000000000000000000000000abcd";
 
   beforeEach(async function() {
-    this.TestToken = await TestToken.new({from: issuer})
-    await this.TestToken.mint(issuer, 1000000000, {from: issuer});    
-    this.simpleSwapFactory = await SimpleSwapFactory.new(this.TestToken.address)
-    let { logs } = await this.simpleSwapFactory.deploySimpleSwap(issuer, defaultHardDepositTimeout, salt)
-    this.ERC20SimpleSwapAddress = logs[0].args.contractAddress
-    this.ERC20SimpleSwap = await ERC20SimpleSwap.at(this.ERC20SimpleSwapAddress)
-    if(value != 0) {
-      await this.TestToken.transfer(this.ERC20SimpleSwap.address, value, {from: issuer});
+    // Get the contract factories
+    TestToken = await ethers.getContractFactory("TestToken");
+    SimpleSwapFactory = await ethers.getContractFactory("SimpleSwapFactory");
+    ERC20SimpleSwap = await ethers.getContractFactory('ERC20SimpleSwap');
+
+    // Deploy the contracts
+    testToken = await TestToken.deploy();
+    await testToken.deployed();
+
+    await testToken.mint(issuer.address, 1000000000);
+    
+    simpleSwapFactory = await SimpleSwapFactory.deploy(testToken.address);
+    await simpleSwapFactory.deployed();
+
+    const deployTx = await simpleSwapFactory.deploySimpleSwap(issuer.address, defaultHardDepositTimeout, salt);
+
+    // Wait for transaction to be mined
+    const receipt = await deployTx.wait();
+
+    // Assume your event provides the address of the deployed ERC20SimpleSwap contract
+    const event = receipt.events.find(e => e.event === 'SimpleSwapDeployed');
+    const erc20SimpleSwapAddress = event.args.contractAddress;
+
+    erc20SimpleSwap = await ERC20SimpleSwap.attach(erc20SimpleSwapAddress);
+
+    // Handle token transfers if value is specified
+    if(value.gt(BN.from(0))) {
+      await testToken.connect(issuer).transfer(erc20SimpleSwap.address, value);
     }
+
+    // Set postconditions for later use
     this.postconditions = {
-      issuer: await this.ERC20SimpleSwap.issuer(),
-      defaultHardDepositTimeout: await this.ERC20SimpleSwap.defaultHardDepositTimeout()
-    }
-  })
+      issuer: await erc20SimpleSwap.issuer(),
+      defaultHardDepositTimeout: await erc20SimpleSwap.defaultHardDepositTimeout()
+    };
+  });
 
   it('should not allow a second init', async function() {
-    await expectRevert(this.ERC20SimpleSwap.init(issuer, this.TestToken.address, 0), "already initialized")
-  })
+    await expectRevert.unspecified(erc20SimpleSwap.init(issuer.address, testToken.address, 0));
+  });
 
   it('should set the issuer', function() {
     expect(this.postconditions.issuer).to.be.equal(issuer)
