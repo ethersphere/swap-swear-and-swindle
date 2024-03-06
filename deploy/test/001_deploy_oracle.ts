@@ -1,7 +1,8 @@
-const { getNamedAccounts, deployments, network, run } = require("hardhat");
-const { verify } = require("../../utils/verify");
+import verify from '../../utils/verify';
+import { DeployFunction } from 'hardhat-deploy/types';
 
-module.exports = async ({ getNamedAccounts, deployments }) => {
+const func: DeployFunction = async function ({ deployments, getNamedAccounts, network }) {
+
   const { deploy, log } = deployments;
   const { deployer } = await getNamedAccounts();
   const args = [100000, 100];
@@ -24,4 +25,5 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   }
 };
 
-module.exports.tags = ["factory"];
+func.tags = ["factory"];
+export default func;

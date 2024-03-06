@@ -47,7 +47,7 @@
     "hardhat-gas-reporter": "^1.0.9",
     "hardhat-tracer": "^2.1.2",
     "mocha": "^10.2.0",
-    "prettier": "^2.1.2",
+    "prettier": "^3.2.5",
     "prettier-plugin-solidity": "^1.0.0-alpha.59",
     "solhint": "^4.1.1",
     "solidity-coverage": "^0.8.2",
@@ -55,11 +55,13 @@
     "typescript": "^4.0.5"
   },
   "scripts": {
+    "lint": "eslint \"**/*.{js,ts}\"",
+    "lint:fix": "eslint --fix \"**/*.{js,ts}\"",
+    "format": "prettier --write \"**/*.{ts,js,sol}\"",
+    "hardhat": "hardhat",
+    "coverage": "hardhat coverage",
     "compile": "hardhat compile",
-    "test": "hardhat test",
-    "abigen": "./abigen/gen.sh ERC20SimpleSwap SimpleSwapFactory",
-    "lint": "solhint contracts/ERC20SimpleSwap.sol contracts/SimpleSwapFactory.sol",
-    "coverage": "hardhat coverage"
+    "test": "hardhat test"
   },
   "keywords": [],
   "author": "",

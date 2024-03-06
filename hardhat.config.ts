@@ -1,32 +1,30 @@
-require('dotenv/config');
-require('solidity-coverage');
-require('hardhat-deploy');
-require('hardhat-deploy-ethers');
-require('@nomiclabs/hardhat-etherscan');
-require('hardhat-gas-reporter');
+import 'dotenv/config';
+import 'solidity-coverage';
+import 'hardhat-deploy';
+import 'hardhat-deploy-ethers';
+import '@nomiclabs/hardhat-etherscan';
+import 'hardhat-gas-reporter';
+import { HardhatUserConfig } from 'hardhat/types';
 
-const PRIVATE_RPC_MAINNET = !process.env.PRIVATE_RPC_MAINNET
-  ? undefined
-  : process.env.PRIVATE_RPC_MAINNET;
-const PRIVATE_RPC_TESTNET = !process.env.PRIVATE_RPC_TESTNET
-  ? undefined
-  : process.env.PRIVATE_RPC_TESTNET;
+const PRIVATE_RPC_MAINNET: string | undefined = process.env.PRIVATE_RPC_MAINNET;
+const PRIVATE_RPC_TESTNET: string | undefined = process.env.PRIVATE_RPC_TESTNET;
 
-const walletSecret =
+const walletSecret: string =
   process.env.WALLET_SECRET === undefined
     ? "undefined"
     : process.env.WALLET_SECRET;
+
 if (walletSecret === "undefined") {
   console.log("Please set your WALLET_SECRET in a .env file");
+} else if (walletSecret.length !== 64) {
+  console.log("WALLET_SECRET must be 64 characters long.");
 }
 
-const mainnetEtherscanKey = process.env.MAINNET_ETHERSCAN_KEY;
-const testnetEtherscanKey = process.env.TESTNET_ETHERSCAN_KEY;
-const accounts =
-  walletSecret.length === 64 ? [walletSecret] : { mnemonic: walletSecret };
+const mainnetEtherscanKey: string | undefined = process.env.MAINNET_ETHERSCAN_KEY;
+const testnetEtherscanKey: string | undefined = process.env.TESTNET_ETHERSCAN_KEY;
+const accounts: string[] | { mnemonic: string } = walletSecret.length === 64 ? [walletSecret] : { mnemonic: walletSecret };
 
-// Config for hardhat.
-module.exports = {
+const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
   solidity: {
     compilers: [
@@ -61,17 +59,13 @@ module.exports = {
       deploy: ["deploy/local/"],
     },
     testnet: {
-      url: PRIVATE_RPC_TESTNET
-        ? PRIVATE_RPC_TESTNET
-        : "https://1rpc.io/sepolia",
+      url: PRIVATE_RPC_TESTNET || "https://1rpc.io/sepolia",
       accounts,
       chainId: 11155111,
       deploy: ["deploy/test/"],
     },
     mainnet: {
-      url: PRIVATE_RPC_MAINNET
-        ? PRIVATE_RPC_MAINNET
-        : "https://rpc.gnosischain.com",
+      url: PRIVATE_RPC_MAINNET || "https://rpc.gnosischain.com",
       accounts,
       chainId: 100,
       deploy: ["deploy/main/"],
@@ -112,3 +106,5 @@ module.exports = {
     sources: "contracts",
   },
 };
+
+export default config;

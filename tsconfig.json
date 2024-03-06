@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2015",
+    "module": "commonjs",
+    "strict": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "dist",
+    "resolveJsonModule": true
+  },
+  "include": ["hardhat.config.ts", "./scripts", "./deploy", "./test", "./utils", "./tasks"],
+  "exclude": ["node_modules", "**/*.spec.ts"]
+}

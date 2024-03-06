@@ -1,7 +1,9 @@
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
+import { DeployFunction } from 'hardhat-deploy/types';
 
-const func = async function ({ deployments }) {
+
+const func: DeployFunction = async function ({ deployments, config }) {
   const { get, log } = deployments;
 
   const SimpleSwapFactory = await get("SimpleSwapFactory");
@@ -20,10 +22,10 @@ const func = async function ({ deployments }) {
 
   // Write the content to the file
   fs.writeFileSync(envFilePath, content, { flag: "a" });
-  console.log(`Exported contract addresses to ${envFilePath}`);
+  log(`Exported contract addresses to ${envFilePath}`);
 
   log("----------------------------------------------------");
 };
 
-module.exports = func;
+export default func;
 func.tags = ["variables"];
