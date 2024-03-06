@@ -1,10 +1,11 @@
 const fs = require("fs");
 const path = require("path");
 
-const func = async function({ deployments }) {
+const func = async function ({ deployments }) {
   const { get, log } = deployments;
 
   const SimpleSwapFactory = await get("SimpleSwapFactory");
+  const PriceOracle = await get("PriceOracle");
 
   // Generate content for the environment file
   let content = "";
@@ -12,6 +13,7 @@ const func = async function({ deployments }) {
   content += `echo "----- USE THE COMMANDS BELOW TO SETUP YOUR TERMINALS -----" >&2\n\n`;
   content += `export BEE_SWAP_FACTORY_ADDRESS=${SimpleSwapFactory.address}\n`;
   content += `export BEE_SWAP_LEGACY_FACTORY_ADDRESSES=${SimpleSwapFactory.address}\n`;
+  content += `export BEE_SWAP_PRICE_ORACLE_ADDRESS=${PriceOracle.address}\n`;
   content += `export BEE_SWAP_ENDPOINT=${config.networks.localhost.url}\n`;
 
   const envFilePath = path.join(__dirname, "../../deployedContracts2.sh");
