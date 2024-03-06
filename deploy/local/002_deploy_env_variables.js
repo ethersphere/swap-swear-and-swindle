@@ -16,7 +16,7 @@ const func = async function ({ deployments }) {
   content += `export BEE_SWAP_PRICE_ORACLE_ADDRESS=${PriceOracle.address}\n`;
   content += `export BEE_SWAP_ENDPOINT=${config.networks.localhost.url}\n`;
 
-  const envFilePath = path.join(__dirname, "../../deployedContracts2.sh");
+  const envFilePath = path.join(__dirname, "../../deployedContracts.sh");
 
   // Write the content to the file
   fs.writeFileSync(envFilePath, content, { flag: "a" });
