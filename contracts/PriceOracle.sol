@@ -7,7 +7,7 @@ import "./access/Ownable.sol";
  * @author The Swarm Authors
  * @dev The price oracle contract keeps track of the current prices for settlement in swap accounting.
  */
-contract SwapPriceOracle is Ownable {
+contract PriceOracle is Ownable {
     /**
      * @dev Emitted when the price is updated.
      */

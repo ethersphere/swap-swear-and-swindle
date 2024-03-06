@@ -9,7 +9,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   const args = [100, 200];
 
   // Deploy the PriceOracle contract
-  const oracle = await deploy('SwapPriceOracle', {
+  const oracle = await deploy('PriceOracle', {
     from: deployer,
     args: args,
     log: true,
