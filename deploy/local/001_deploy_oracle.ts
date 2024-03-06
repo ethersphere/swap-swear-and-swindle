@@ -1,12 +1,11 @@
-
 import { DeployFunction } from 'hardhat-deploy/types';
 
-const func: DeployFunction = async function ({ deployments, getNamedAccounts  }) {
+const func: DeployFunction = async function ({ deployments, getNamedAccounts }) {
   const { deploy, log } = deployments;
   const { deployer } = await getNamedAccounts();
   const waitBlockConfirmations = 1;
 
-  log("----------------------------------------------------");
+  log('----------------------------------------------------');
   const deployArgs: [number, number] = [100, 200];
 
   // Deploy the PriceOracle contract
@@ -22,4 +21,4 @@ const func: DeployFunction = async function ({ deployments, getNamedAccounts  })
 };
 
 export default func;
-func.tags = ["factory"];
+func.tags = ['factory'];

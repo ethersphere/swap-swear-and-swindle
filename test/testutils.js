@@ -4,5 +4,5 @@ async function computeCost(receipt) {
 }
 
 module.exports = {
-  computeCost
+  computeCost,
 };

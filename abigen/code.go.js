@@ -1,12 +1,12 @@
-const fs = require('fs')
+const fs = require('fs');
 
-const [,,package,compiled,contract] = process.argv
+const [, , package, compiled, contract] = process.argv;
 
-const output = JSON.parse(fs.readFileSync(compiled))
+const output = JSON.parse(fs.readFileSync(compiled));
 
-function makeCodeFile(contract, path=`contracts/${contract}.sol`) {
-  const Contract = output.contracts[`${path}:${contract}`]
-  const binRuntime = Contract['bin-runtime']
+function makeCodeFile(contract, path = `contracts/${contract}.sol`) {
+  const Contract = output.contracts[`${path}:${contract}`];
+  const binRuntime = Contract['bin-runtime'];
 
   return `  // Copyright 2019 The Swarm Authors
   // This file is part of the Swarm library.
@@ -29,7 +29,7 @@ function makeCodeFile(contract, path=`contracts/${contract}.sol`) {
   package ${package}
 
   // ${contract}DeployedCode is the bytecode ${contract} will have after deployment
-  const ${contract}DeployedCode = "0x${binRuntime}"`
+  const ${contract}DeployedCode = "0x${binRuntime}"`;
 }
 
-console.log(makeCodeFile(contract))
+console.log(makeCodeFile(contract));

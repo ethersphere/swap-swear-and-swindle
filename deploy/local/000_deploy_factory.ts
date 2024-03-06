@@ -1,14 +1,13 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 
 const func: DeployFunction = async function ({ deployments, getNamedAccounts, network }) {
-
   const { deploy, log } = deployments;
   const { deployer } = await getNamedAccounts();
-  const waitBlockConfirmations = network.name != "testnet" ? 1 : 6;
+  const waitBlockConfirmations = network.name != 'testnet' ? 1 : 6;
 
-  log("----------------------------------------------------");
+  log('----------------------------------------------------');
 
-  const token = await deploy("TestToken", {
+  const token = await deploy('TestToken', {
     from: deployer,
     log: true,
   });
@@ -16,7 +15,7 @@ const func: DeployFunction = async function ({ deployments, getNamedAccounts, ne
   log(`Token deployed at address ${token.address}`);
 
   const deployArgs: string[] = [token.address];
-  const factory = await deploy("SimpleSwapFactory", {
+  const factory = await deploy('SimpleSwapFactory', {
     from: deployer,
     args: deployArgs,
     log: true,
@@ -27,4 +26,4 @@ const func: DeployFunction = async function ({ deployments, getNamedAccounts, ne
 };
 
 export default func;
-func.tags = ["factory"];
+func.tags = ['factory'];
