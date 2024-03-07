@@ -53,7 +53,7 @@ const config: HardhatUserConfig = {
     localhost: {
       url: 'http://localhost:8545',
       accounts,
-      chainId: 31337,
+      chainId: 12345,
       deploy: ['deploy/local/'],
     },
     testnet: {
