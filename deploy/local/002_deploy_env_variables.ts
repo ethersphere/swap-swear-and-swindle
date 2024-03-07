@@ -1,5 +1,3 @@
-import fs from 'fs';
-import path from 'path';
 import { DeployFunction } from 'hardhat-deploy/types';
 
 const func: DeployFunction = async function ({ deployments, config }) {
@@ -17,11 +15,9 @@ const func: DeployFunction = async function ({ deployments, config }) {
   content += `export BEE_SWAP_PRICE_ORACLE_ADDRESS=${PriceOracle.address}\n`;
   content += `export BEE_SWAP_ENDPOINT=${config.networks.localhost.url}\n`;
 
-  const envFilePath = path.join(__dirname, '../../deployedContracts.sh');
-
-  // Write the content to the file
-  fs.writeFileSync(envFilePath, content, { flag: 'a' });
-  log(`Exported contract addresses to ${envFilePath}`);
+  // Output the content to the terminal
+  console.log(content);
+  log(`Exported contract addresses to console`);
 
   log('----------------------------------------------------');
 };
