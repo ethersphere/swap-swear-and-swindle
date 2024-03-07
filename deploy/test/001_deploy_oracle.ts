@@ -4,12 +4,12 @@ import { DeployFunction } from 'hardhat-deploy/types';
 const func: DeployFunction = async function ({ deployments, getNamedAccounts, network }) {
   const { deploy, log } = deployments;
   const { deployer } = await getNamedAccounts();
-  const args = [100000, 100];
+  const deployArgs = [100000, 100];
 
   // Deploy the PriceOracle contract
   const oracle = await deploy('PriceOracle', {
     from: deployer,
-    args: args,
+    args: deployArgs,
     log: true,
     waitConfirmations: 6,
   });
@@ -20,7 +20,7 @@ const func: DeployFunction = async function ({ deployments, getNamedAccounts, ne
   // Verify the deployment
   if (network.name == 'testnet' && process.env.TESTNET_ETHERSCAN_KEY) {
     log('Verifying...');
-    await verify(oracle.address, arguments);
+    await verify(oracle.address, deployArgs);
   }
 };
 

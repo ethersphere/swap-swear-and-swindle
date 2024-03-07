@@ -22,7 +22,7 @@ const func: DeployFunction = async function ({ deployments, getNamedAccounts, ne
   // Verify the deployment
   if (network.name === 'testnet' && process.env.TESTNET_ETHERSCAN_KEY) {
     log('Verifying...');
-    await verify(factory.address, arguments);
+    await verify(factory.address, deployArgs);
   }
 };
 
