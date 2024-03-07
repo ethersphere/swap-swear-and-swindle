@@ -1,6 +1,6 @@
-const { expect } = require('chai');
-const { ethers } = require('hardhat');
-const { constants } = require('@openzeppelin/test-helpers');
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
+import { constants } from '@openzeppelin/test-helpers';
 
 describe('SimpleSwapFactory', function () {
   const salt = '0x000000000000000000000000000000000000000000000000000000000000abcd';
@@ -11,10 +11,9 @@ describe('SimpleSwapFactory', function () {
     [issuer, other] = await ethers.getSigners();
   });
 
-  function shouldDeployERC20SimpleSwap(DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT, value) {
+  function shouldDeployERC20SimpleSwap(DEFAULT_HARDDEPOSIT_DECREASE_TIMEOUT: number, value: number) {
     beforeEach(async function () {
-      let deployer, other;
-      [deployer, other] = await ethers.getSigners();
+      const [deployer] = await ethers.getSigners();
       const TestToken = await ethers.getContractFactory('TestToken');
       testToken = await TestToken.deploy();
       await testToken.deployed();
@@ -32,7 +31,7 @@ describe('SimpleSwapFactory', function () {
       this.ERC20SimpleSwap = await ERC20SimpleSwap.attach(this.ERC20SimpleSwapAddress);
 
       if (value.gt(0)) {
-        await testToken.mint(issuer.address, value);
+        await testToken.mint(deployer.address, value);
         await testToken.transfer(this.ERC20SimpleSwap.address, value);
       }
     });

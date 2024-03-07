@@ -1,4 +1,4 @@
-const abi = require('ethereumjs-abi');
+import { ethers } from 'hardhat';
 
 const EIP712Domain = [
   { name: 'name', type: 'string' },
@@ -26,33 +26,28 @@ const CustomDecreaseTimeoutType = [
   { name: 'decreaseTimeout', type: 'uint256' },
 ];
 
-async function sign(hash, signer) {
-  let signature = await web3.eth.sign(hash, signer);
-
-  let rs = signature.substr(0, 130);
-  let v = parseInt(signature.substr(130, 2), 16) + 27;
-
-  return rs + v.toString(16);
+async function sign(hash: string, signer: string): Promise<string> {
+  const signature = await ethers.provider.getSigner(signer).signMessage(ethers.utils.arrayify(hash));
+  return signature;
 }
 
-function signTypedData(eip712data, signee) {
-  return new Promise((resolve, reject) =>
-    web3.currentProvider.send(
-      {
-        method: 'eth_signTypedData_v4',
-        params: [signee, eip712data],
-      },
-      (err, result) => (err == null ? resolve(result.result) : reject(err))
-    )
-  );
+function signTypedData(eip712data: any, signee: string): Promise<string> {
+  const signer = ethers.provider.getSigner(signee);
+  return signer._signTypedData(eip712data.domain, eip712data.types, eip712data.message);
 }
 
 // the chainId is set to 31337 which is the hardhat default
-async function signCheque(swap, beneficiary, cumulativePayout, signee, chainId = 31337) {
+async function signCheque(
+  swap: any,
+  beneficiary: string,
+  cumulativePayout: any,
+  signee: string,
+  chainId = 31337
+): Promise<string> {
   const cheque = {
     chequebook: swap.address,
     beneficiary,
-    cumulativePayout: cumulativePayout.toNumber(),
+    cumulativePayout: cumulativePayout.toBigInt(),
   };
 
   const eip712data = {
@@ -72,7 +67,15 @@ async function signCheque(swap, beneficiary, cumulativePayout, signee, chainId =
   return signTypedData(eip712data, signee);
 }
 
-async function signCashOut(swap, sender, cumulativePayout, beneficiaryAgent, callerPayout, signee, chainId = 31337) {
+async function signCashOut(
+  swap: any, // Changed from ethers.Contract to any
+  sender: string,
+  cumulativePayout: any,
+  beneficiaryAgent: string,
+  callerPayout: any,
+  signee: string,
+  chainId = 31337
+): Promise<string> {
   const eip712data = {
     types: {
       EIP712Domain,
@@ -87,16 +90,22 @@ async function signCashOut(swap, sender, cumulativePayout, beneficiaryAgent, cal
     message: {
       chequebook: swap.address,
       sender,
-      requestPayout: cumulativePayout.toNumber(),
+      requestPayout: cumulativePayout.toBigInt(),
       recipient: beneficiaryAgent,
-      callerPayout: callerPayout.toNumber(),
+      callerPayout: callerPayout.toBigInt(),
     },
   };
 
   return signTypedData(eip712data, signee);
 }
 
-async function signCustomDecreaseTimeout(swap, beneficiary, decreaseTimeout, signee, chainId = 31337) {
+async function signCustomDecreaseTimeout(
+  swap: any,
+  beneficiary: string,
+  decreaseTimeout: any,
+  signee: string,
+  chainId = 31337
+): Promise<string> {
   const eip712data = {
     types: {
       EIP712Domain,
@@ -111,15 +120,10 @@ async function signCustomDecreaseTimeout(swap, beneficiary, decreaseTimeout, sig
     message: {
       chequebook: swap.address,
       beneficiary,
-      decreaseTimeout: decreaseTimeout.toNumber(),
+      decreaseTimeout: decreaseTimeout.toBigInt(),
     },
   };
   return signTypedData(eip712data, signee);
 }
 
-module.exports = {
-  signCustomDecreaseTimeout,
-  signCashOut,
-  signCheque,
-  sign,
-};
+export { signCustomDecreaseTimeout, signCashOut, signCheque, sign };
