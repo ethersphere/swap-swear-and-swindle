@@ -1,8 +1,7 @@
 import 'dotenv/config';
-import 'solidity-coverage';
 import 'hardhat-deploy';
 import 'hardhat-deploy-ethers';
-import '@nomiclabs/hardhat-etherscan';
+import '@nomicfoundation/hardhat-verify';
 import 'hardhat-gas-reporter';
 import { HardhatUserConfig } from 'hardhat/types';
 
