@@ -1,11 +1,12 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
+import { BigNumber, Contract, ContractTransaction } from 'ethers';
 import { constants } from '@openzeppelin/test-helpers';
 
 describe('SimpleSwapFactory', function () {
   const salt = '0x000000000000000000000000000000000000000000000000000000000000abcd';
-  let issuer, other;
-  let simpleSwapFactory, testToken;
+  let issuer:any, other:any;
+  let simpleSwapFactory:Contract, testToken:Contract;
 
   beforeEach(async function () {
     [issuer, other] = await ethers.getSigners();
@@ -84,6 +85,7 @@ describe('SimpleSwapFactory', function () {
         simpleSwapFactory = await SimpleSwapFactory.deploy(testToken.address);
         await simpleSwapFactory.deployed();
 
+        console.log(constants.ZERO_ADDRESS);
         await expect(simpleSwapFactory.deploySimpleSwap(constants.ZERO_ADDRESS, 86400, salt)).to.be.revertedWith(
           'invalid issuer'
         );
