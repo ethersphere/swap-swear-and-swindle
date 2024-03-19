@@ -5,8 +5,8 @@ import { constants } from '@openzeppelin/test-helpers';
 
 describe('SimpleSwapFactory', function () {
   const salt = '0x000000000000000000000000000000000000000000000000000000000000abcd';
-  let issuer:any, other:any;
-  let simpleSwapFactory:Contract, testToken:Contract;
+  let issuer: any, other: any;
+  let simpleSwapFactory: Contract, testToken: Contract;
 
   beforeEach(async function () {
     [issuer, other] = await ethers.getSigners();
