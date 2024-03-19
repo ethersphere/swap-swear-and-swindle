@@ -36,13 +36,13 @@ function signTypedData(eip712data: any, signee: string): Promise<string> {
   return signer._signTypedData(eip712data.domain, eip712data.types, eip712data.message);
 }
 
-// the chainId is set to 31337 which is the hardhat default
+// the chainId is set to 12345 which is the hardhat default
 async function signCheque(
   swap: any,
   beneficiary: string,
   cumulativePayout: any,
   signee: string,
-  chainId = 31337
+  chainId = 12345
 ): Promise<string> {
   const cheque = {
     chequebook: swap.address,
@@ -74,7 +74,7 @@ async function signCashOut(
   beneficiaryAgent: string,
   callerPayout: any,
   signee: string,
-  chainId = 31337
+  chainId = 12345
 ): Promise<string> {
   const eip712data = {
     types: {
@@ -104,7 +104,7 @@ async function signCustomDecreaseTimeout(
   beneficiary: string,
   decreaseTimeout: any,
   signee: string,
-  chainId = 31337
+  chainId = 12345
 ): Promise<string> {
   const eip712data = {
     types: {

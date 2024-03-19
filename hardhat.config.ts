@@ -22,6 +22,22 @@ const accounts: string[] | { mnemonic: string } =
   walletSecret.length === 64 ? [walletSecret] : { mnemonic: walletSecret };
 
 const config: HardhatUserConfig = {
+  namedAccounts: {
+    deployer: 0,
+    admin: 1,
+    stamper: 2,
+    oracle: 3,
+    redistributor: 4,
+    pauser: 5,
+    node_0: 6,
+    node_1: 7,
+    node_2: 8,
+    node_3: 9,
+    node_4: 10,
+    node_5: 11,
+    node_6: 12,
+    node_7: 13,
+  },
   defaultNetwork: 'hardhat',
   solidity: {
     compilers: [
@@ -47,11 +63,24 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
+      chainId: 12345,
+      accounts: [
+        // deployer 0x3c8F39EE625fCF97cB6ee22bCe25BE1F1E5A5dE8
+        {
+          privateKey: '0x0d8f0a76e88539c4ceaa6ad01372cce44fb621b56b34b2cc614b4c77fb081f20',
+          balance: '10000000000000000000000',
+        },
+        // admin 0x7E71bA1aB8AF3454a01CFafe358BEbb7691d02f8
+        {
+          privateKey: '0x8d56d322a1bb1e94c7d64ccd62aa2e5cc9760f59575eda0f7fd392bab8d6ba0d',
+          balance: '10000000000000000000000',
+        },
+      ],
       deploy: ['deploy/local/'],
     },
     localhost: {
       url: 'http://localhost:8545',
-      accounts,
+      // accounts,  if not defined uses the same as above hardhat
       chainId: 12345,
       deploy: ['deploy/local/'],
     },
