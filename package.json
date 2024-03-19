@@ -22,7 +22,8 @@
     "hardhat-contract-sizer": "^2.8.0",
     "hardhat-preprocessor": "^0.1.5",
     "typescript": "^4.0.5",
-    "ts-node": "^10.8.1"
+    "ts-node": "^10.8.1",
+    "solidity-coverage": "^0.8.2"
   },
   "devDependencies": {
     "@ethereum-waffle/chai": "^4.0.10",

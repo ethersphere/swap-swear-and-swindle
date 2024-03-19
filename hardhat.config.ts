@@ -3,6 +3,7 @@ import 'hardhat-deploy';
 import 'hardhat-deploy-ethers';
 import '@nomicfoundation/hardhat-verify';
 import 'hardhat-gas-reporter';
+import 'solidity-coverage';
 import { HardhatUserConfig } from 'hardhat/types';
 
 const PRIVATE_RPC_MAINNET: string | undefined = process.env.PRIVATE_RPC_MAINNET;
@@ -25,18 +26,9 @@ const config: HardhatUserConfig = {
   namedAccounts: {
     deployer: 0,
     admin: 1,
-    stamper: 2,
-    oracle: 3,
-    redistributor: 4,
-    pauser: 5,
-    node_0: 6,
-    node_1: 7,
-    node_2: 8,
-    node_3: 9,
-    node_4: 10,
-    node_5: 11,
-    node_6: 12,
-    node_7: 13,
+    named_1: 2,
+    named_2: 3,
+    named_3: 4,
   },
   defaultNetwork: 'hardhat',
   solidity: {
@@ -73,6 +65,31 @@ const config: HardhatUserConfig = {
         // admin 0x7E71bA1aB8AF3454a01CFafe358BEbb7691d02f8
         {
           privateKey: '0x8d56d322a1bb1e94c7d64ccd62aa2e5cc9760f59575eda0f7fd392bab8d6ba0d',
+          balance: '10000000000000000000000',
+        },
+        // named1 0xFCA295bC36F47A3Eb53F657b88f3f324374656C6
+        {
+          privateKey: '0x963893a36bd803209c07615b0650303706fb01158479a46fba4dea3fe8cf0734',
+          balance: '10000000000000000000000',
+        },
+        // named2 0xB5963cAcF590909407433024cD3BA0319542E99D
+        {
+          privateKey: '0xee65b03b4dfdde207a44c6ff5da99201ee0642841ae9f2e07927e8d2ad523d55',
+          balance: '10000000000000000000000',
+        },
+        // named3 0x9C8EEad79edDC16594489d63E5A9F7530b642079
+        {
+          privateKey: '0x34777daf03381f4666635bff0e03720a49f62ba28daa3ab6cabe0922e8574422',
+          balance: '10000000000000000000000',
+        },
+        // other_1 0x626178434A88c3c8809D136d500b9707D749EA9B
+        {
+          privateKey: 'f09baf4a06da707abeb96568a1419b4eec094774eaa85ef85517457ffe25b515',
+          balance: '10000000000000000000000',
+        },
+        // other_2 0xb22D48A49c0Aa99AC94072E229E52687E97da253
+        {
+          privateKey: '5d6172133423006770002831e395aca9d2dad3bcf9257e38c2f19224b4aef78b',
           balance: '10000000000000000000000',
         },
       ],
