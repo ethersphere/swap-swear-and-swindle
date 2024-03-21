@@ -1,31 +1,40 @@
-import { BN, time } from '@openzeppelin/test-helpers';
+import { BN, balance, time, expectEvent, expectRevert } from '@openzeppelin/test-helpers';
 import { expect } from 'chai';
-import { ethers, getNamedAccounts, getUnnamedAccounts } from 'hardhat';
+import { ethers, deployments, getNamedAccounts, getUnnamedAccounts } from 'hardhat';
 import { BigNumber, Contract, ContractTransaction } from 'ethers';
 
 import { signCheque, signCashOut, signCustomDecreaseTimeout } from './swutils';
-
-// Assuming ERC20SimpleSwap, SimpleSwapFactory, and TestToken are in the same directory
-import ERC20SimpleSwapArtifact from '../artifacts/contracts/ERC20SimpleSwap.sol/ERC20SimpleSwap.json';
-import SimpleSwapFactoryArtifact from '../artifacts/contracts/SimpleSwapFactory.sol/SimpleSwapFactory.json';
-import TestTokenArtifact from '../artifacts/contracts/TestToken.sol/TestToken.json';
 
 function shouldDeploy(issuer, defaultHardDepositTimeout, from, value) {
   const salt = '0x000000000000000000000000000000000000000000000000000000000000abcd';
 
   beforeEach(async function () {
-    this.TestToken = await TestToken.new({ from: issuer });
-    await this.TestToken.mint(issuer, 1000000000, { from: issuer });
-    this.simpleSwapFactory = await SimpleSwapFactory.new(this.TestToken.address);
-    let { logs } = await this.simpleSwapFactory.deploySimpleSwap(issuer, defaultHardDepositTimeout, salt);
-    this.ERC20SimpleSwapAddress = logs[0].args.contractAddress;
-    this.ERC20SimpleSwap = await ERC20SimpleSwap.at(this.ERC20SimpleSwapAddress);
+    const TestToken = await ethers.getContract('TestToken');
+    await TestToken.mint(issuer, 1000000000, { from: issuer });
+
+    const SimpleSwapFactory = await ethers.getContract('SimpleSwapFactory');
+    const deployTx = await SimpleSwapFactory.deploySimpleSwap(issuer, defaultHardDepositTimeout, salt);
+
+    // Wait for the transaction to be mined to access the events and their arguments
+    const receipt = await deployTx.wait();
+    const ERC20SimpleSwapAddress = receipt.events?.filter((x) => x.event === 'SimpleSwapDeployed')[0].args
+      .contractAddress;
+
+    // Assuming 'YourEventName' is the event name that logs the contract address, replace it accordingly
+
+    const ERC20SimpleSwap = await ethers.getContractAt('ERC20SimpleSwap', ERC20SimpleSwapAddress);
+
+    // If value is not equal to 0, transfer tokens from issuer to the ERC20SimpleSwap contract
     if (value != 0) {
-      await this.TestToken.transfer(this.ERC20SimpleSwap.address, value, { from: issuer });
+      await this.TestToken.connect(issuer).transfer(ERC20SimpleSwap.address, value);
     }
-    this.postconditions = {
-      issuer: await this.ERC20SimpleSwap.issuer(),
-      defaultHardDepositTimeout: await this.ERC20SimpleSwap.defaultHardDepositTimeout(),
+
+    // Assuming 'issuer' is a Signer or you have access to the Signer to perform the transfer
+
+    // Read postconditions from the deployed ERC20SimpleSwap contract
+    const postconditions = {
+      issuer: await ERC20SimpleSwap.issuer(),
+      defaultHardDepositTimeout: await ERC20SimpleSwap.defaultHardDepositTimeout(),
     };
   });
 
@@ -37,12 +46,12 @@ function shouldDeploy(issuer, defaultHardDepositTimeout, from, value) {
     expect(this.postconditions.issuer).to.be.equal(issuer);
   });
   it('should set the defaultHardDepositTimeout', function () {
-    expect(this.postconditions.defaultHardDepositTimeout).bignumber.to.be.equal(defaultHardDepositTimeout);
+    expect(this.postconditions.defaultHardDepositTimeout).to.equal(defaultHardDepositTimeout);
   });
 }
 function shouldReturnDefaultHardDepositTimeout(expected) {
   it('should return the expected defaultHardDepositTimeout', async function () {
-    expect(await this.ERC20SimpleSwap.defaultHardDepositTimeout()).bignumber.to.be.equal(expected);
+    expect(await this.ERC20SimpleSwap.defaultHardDepositTimeout()).to.equal(expected);
   });
 }
 
@@ -51,7 +60,7 @@ function shouldReturnPaidOut(beneficiary, expectedAmount) {
     this.paidOut = await this.ERC20SimpleSwap.paidOut(beneficiary);
   });
   it('should return the expected amount', function () {
-    expect(expectedAmount).bignumber.to.be.equal(this.paidOut);
+    expect(expectedAmount).to.equal(this.paidOut);
   });
 }
 
@@ -60,7 +69,7 @@ function shouldReturnTotalPaidOut(expectedAmount) {
     this.totalPaidOut = await this.ERC20SimpleSwap.totalPaidOut();
   });
   it('should return the expected amount', function () {
-    expect(expectedAmount).bignumber.to.be.equal(this.totalPaidOut);
+    expect(expectedAmount).to.equal(this.totalPaidOut);
   });
 }
 
@@ -82,13 +91,13 @@ function shouldReturnHardDeposits(
     this.hardDeposits = await this.ERC20SimpleSwap.hardDeposits(beneficiary);
   });
   it('should return the expected amount', function () {
-    expect(expectedAmount).bignumber.to.be.equal(this.hardDeposits.amount);
+    expect(expectedAmount).to.equal(this.hardDeposits.amount);
   });
   it('should return the expected decreaseAmount', function () {
-    expect(expectedDecreaseAmount).bignumber.to.be.equal(this.hardDeposits.decreaseAmount);
+    expect(expectedDecreaseAmount).to.equal(this.hardDeposits.decreaseAmount);
   });
   it('should return the expected timeout', function () {
-    expect(expectedDecreaseTimeout).bignumber.to.be.equal(this.hardDeposits.timeout);
+    expect(expectedDecreaseTimeout).to.equal(this.hardDeposits.timeout);
   });
   it('should return the exptected canBeDecreasedAt', function () {
     expect(this.expectedCanBeDecreasedAt.toNumber()).to.be.closeTo(this.hardDeposits.canBeDecreasedAt.toNumber(), 5);
@@ -101,7 +110,7 @@ function shouldReturnTotalHardDeposit(expectedTotalHardDeposit) {
   });
 
   it('should return the expectedTotalHardDeposit', function () {
-    expect(expectedTotalHardDeposit).bignumber.to.be.equal(this.totalHardDeposit);
+    expect(expectedTotalHardDeposit).to.equal(this.totalHardDeposit);
   });
 }
 
@@ -113,13 +122,13 @@ function shouldReturnIssuer(expectedIssuer) {
 
 function shouldReturnLiquidBalance(expectedLiquidBalance) {
   it('should return the expected liquidBalance', async function () {
-    expect(await this.ERC20SimpleSwap.liquidBalance()).bignumber.to.equal(expectedLiquidBalance);
+    expect(await this.ERC20SimpleSwap.liquidBalance()).to.equal(expectedLiquidBalance);
   });
 }
 
 function shouldReturnLiquidBalanceFor(beneficiary, expectedLiquidBalanceFor) {
   it('should return the expected liquidBalance', async function () {
-    expect(await this.ERC20SimpleSwap.liquidBalanceFor(beneficiary)).bignumber.to.equal(expectedLiquidBalanceFor);
+    expect(await this.ERC20SimpleSwap.liquidBalanceFor(beneficiary)).to.equal(expectedLiquidBalanceFor);
   });
 }
 
@@ -148,25 +157,25 @@ function cashChequeInternal(beneficiary, recipient, cumulativePayout, callerPayo
       expectedDecreaseHardDeposit = this.preconditions.hardDepositFor.amount;
     }
     // totalHarddeposit
-    expect(this.postconditions.totalHardDeposit).bignumber.to.be.equal(
+    expect(this.postconditions.totalHardDeposit).to.equal(
       this.preconditions.totalHardDeposit.sub(expectedDecreaseHardDeposit)
     );
     // hardDepositFor
-    expect(this.postconditions.hardDepositFor.amount).bignumber.to.be.equal(
+    expect(this.postconditions.hardDepositFor.amount).to.equal(
       this.preconditions.hardDepositFor.amount.sub(expectedDecreaseHardDeposit)
     );
   });
 
   it('should update paidOut', async function () {
-    expect(this.postconditions.paidOut).bignumber.to.be.equal(this.preconditions.paidOut.add(this.totalPayout));
+    expect(this.postconditions.paidOut).to.equal(this.preconditions.paidOut.add(this.totalPayout));
   });
 
   it('should update totalPaidOut', async function () {
-    expect(this.postconditions.totalPaidOut).bignumber.to.be.equal(this.preconditions.paidOut.add(this.totalPayout));
+    expect(this.postconditions.totalPaidOut).to.equal(this.preconditions.paidOut.add(this.totalPayout));
   });
 
   it('should transfer the correct amount to the recipient', async function () {
-    expect(this.postconditions.recipientBalance).bignumber.to.be.equal(
+    expect(this.postconditions.recipientBalance).to.equal(
       this.preconditions.recipientBalance.add(this.totalPayout.sub(callerPayout))
     );
   });
@@ -177,9 +186,7 @@ function cashChequeInternal(beneficiary, recipient, cumulativePayout, callerPayo
     } else {
       expectedAmountCaller = callerPayout;
     }
-    expect(this.postconditions.callerBalance).bignumber.to.be.equal(
-      this.preconditions.callerBalance.add(expectedAmountCaller)
-    );
+    expect(this.postconditions.callerBalance).to.equal(this.preconditions.callerBalance.add(expectedAmountCaller));
   });
 
   it('should emit a ChequeCashed event', function () {
@@ -398,7 +405,7 @@ function shouldPrepareDecreaseHardDeposit(beneficiary, decreaseAmount, from) {
   });
 
   it('should update the decreaseAmount', function () {
-    expect(this.postconditions.hardDepositFor.decreaseAmount).bignumber.to.be.equal(decreaseAmount);
+    expect(this.postconditions.hardDepositFor.decreaseAmount).to.equal(decreaseAmount);
   });
 
   it('should emit a HardDepositDecreasePrepared event', function () {
@@ -433,19 +440,19 @@ function shouldDecreaseHardDeposit(beneficiary, from) {
   });
 
   it('decreases the hardDeposit amount for the beneficiary', function () {
-    expect(this.postconditions.hardDepositFor.amount).bignumber.to.be.equal(
+    expect(this.postconditions.hardDepositFor.amount).to.equal(
       this.preconditions.hardDepositFor.amount.sub(this.preconditions.hardDepositFor.decreaseAmount)
     );
   });
 
   it('decreases the total hardDeposits', function () {
-    expect(this.postconditions.hardDeposit).bignumber.to.be.equal(
+    expect(this.postconditions.hardDeposit).to.equal(
       this.preconditions.hardDeposit.sub(this.preconditions.hardDepositFor.decreaseAmount)
     );
   });
 
   it('resets the canBeDecreased at', function () {
-    expect(this.postconditions.hardDepositFor.canBeDecreasedAt).bignumber.to.be.equal(new BN(0));
+    expect(this.postconditions.hardDepositFor.canBeDecreasedAt).to.equal(new BN(0));
   });
 
   it('emits a hardDepositAmountChanged event', function () {
@@ -484,33 +491,31 @@ function shouldIncreaseHardDeposit(beneficiary, amount, from) {
   });
 
   it('should decrease the liquidBalance', function () {
-    expect(this.postconditions.liquidBalance).bignumber.to.be.equal(this.preconditions.liquidBalance.sub(amount));
+    expect(this.postconditions.liquidBalance).to.equal(this.preconditions.liquidBalance.sub(amount));
   });
 
   it('should not affect the liquidBalanceFor', function () {
-    expect(this.postconditions.liquidBalanceFor).bignumber.to.be.equal(this.preconditions.liquidBalanceFor);
+    expect(this.postconditions.liquidBalanceFor).to.equal(this.preconditions.liquidBalanceFor);
   });
 
   it('should not affect the balance', function () {
-    expect(this.postconditions.balance).bignumber.to.be.equal(this.preconditions.balance);
+    expect(this.postconditions.balance).to.equal(this.preconditions.balance);
   });
 
   it('should increase the totalHardDeposit', function () {
-    expect(this.postconditions.totalHardDeposit).bignumber.to.be.equal(this.preconditions.totalHardDeposit.add(amount));
+    expect(this.postconditions.totalHardDeposit).to.equal(this.preconditions.totalHardDeposit.add(amount));
   });
 
   it('should increase the hardDepositFor', function () {
-    expect(this.postconditions.hardDepositFor.amount).bignumber.to.be.equal(
-      this.preconditions.hardDepositFor.amount.add(amount)
-    );
+    expect(this.postconditions.hardDepositFor.amount).to.equal(this.preconditions.hardDepositFor.amount.add(amount));
   });
 
   it('should not influence the timeout', function () {
-    expect(this.postconditions.hardDepositFor.timeout).bignumber.to.be.equal(this.preconditions.hardDepositFor.timeout);
+    expect(this.postconditions.hardDepositFor.timeout).to.equal(this.preconditions.hardDepositFor.timeout);
   });
 
   it('should set canBeDecreasedAt to zero', function () {
-    expect(this.postconditions.hardDepositFor.canBeDecreasedAt).bignumber.to.be.equal(new BN(0));
+    expect(this.postconditions.hardDepositFor.canBeDecreasedAt).to.equal(new BN(0));
   });
 
   it('emits a hardDepositAmountChanged event', function () {
@@ -543,7 +548,7 @@ function shouldSetCustomHardDepositTimeout(beneficiary, timeout, from) {
   });
 
   it('should have set the timeout', async function () {
-    expect(this.postconditions.hardDepositFor.timeout).bignumber.to.be.equal(timeout);
+    expect(this.postconditions.hardDepositFor.timeout).to.equal(timeout);
   });
 
   it('emits a HardDepositTimeoutChanged event', function () {
@@ -589,11 +594,11 @@ function shouldWithdraw(amount, from) {
   });
 
   it('should have updated the liquidBalance', function () {
-    expect(this.postconditions.liquidBalance).bignumber.to.be.equal(this.preconditions.liquidBalance.sub(amount));
+    expect(this.postconditions.liquidBalance).to.equal(this.preconditions.liquidBalance.sub(amount));
   });
 
   it('should have updated the callerBalance', function () {
-    expect(this.postconditions.callerBalance).bignumber.to.be.equal(this.preconditions.callerBalance.add(amount));
+    expect(this.postconditions.callerBalance).to.equal(this.preconditions.callerBalance.add(amount));
   });
 }
 function shouldNotWithdraw(amount, from, value, revertMessage) {
@@ -613,13 +618,13 @@ function shouldDeposit(amount, from) {
     this.logs = logs;
   });
   it('should update the liquidBalance of the checkbook', async function () {
-    expect(await this.ERC20SimpleSwap.liquidBalance()).bignumber.to.equal(this.preconditions.liquidBalance.add(amount));
+    expect(await this.ERC20SimpleSwap.liquidBalance()).to.equal(this.preconditions.liquidBalance.add(amount));
   });
   it('should update the balance of the checkbook', async function () {
-    expect(await this.ERC20SimpleSwap.balance()).bignumber.to.equal(this.preconditions.balance.add(amount));
+    expect(await this.ERC20SimpleSwap.balance()).to.equal(this.preconditions.balance.add(amount));
   });
   it('should not afect the totalHardDeposit', async function () {
-    expect(await this.ERC20SimpleSwap.totalHardDeposit()).bignumber.to.equal(this.preconditions.totalHardDeposit);
+    expect(await this.ERC20SimpleSwap.totalHardDeposit()).to.equal(this.preconditions.totalHardDeposit);
   });
   it('should emit a transfer event', async function () {
     expectEvent.inLogs(this.logs, 'Transfer', {

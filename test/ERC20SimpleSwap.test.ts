@@ -3,7 +3,7 @@ import { shouldBehaveLikeERC20SimpleSwap } from './ERC20SimpleSwap.behavior';
 import { shouldDeploy } from './ERC20SimpleSwap.should';
 
 import { expect } from 'chai';
-import { ethers, getNamedAccounts, getUnnamedAccounts } from 'hardhat';
+import { ethers, getNamedAccounts, getUnnamedAccounts, deployments } from 'hardhat';
 import { BigNumber, Contract, ContractTransaction } from 'ethers';
 
 describe('ERC20SimpleSwap', async function () {
@@ -20,24 +20,27 @@ describe('ERC20SimpleSwap', async function () {
     defaultHardDepositTimeout = new BN(86400);
   });
 
-  describe("when we don't deposit while deploying", async function () {
-    const defaultHardDepositTimeout = new BN(86400);
-    const value = new BN(0);
+  // describe("when we don't deposit while deploying", async function () {
+  //   const defaultHardDepositTimeout = new BN(86400);
+  //   const value = new BN(0);
 
-    it('should check', async function () {
-      const sender = issuer;
-      console.log(alice);
-      // shouldDeploy(issuer, defaultHardDepositTimeout, sender, value);
-      shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, agent], new BN(86400));
-    });
-  });
-  describe('when we deposit while deploying', async function () {
-    const sender = issuer;
-    const defaultHardDepositTimeout = new BN(86400);
-    const value = new BN(50);
+  //   beforeEach(async function () {
+  //     await deployments.fixture();
+  //   });
 
-    it('should check', async function () {
-      //shouldDeploy(issuer, defaultHardDepositTimeout, sender, value);
-    });
-  });
+  //   it('should check 1', async function () {
+  //     const sender = issuer;
+  //     shouldDeploy(issuer, defaultHardDepositTimeout, sender, value);
+  //     shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, agent], new BN(86400));
+  //   });
+  // });
+  // describe('when we deposit while deploying', async function () {
+  //   const sender = issuer;
+  //   const defaultHardDepositTimeout = new BN(86400);
+  //   const value = new BN(50);
+
+  //   it('should check 2', async function () {
+  //     //    shouldDeploy(issuer, defaultHardDepositTimeout, sender, value);
+  //   });
+  // });
 });
