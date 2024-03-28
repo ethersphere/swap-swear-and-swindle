@@ -1,8 +1,7 @@
 {
-  "extends": "solhint:recommended",
+  "extends": "solhint:default",
+  "plugins": ["prettier"],
   "rules": {
-    "func-visibility": ["error",{"ignoreConstructors":true}],
-    "not-rely-on-time": "off",
-    "compiler-version": "off"
+    "prettier/prettier": "error"
   }
 }

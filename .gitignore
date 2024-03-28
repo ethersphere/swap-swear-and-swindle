@@ -26,6 +26,8 @@ node_modules/
 # hardhat-deploy
 deployments/hardhat
 deployments/localhost
+deployedContracts2.sh
+yarn-error.log
 
 # Misc
 contractsInfo.json
