@@ -9,7 +9,7 @@ const func: DeployFunction = async function ({ deployments, getNamedAccounts, ne
   log('----------------------------------------------------');
 
   // Check if this is run on Cluster and is already using deployed token from Storage Incentive
-  const deployedToken = '0x942C6684eB9874C63d4ed26Ab0623F951D253081';
+  const deployedToken = '0x6AAB14FE9cccd64A502d23842d916eB5321c26E7';
   const code = await ethers.provider.getCode(deployedToken);
   let tokenAddress;
 
