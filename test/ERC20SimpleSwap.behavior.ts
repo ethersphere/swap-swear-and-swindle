@@ -1,8 +1,5 @@
-import { BN, time } from '@openzeppelin/test-helpers';
-import { expect } from 'chai';
-import { ethers, getNamedAccounts, getUnnamedAccounts } from 'hardhat';
-import { BigNumber, Contract, ContractTransaction } from 'ethers';
-
+import { BN } from '@openzeppelin/test-helpers';
+import { time } from '@nomicfoundation/hardhat-network-helpers';
 import {
   shouldReturnDefaultHardDepositTimeout,
   shouldReturnPaidOut,
@@ -29,7 +26,7 @@ import {
   shouldDeposit,
 } from './ERC20SimpleSwap.should';
 
-// Define the structure of your enabledTests object to make its properties strongly typed
+//Define the structure of your enabledTests object to make its properties strongly typed
 interface EnabledTests {
   defaultHardDepositTimeout: boolean;
   cheques: boolean;
@@ -193,7 +190,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol]: string[], 
                       toDecrease,
                       expectedDecreaseTimeout,
                       new BN(42)
-                    ); // 42 (not BN(0)) signifies that we have to define it later
+                    ); //42 (not BN(0)) signifies that we have to define it later
                   });
                 });
               });
@@ -573,7 +570,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol]: string[], 
           const caller = issuer;
           const callerPayout = new BN(0);
           const beneficiarySignee = beneficiary;
-          const issuerSignee = beneficiary; // on purpose not the correct signee, as it is not needed
+          const issuerSignee = beneficiary; //on purpose not the correct signee, as it is not needed
           describe(describeTest + 'shouldCashCheque', function () {
             shouldCashCheque(
               beneficiary,
@@ -723,6 +720,7 @@ function shouldBehaveLikeERC20SimpleSwap([issuer, alice, bob, carol]: string[], 
             );
           });
         });
+
         describe('when we send value along', function () {
           const value = new BN(1);
           const revertMessage = 'revert';

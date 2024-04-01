@@ -34,7 +34,7 @@ async function sign(hash: string, signer: string): Promise<string> {
 function signTypedData(eip712data: any, signee: string): Promise<string> {
   const signer = ethers.provider.getSigner(signee);
   return signer._signTypedData(eip712data.domain, eip712data.types, eip712data.message);
-}
+};
 
 // the chainId is set to 12345 which is the hardhat default
 async function signCheque(
@@ -47,12 +47,12 @@ async function signCheque(
   const cheque = {
     chequebook: swap.address,
     beneficiary,
-    cumulativePayout: cumulativePayout.toBigInt(),
+    cumulativePayout: BigInt(cumulativePayout),
   };
 
   const eip712data = {
     types: {
-      EIP712Domain,
+      // EIP712Domain,
       Cheque: ChequeType,
     },
     domain: {
@@ -78,7 +78,7 @@ async function signCashOut(
 ): Promise<string> {
   const eip712data = {
     types: {
-      EIP712Domain,
+      //EIP712Domain,
       Cashout: CashoutType,
     },
     domain: {
@@ -90,9 +90,9 @@ async function signCashOut(
     message: {
       chequebook: swap.address,
       sender,
-      requestPayout: cumulativePayout.toBigInt(),
+      requestPayout: BigInt(cumulativePayout),
       recipient: beneficiaryAgent,
-      callerPayout: callerPayout.toBigInt(),
+      callerPayout: BigInt(callerPayout),
     },
   };
 
@@ -108,7 +108,7 @@ async function signCustomDecreaseTimeout(
 ): Promise<string> {
   const eip712data = {
     types: {
-      EIP712Domain,
+      //EIP712Domain,
       CustomDecreaseTimeout: CustomDecreaseTimeoutType,
     },
     domain: {
@@ -120,7 +120,7 @@ async function signCustomDecreaseTimeout(
     message: {
       chequebook: swap.address,
       beneficiary,
-      decreaseTimeout: decreaseTimeout.toBigInt(),
+      decreaseTimeout: BigInt(decreaseTimeout),
     },
   };
   return signTypedData(eip712data, signee);
