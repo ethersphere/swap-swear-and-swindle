@@ -26,6 +26,7 @@ node_modules/
 # hardhat-deploy
 deployments/hardhat
 deployments/localhost
+deployments/localcluster
 deployedContracts2.sh
 yarn-error.log
 

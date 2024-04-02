@@ -101,6 +101,12 @@ const config: HardhatUserConfig = {
       chainId: 12345,
       deploy: ['deploy/local/'],
     },
+    localcluster: {
+      url: 'http://geth-swap:8545',
+      // accounts,  if not defined uses the same as above hardhat
+      chainId: 12345,
+      deploy: ['deploy/local/'],
+    },
     testnet: {
       url: PRIVATE_RPC_TESTNET || 'https://1rpc.io/sepolia',
       accounts,

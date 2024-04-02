@@ -1,10 +1,13 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 
-const func: DeployFunction = async function ({ deployments, config }) {
+const func: DeployFunction = async function ({ deployments, config, network }) {
   const { get, log } = deployments;
 
   const SimpleSwapFactory = await get('SimpleSwapFactory');
   const PriceOracle = await get('PriceOracle');
+  let networkURL = config.networks[network.name].url;
+
+  console.log(network.name);
 
   // Generate content for the environment file
   let content = '';
@@ -13,7 +16,7 @@ const func: DeployFunction = async function ({ deployments, config }) {
   content += `export BEE_SWAP_FACTORY_ADDRESS=${SimpleSwapFactory.address}\n`;
   content += `export BEE_SWAP_LEGACY_FACTORY_ADDRESSES=${SimpleSwapFactory.address}\n`;
   content += `export BEE_SWAP_PRICE_ORACLE_ADDRESS=${PriceOracle.address}\n`;
-  content += `export BEE_SWAP_ENDPOINT=${config.networks.localhost.url}\n`;
+  content += `export BEE_SWAP_ENDPOINT=${networkURL}\n`;
 
   // Output the content to the terminal
   console.log(content);
