@@ -7,8 +7,6 @@ const func: DeployFunction = async function ({ deployments, config, network }) {
   const PriceOracle = await get('PriceOracle');
   let networkURL = config.networks[network.name].url;
 
-  console.log(network.name);
-
   // Generate content for the environment file
   let content = '';
 
