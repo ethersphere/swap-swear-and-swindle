@@ -45,7 +45,7 @@ interface EnabledTests {
   deposit: boolean;
 }
 
-let enabledTests: EnabledTests = {
+const enabledTests: EnabledTests = {
   defaultHardDepositTimeout: true,
   cheques: true,
   hardDeposits: true,

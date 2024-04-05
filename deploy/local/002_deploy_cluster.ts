@@ -5,7 +5,7 @@ const func: DeployFunction = async function ({ deployments, config, network }) {
 
   const SimpleSwapFactory = await get('SimpleSwapFactory');
   const PriceOracle = await get('PriceOracle');
-  let networkURL = config.networks[network.name].url;
+  const networkURL = config.networks[network.name].url;
 
   // Generate content for the environment file
   let content = '';

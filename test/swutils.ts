@@ -34,7 +34,7 @@ async function sign(hash: string, signer: string): Promise<string> {
 function signTypedData(eip712data: any, signee: string): Promise<string> {
   const signer = ethers.provider.getSigner(signee);
   return signer._signTypedData(eip712data.domain, eip712data.types, eip712data.message);
-};
+}
 
 // the chainId is set to 12345 which is the hardhat default
 async function signCheque(
