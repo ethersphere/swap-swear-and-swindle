@@ -2,9 +2,6 @@
   "name": "sw3",
   "version": "0.2.0",
   "description": "Contracts for Swap, Swear and Swindle.",
-  "directories": {
-    "test": "test"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/ethersphere/swap-swear-and-swindle.git"

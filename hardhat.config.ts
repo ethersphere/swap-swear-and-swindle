@@ -25,10 +25,10 @@ const accounts: string[] | { mnemonic: string } =
 const config: HardhatUserConfig = {
   namedAccounts: {
     deployer: 0,
-    admin: 1,
-    named_1: 2,
-    named_2: 3,
-    named_3: 4,
+    alice: 1,
+    bob: 2,
+    carol: 3,
+    other: 4,
   },
   defaultNetwork: 'hardhat',
   solidity: {
@@ -52,6 +52,9 @@ const config: HardhatUserConfig = {
         },
       },
     ],
+  },
+  mocha: {
+    timeout: Number.MAX_SAFE_INTEGER,
   },
   networks: {
     hardhat: {
@@ -143,13 +146,6 @@ const config: HardhatUserConfig = {
         },
       },
     ],
-  },
-  namedAccounts: {
-    deployer: 0,
-    alice: 1,
-    bob: 2,
-    carol: 3,
-    other: 4,
   },
   paths: {
     sources: 'contracts',
