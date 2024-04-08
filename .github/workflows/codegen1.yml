@@ -3,9 +3,9 @@ name: codegen
 on:
   push:
     branches-ignore:
-      - "**"
+      - '**'
     tags:
-      - "v*.*.*"
+      - 'v*.*.*'
 
 jobs:
   build:
@@ -19,7 +19,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v1
         with:
-          node-version: "14"
+          node-version: '20'
 
       # Restore the yarn cache
       - uses: c-hive/gha-yarn-cache@v1
