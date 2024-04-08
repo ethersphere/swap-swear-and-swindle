@@ -1,0 +1,63 @@
+name: codegen
+
+on:
+  push:
+    branches-ignore:
+      - '**'
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
+          fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: '20'
+
+      # Restore the yarn cache
+      - uses: c-hive/gha-yarn-cache@v1
+
+      - name: Yarn install
+        run: yarn install
+
+      - name: Yarn Compile
+        run: yarn compile
+
+      - uses: actions/checkout@v2
+        with:
+          repository: ethersphere/go-sw3-abi
+          path: go
+          persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
+          fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
+          ref: master
+
+      - name: Get tag
+        id: tag
+        uses: dawidd6/action-get-tag@v1
+
+      - name: Commit files
+        run: |
+          mkdir -p go/sw3abi
+          ./codegen/go1.sh "go/sw3abi/abi_${{steps.tag.outputs.tag}}.go" "${{steps.tag.outputs.tag}}"
+          cd go
+          git config --local user.email "bee-worker@ethswarm.org"
+          git config --local user.name "bee-worker"
+          git add .
+          git commit -m "generate code for sw3 contracts ${{steps.tag.outputs.tag}}" -a
+          git tag "${{steps.tag.outputs.tag}}"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          repository: ethersphere/go-sw3-abi
+          directory: go
+          github_token: ${{ secrets.GHA_PAT_BASIC }}
+          branch: master
+          tags: true
