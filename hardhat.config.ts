@@ -62,14 +62,14 @@ const config: HardhatUserConfig = {
     hardhat: {
       chainId: 12345,
       accounts: [
-        // deployer 0x62cab2b3b55f341f10348720ca18063cdb779ad5
-        {
-          privateKey: '4663c222787e30c1994b59044aa5045377a6e79193a8ead88293926b535c722d',
-          balance: '10000000000000000000000',
-        },
-        // deployer_2 0x77CbAdb1059dDC7334227e025fC940469f52FEd8
+        // deployer 0x77CbAdb1059dDC7334227e025fC940469f52FEd8
         {
           privateKey: '0xb65c0589ad60bc9985f0b6eafe5dd480b7ad63f073a7e9625dd23466a0d1947d',
+          balance: '10000000000000000000000',
+        },
+        // deployer_SI 0x62cab2b3b55f341f10348720ca18063cdb779ad5
+        {
+          privateKey: '4663c222787e30c1994b59044aa5045377a6e79193a8ead88293926b535c722d',
           balance: '10000000000000000000000',
         },
         // admin 0x7E71bA1aB8AF3454a01CFafe358BEbb7691d02f8
