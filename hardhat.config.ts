@@ -24,15 +24,6 @@ const accounts: string[] | { mnemonic: string } =
   walletSecret.length === 64 ? [walletSecret] : { mnemonic: walletSecret };
 
 const config: HardhatUserConfig = {
-  namedAccounts: {
-    deployer: 0,
-    deployer_si: 1,
-    admin: 2,
-    alice: 3,
-    bob: 4,
-    carol: 5,
-    other: 6,
-  },
   defaultNetwork: 'hardhat',
   solidity: {
     compilers: [
@@ -66,11 +57,6 @@ const config: HardhatUserConfig = {
         // deployer 0x7E71bA1aB8AF3454a01CFafe358BEbb7691d02f8
         {
           privateKey: '0x8d56d322a1bb1e94c7d64ccd62aa2e5cc9760f59575eda0f7fd392bab8d6ba0d',
-          balance: '10000000000000000000000',
-        },
-        // deployer_SI 0x62cab2b3b55f341f10348720ca18063cdb779ad5
-        {
-          privateKey: '4663c222787e30c1994b59044aa5045377a6e79193a8ead88293926b535c722d',
           balance: '10000000000000000000000',
         },
         // admin 0x77CbAdb1059dDC7334227e025fC940469f52FEd8
@@ -158,8 +144,14 @@ const config: HardhatUserConfig = {
   paths: {
     sources: 'contracts',
   },
+  namedAccounts: {
+    deployer: 0,
+    admin: 1,
+    alice: 2,
+    bob: 3,
+    carol: 4,
+    other: 5,
+  },
 };
-
-console.log(accounts);
 
 export default config;

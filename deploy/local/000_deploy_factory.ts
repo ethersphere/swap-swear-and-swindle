@@ -2,7 +2,7 @@ import { DeployFunction } from 'hardhat-deploy/types';
 
 const func: DeployFunction = async function ({ deployments, getNamedAccounts, network, ethers }) {
   const { deploy, log } = deployments;
-  const { deployer, deployer_si } = await getNamedAccounts();
+  const { deployer } = await getNamedAccounts();
 
   log('----------------------------------------------------');
   log('Deployer address at ', deployer);
