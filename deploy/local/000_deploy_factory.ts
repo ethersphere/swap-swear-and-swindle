@@ -27,7 +27,6 @@ const func: DeployFunction = async function ({ deployments, getNamedAccounts, ne
 
   // If there's code, then there's a contract deployed
   if (code !== '0x') {
-    console.log('A contract is deployed at this address.');
     tokenAddress = deployedToken;
   } else {
     const token = await deploy('TestToken', {

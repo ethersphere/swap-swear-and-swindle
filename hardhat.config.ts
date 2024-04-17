@@ -25,7 +25,7 @@ const accounts: string[] | { mnemonic: string } =
 const config: HardhatUserConfig = {
   namedAccounts: {
     deployer: 0,
-    deployer2: 1,
+    deployer_si: 1,
     admin: 2,
     alice: 3,
     bob: 4,
