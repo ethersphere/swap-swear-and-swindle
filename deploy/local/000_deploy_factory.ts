@@ -2,23 +2,11 @@ import { DeployFunction } from 'hardhat-deploy/types';
 
 const func: DeployFunction = async function ({ deployments, getNamedAccounts, network, ethers }) {
   const { deploy, log } = deployments;
-  const { deployer, deployer_si } = await getNamedAccounts();
+  const { deployer } = await getNamedAccounts();
 
   log('----------------------------------------------------');
   log('Deployer address at ', deployer);
   log('----------------------------------------------------');
-
-  // Send ETH to S3 deployer if using localcluster and geth
-  const amountEth = ethers.utils.parseEther('10'); // 10 ETH
-  if (network.name == 'localcluster') {
-    await deployments.rawTx({
-      from: ethers.utils.getAddress(deployer_si),
-      to: ethers.utils.getAddress(deployer),
-      value: amountEth,
-    });
-    log('Sent ETH to S3 deployer from SI deployer');
-    log('----------------------------------------------------');
-  }
 
   // Check if this is run on Cluster and is already using deployed token from Storage Incentive
   const deployedToken = '0x6AAB14FE9cccd64A502d23842d916eB5321c26E7';

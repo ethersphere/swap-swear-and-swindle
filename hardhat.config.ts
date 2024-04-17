@@ -9,12 +9,13 @@ import { HardhatUserConfig } from 'hardhat/types';
 const PRIVATE_RPC_MAINNET: string | undefined = process.env.PRIVATE_RPC_MAINNET;
 const PRIVATE_RPC_TESTNET: string | undefined = process.env.PRIVATE_RPC_TESTNET;
 
-const walletSecret: string = process.env.WALLET_SECRET === undefined ? 'undefined' : process.env.WALLET_SECRET;
+// We use WALLET_SECRET_2 because of collide with SI repo that uses WALLET_SECRET and we use both of them for cluster deployment
+const walletSecret: string = process.env.WALLET_SECRET_2 === undefined ? 'undefined' : process.env.WALLET_SECRET_2;
 
 if (walletSecret === 'undefined') {
-  console.log('Please set your WALLET_SECRET in a .env file');
+  console.log('Please set your WALLET_SECRET_2 in a .env file');
 } else if (walletSecret.length !== 64) {
-  console.log('WALLET_SECRET must be 64 characters long.');
+  console.log('WALLET_SECRET_2 must be 64 characters long.');
 }
 
 const mainnetEtherscanKey: string | undefined = process.env.MAINNET_ETHERSCAN_KEY;
@@ -23,15 +24,6 @@ const accounts: string[] | { mnemonic: string } =
   walletSecret.length === 64 ? [walletSecret] : { mnemonic: walletSecret };
 
 const config: HardhatUserConfig = {
-  namedAccounts: {
-    deployer: 0,
-    deployer_si: 1,
-    admin: 2,
-    alice: 3,
-    bob: 4,
-    carol: 5,
-    other: 6,
-  },
   defaultNetwork: 'hardhat',
   solidity: {
     compilers: [
@@ -62,19 +54,14 @@ const config: HardhatUserConfig = {
     hardhat: {
       chainId: 12345,
       accounts: [
-        // deployer 0x77CbAdb1059dDC7334227e025fC940469f52FEd8
-        {
-          privateKey: '0xb65c0589ad60bc9985f0b6eafe5dd480b7ad63f073a7e9625dd23466a0d1947d',
-          balance: '10000000000000000000000',
-        },
-        // deployer_SI 0x62cab2b3b55f341f10348720ca18063cdb779ad5
-        {
-          privateKey: '4663c222787e30c1994b59044aa5045377a6e79193a8ead88293926b535c722d',
-          balance: '10000000000000000000000',
-        },
-        // admin 0x7E71bA1aB8AF3454a01CFafe358BEbb7691d02f8
+        // deployer 0x7E71bA1aB8AF3454a01CFafe358BEbb7691d02f8
         {
           privateKey: '0x8d56d322a1bb1e94c7d64ccd62aa2e5cc9760f59575eda0f7fd392bab8d6ba0d',
+          balance: '10000000000000000000000',
+        },
+        // admin 0x77CbAdb1059dDC7334227e025fC940469f52FEd8
+        {
+          privateKey: '0xb65c0589ad60bc9985f0b6eafe5dd480b7ad63f073a7e9625dd23466a0d1947d',
           balance: '10000000000000000000000',
         },
         // named1 0xFCA295bC36F47A3Eb53F657b88f3f324374656C6
@@ -156,6 +143,14 @@ const config: HardhatUserConfig = {
   },
   paths: {
     sources: 'contracts',
+  },
+  namedAccounts: {
+    deployer: 0,
+    admin: 1,
+    alice: 2,
+    bob: 3,
+    carol: 4,
+    other: 5,
   },
 };
 
