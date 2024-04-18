@@ -9,13 +9,12 @@ import { HardhatUserConfig } from 'hardhat/types';
 const PRIVATE_RPC_MAINNET: string | undefined = process.env.PRIVATE_RPC_MAINNET;
 const PRIVATE_RPC_TESTNET: string | undefined = process.env.PRIVATE_RPC_TESTNET;
 
-// We use WALLET_SECRET_2 because of collide with SI repo that uses WALLET_SECRET and we use both of them for cluster deployment
-const walletSecret: string = process.env.WALLET_SECRET_2 === undefined ? 'undefined' : process.env.WALLET_SECRET_2;
+const walletSecret: string = process.env.WALLET_SECRET === undefined ? 'undefined' : process.env.WALLET_SECRET;
 
 if (walletSecret === 'undefined') {
-  console.log('Please set your WALLET_SECRET_2 in a .env file');
+  console.log('Please set your WALLET_SECRET in a .env file');
 } else if (walletSecret.length !== 64) {
-  console.log('WALLET_SECRET_2 must be 64 characters long.');
+  console.log('WALLET_SECRET must be 64 characters long.');
 }
 
 const mainnetEtherscanKey: string | undefined = process.env.MAINNET_ETHERSCAN_KEY;
@@ -94,13 +93,19 @@ const config: HardhatUserConfig = {
     },
     localhost: {
       url: 'http://localhost:8545',
-      // accounts,  if not defined uses the same as above hardhat
+      accounts: [
+        '0x8d56d322a1bb1e94c7d64ccd62aa2e5cc9760f59575eda0f7fd392bab8d6ba0d', // deployer 0x7E71bA1aB8AF3454a01CFafe358BEbb7691d02f8
+        '0xb65c0589ad60bc9985f0b6eafe5dd480b7ad63f073a7e9625dd23466a0d1947d', // admin 0x77CbAdb1059dDC7334227e025fC940469f52FEd8
+      ],
       chainId: 12345,
       deploy: ['deploy/local/'],
     },
     localcluster: {
       url: 'http://geth-swap:8545',
-      // accounts,  if not defined uses the same as above hardhat
+      accounts: [
+        '0x8d56d322a1bb1e94c7d64ccd62aa2e5cc9760f59575eda0f7fd392bab8d6ba0d', // deployer 0x7E71bA1aB8AF3454a01CFafe358BEbb7691d02f8
+        '0xb65c0589ad60bc9985f0b6eafe5dd480b7ad63f073a7e9625dd23466a0d1947d', // admin 0x77CbAdb1059dDC7334227e025fC940469f52FEd8
+      ],
       chainId: 12345,
       deploy: ['deploy/local/'],
     },
