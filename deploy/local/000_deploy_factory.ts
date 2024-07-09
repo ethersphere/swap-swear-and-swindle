@@ -1,4 +1,16 @@
 import { DeployFunction } from 'hardhat-deploy/types';
+import { rm } from 'fs';
+import { promisify } from 'util';
+const rmAsync = promisify(rm);
+
+async function deleteDirectory(directoryPath: string) {
+  try {
+    await rmAsync(directoryPath, { recursive: true, force: true });
+    console.log(`Deleted directory and all its contents: ${directoryPath}`);
+  } catch (error) {
+    console.error('Error deleting directory:', error);
+  }
+}
 
 const func: DeployFunction = async function ({ deployments, getNamedAccounts, ethers }) {
   const { deploy, log } = deployments;
@@ -13,9 +25,13 @@ const func: DeployFunction = async function ({ deployments, getNamedAccounts, et
   const code = await ethers.provider.getCode(deployedToken);
   let tokenAddress;
 
-  // If there's code, then there's a contract deployed
+  // If there's code, then there's a contract deployed and we are deploying on running hardhat node
   if (code !== '0x') {
     tokenAddress = deployedToken;
+
+    // Do cleanup of previous deployment
+    const directoryToDelete = 'deployments/localhost/';
+    //await deleteDirectory(directoryToDelete);
   } else {
     const token = await deploy('TestToken', {
       from: deployer,
