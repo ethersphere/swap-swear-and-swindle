@@ -1,4 +1,4 @@
-# sw3 contracts
+# SW3 contracts
 
 Contracts for Swap, Swear and Swindle.
 
@@ -121,16 +121,10 @@ For signing purposes the chequebook uses EIP-712 Ethereum typed structured data 
 
 `Swear` and `Swindle` are the contracts for the trial system of sw3. You can find them in the `experimental` branch.
 
-## Releasing
 
-To release a new stable version, tag the commit without the `-rcX` suffix.
-For example, to release `v0.4.0`, execute the following command: `git tag v0.4.0 && git push origin v0.4.0`.
-This will generate Golang source code for the smart contracts and publish it to the [`ethersphere/go-sw3-abi/`](https://github.com/ethersphere/go-sw3-abi/) repository.
+# Price-Oracle contracts
 
-
-# Price-Oracle
-
-This repo also contains the contracts and tests for the swarm price orace.
+This repo also contains the contracts and tests for the swarm S3 price oracle.
 
 ## Deployments
 
@@ -138,10 +132,38 @@ This repo also contains the contracts and tests for the swarm price orace.
 | ------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | XDai    | [0x0FDc5429C50e2a39066D8A94F3e2D2476fcc3b85](https://gnosisscan.io/address/0x0FDc5429C50e2a39066D8A94F3e2D2476fcc3b85#code)        |
 | Sepolia | [0xe821533d30A4250e50812Aa060EEb2E8Ef3D98f6](https://sepolia.etherscan.io/address/0xe821533d30A4250e50812Aa060EEb2E8Ef3D98f6#code) |
-| Goerli  | [0x0c9dE531dCB38B758fe8A2c163444a5e54ee0db2](https://goerli.etherscan.io/address/0x0c9dE531dCB38B758fe8A2c163444a5e54ee0db2)       |
+
 
 ## Go-bindings
 
 The go bindings are automatically generated on every release git tag and the pushed to the [ethersphere/go-price-oracle-abi](https://github.com/ethersphere/go-price-oracle-abi) repository.
 
-To release a new stable version do the following. For example, to release v0.2.0, execute the following command: git tag v0.4.0 && git push origin v0.2.0.
+
+## Releasing for S3 and Oracle
+
+To release a new stable version, tag the commit without the `-rcX` suffix.
+For example, to release `v0.4.0`, execute the following command: `git tag v0.4.0 && git push origin v0.4.0`.
+This will generate Golang source code for the smart contracts and publish it to the [`ethersphere/go-sw3-abi/`](https://github.com/ethersphere/go-sw3-abi/) repository and/or https://github.com/ethersphere/go-price-oracle-abi
+
+
+### Deployments for S3 and Oracle
+
+#### Method
+
+All deployments and Tests are fully dependant on Hardhat Deploy library https://github.com/wighawag/hardhat-deploy and follow best practices used there
+
+##### Prerequisites
+
+Feel free to use public RPCs but if you want extra security and speed, feel free to use Infura, Alchemy or any other private RPC and add full path with your KEY to .env file
+
+##### Steps
+
+1. Run `yarn hardhat compile` to get all the contracts compiled.
+2. Run `yarn hardhat test` to run all the tests.
+3. Configure `.env` file
+   - Set your `WALLET_SECRET` in the `.env` file.
+   - Set your `INFURA_TOKEN` in the `.env` file.
+4. To deploy all contracts and set roles:
+   - Mainnet: `yarn hardhat deploy --network mainnet`
+   - Testnet: `yarn hardhat deploy --network testnet`
+

@@ -24,5 +24,5 @@ const func: DeployFunction = async function ({ deployments, getNamedAccounts, ne
   }
 };
 
-func.tags = ['factory'];
+func.tags = ['oracle'];
 export default func;
