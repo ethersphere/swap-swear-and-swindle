@@ -4,9 +4,9 @@ yarn compile
 TARGET="$1"
 VERSION="$(echo $2 | tr . _)"
 
-PRICE_ORACLE_ABI="$(cat artifacts/src/PriceOracle.sol/PriceOracle.json | jq .abi)"
-PRICE_ORACLE_BYTECODE="$(cat artifacts/src/PriceOracle.sol/PriceOracle.json | jq .bytecode)"
-PRICE_ORACLE_DEPLOYED_BYTECODE="$(cat artifacts/src/PriceOracle.sol/PriceOracle.json | jq .deployedBytecode)"
+PRICE_ORACLE_ABI="$(cat artifacts/contracts/PriceOracle.sol/PriceOracle.json | jq .abi)"
+PRICE_ORACLE_BYTECODE="$(cat artifacts/contracts/PriceOracle.sol/PriceOracle.json | jq .bytecode)"
+PRICE_ORACLE_DEPLOYED_BYTECODE="$(cat artifacts/contracts/PriceOracle.sol/PriceOracle.json | jq .deployedBytecode)"
 
 cat <<EOF > "$TARGET"
 // Copyright 2021 The Swarm Authors. All rights reserved.

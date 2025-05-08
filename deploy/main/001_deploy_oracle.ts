@@ -18,7 +18,7 @@ const func: DeployFunction = async function ({ deployments, getNamedAccounts, ne
   console.log('Oracle deployed at address ' + oracle.address);
 
   // Verify the deployment
-  if (network.name == 'testnet' && process.env.TESTNET_ETHERSCAN_KEY) {
+  if (network.name == 'mainnet' && process.env.MAINNET_ETHERSCAN_KEY) {
     log('Verifying...');
     await verify(oracle.address, deployArgs);
   }
