@@ -143,7 +143,10 @@ The go bindings are automatically generated on every release git tag and the pus
 
 To release a new stable version, tag the commit without the `-rcX` suffix.
 For example, to release `v0.4.0`, execute the following command: `git tag v0.4.0 && git push origin v0.4.0`.
-This will generate Golang source code for the smart contracts and publish it to the [`ethersphere/go-sw3-abi/`](https://github.com/ethersphere/go-sw3-abi/) repository and/or https://github.com/ethersphere/go-price-oracle-abi
+This will generate Golang source code for the smart contracts and publish it to the [`ethersphere/go-sw3-abi/`](https://github.com/ethersphere/go-sw3-abi/) repository and https://github.com/ethersphere/go-price-oracle-abi
+
+
+DONT DO TAGS with RC in it, as currently script is naming the files with those and Bee Node compile cant handle file names with RC in the name.
 
 
 ### Deployments for S3 and Oracle
