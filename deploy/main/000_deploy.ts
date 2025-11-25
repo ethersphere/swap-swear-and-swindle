@@ -1,11 +1,12 @@
 import { DeployFunction } from 'hardhat-deploy/types';
+import { networkConfig } from '../../helper-hardhat-config';
 
 const func: DeployFunction = async function ({ deployments, getNamedAccounts, network }) {
   const { deploy, log } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  // This code is just used for Sepolia testnet deployment
-  const waitBlockConfirmations = network.name !== 'mainnet' ? 1 : 6;
+  // Get block confirmations for the current network
+  const waitBlockConfirmations = networkConfig[network.name]?.blockConfirmations || 1;
 
   log('----------------------------------------------------');
   // sBZZ token address
