@@ -7,6 +7,7 @@ IMAGE="${ECHIDNA_IMAGE:-ghcr.io/crytic/echidna/echidna:latest}"
 PLATFORM="${ECHIDNA_DOCKER_PLATFORM:-}"
 TARGET_FILTER="${ECHIDNA_TARGET_FILTER:-}"
 CONFIG_FILE="${ECHIDNA_CONFIG:-echidna/echidna.yaml}"
+TMP_CONFIG_DIR="$ROOT_DIR/echidna/.tmp"
 
 if [[ -z "$PLATFORM" ]]; then
   case "$(uname -m)" in
@@ -32,6 +33,8 @@ if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
 fi
 
 yarn hardhat compile
+mkdir -p "$TMP_CONFIG_DIR"
+trap 'rm -rf "$TMP_CONFIG_DIR"' EXIT
 
 DOCKER_ARGS=(
   run
@@ -51,7 +54,13 @@ for target in "${TARGETS[@]}"; do
     continue
   fi
 
+  corpus_dir="echidna/corpus/${contract_name}"
+  temp_config="$TMP_CONFIG_DIR/${contract_name}.yaml"
+
+  awk '!/^corpusDir:/' "$CONFIG_FILE" > "$temp_config"
+  printf '\ncorpusDir: %s\n' "$corpus_dir" >> "$temp_config"
+
   echo "==> Running ${contract_name}"
   docker "${DOCKER_ARGS[@]}" "$IMAGE" \
-    echidna . --contract "$contract_name" --config "$CONFIG_FILE"
+    echidna . --contract "$contract_name" --config "${temp_config#"$ROOT_DIR/"}"
 done

@@ -9,9 +9,6 @@ testLimit: 50000
 # Shrinking a counterexample can be much slower than fuzzing.
 shrinkLimit: 5000
 
-# Persist interesting inputs between runs.
-corpusDir: echidna/corpus
-
 # Useful while iterating on invariants.
 coverage: true
 
