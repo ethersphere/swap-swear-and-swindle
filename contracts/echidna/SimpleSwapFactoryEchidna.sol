@@ -4,6 +4,7 @@ pragma abicoder v2;
 
 import "../SimpleSwapFactory.sol";
 import "../TestToken.sol";
+import "@openzeppelin/contracts/proxy/Clones.sol";
 
 contract FactoryActor {
     function deploySimpleSwap(
@@ -26,12 +27,16 @@ contract SimpleSwapFactoryEchidna {
     uint256 private constant ACTOR_COUNT = 3;
     uint256 private constant TRACKED_DEPLOYMENTS = 16;
 
+    using Clones for address;
+
     TestToken private token;
     SimpleSwapFactory private factory;
     FactoryActor[3] private actors;
     address[3] private actorAddresses;
     address[16] private deployedSwaps;
+    address[16] private swapCallers;
     address[16] private swapIssuers;
+    bytes32[16] private swapSalts;
     uint256[16] private swapTimeouts;
     uint256 private deployedSwapCount;
     bool private invariantFailed;
@@ -53,7 +58,11 @@ contract SimpleSwapFactoryEchidna {
         bytes32 salt
     ) public {
         uint256 callerIndex = callerSeed % ACTOR_COUNT;
+        address caller = actorAddresses[callerIndex];
         address issuer = actorAddresses[issuerSeed % ACTOR_COUNT];
+        address expectedAddress = _expectedDeploymentAddress(caller, salt);
+        bool alreadyDeployed = factory.deployedContracts(expectedAddress);
+        uint256 deploymentsBefore = deployedSwapCount;
 
         (bool ok, address deployedAddress) = actors[callerIndex].deploySimpleSwap(
             factory,
@@ -63,9 +72,23 @@ contract SimpleSwapFactoryEchidna {
         );
 
         if (!ok) {
+            if (!alreadyDeployed) {
+                invariantFailed = true;
+            }
+            if (deployedSwapCount != deploymentsBefore) {
+                invariantFailed = true;
+            }
             return;
         }
 
+        if (alreadyDeployed) {
+            invariantFailed = true;
+            return;
+        }
+
+        if (deployedAddress != expectedAddress) {
+            invariantFailed = true;
+        }
         if (!factory.deployedContracts(deployedAddress)) {
             invariantFailed = true;
         }
@@ -89,9 +112,40 @@ contract SimpleSwapFactoryEchidna {
 
         if (deployedSwapCount < TRACKED_DEPLOYMENTS) {
             deployedSwaps[deployedSwapCount] = deployedAddress;
+            swapCallers[deployedSwapCount] = caller;
             swapIssuers[deployedSwapCount] = issuer;
+            swapSalts[deployedSwapCount] = salt;
             swapTimeouts[deployedSwapCount] = defaultHardDepositTimeout;
             deployedSwapCount++;
+        }
+    }
+
+    function deploySimpleSwapWithZeroIssuer(
+        uint256 callerSeed,
+        uint256 defaultHardDepositTimeout,
+        bytes32 salt
+    ) public {
+        uint256 callerIndex = callerSeed % ACTOR_COUNT;
+        address caller = actorAddresses[callerIndex];
+        address expectedAddress = _expectedDeploymentAddress(caller, salt);
+        uint256 deploymentsBefore = deployedSwapCount;
+        bool registeredBefore = factory.deployedContracts(expectedAddress);
+
+        (bool ok, ) = actors[callerIndex].deploySimpleSwap(
+            factory,
+            address(0),
+            defaultHardDepositTimeout,
+            salt
+        );
+
+        if (ok) {
+            invariantFailed = true;
+        }
+        if (deployedSwapCount != deploymentsBefore) {
+            invariantFailed = true;
+        }
+        if (factory.deployedContracts(expectedAddress) != registeredBefore) {
+            invariantFailed = true;
         }
     }
 
@@ -143,6 +197,43 @@ contract SimpleSwapFactoryEchidna {
         return true;
     }
 
+    function echidna_tracked_deployments_match_predicted_addresses()
+        public
+        view
+        returns (bool)
+    {
+        for (uint256 i = 0; i < deployedSwapCount; i++) {
+            if (
+                deployedSwaps[i] !=
+                _expectedDeploymentAddress(swapCallers[i], swapSalts[i])
+            ) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    function echidna_same_salt_different_callers_have_distinct_addresses()
+        public
+        view
+        returns (bool)
+    {
+        for (uint256 i = 0; i < deployedSwapCount; i++) {
+            for (uint256 j = i + 1; j < deployedSwapCount; j++) {
+                if (
+                    swapSalts[i] == swapSalts[j] &&
+                    swapCallers[i] != swapCallers[j] &&
+                    deployedSwaps[i] == deployedSwaps[j]
+                ) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
     function echidna_no_postcondition_failures() public view returns (bool) {
         return !invariantFailed;
     }
@@ -155,5 +246,18 @@ contract SimpleSwapFactoryEchidna {
         }
 
         return false;
+    }
+
+    function _expectedDeploymentAddress(address caller, bytes32 salt)
+        internal
+        view
+        returns (address)
+    {
+        return
+            Clones.predictDeterministicAddress(
+                factory.master(),
+                keccak256(abi.encode(caller, salt)),
+                address(factory)
+            );
     }
 }
