@@ -20,6 +20,7 @@ fi
 TARGETS=(
   "ERC20SimpleSwapEchidna"
   "SimpleSwapFactoryEchidna"
+  "SimpleSwapFactorySystemEchidna"
   "PriceOracleEchidna"
 )
 
