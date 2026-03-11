@@ -17,6 +17,31 @@ yarn test
 
 To also generate coverage information use `yarn coverage` instead.
 
+## Fuzzing
+
+This repo also includes Echidna-based, stateful fuzzing for the smart contract suite. The harnesses model multiple actors, exercise state transitions across the swap, factory, and oracle contracts, and check accounting, configuration, non-interference, and post-condition properties.
+
+Fuzz testing repeatedly calls contract functions with randomized inputs and call sequences. Instead of checking a single expected output per test, the harness defines invariants and safety properties that must always hold, and Echidna searches for counterexamples.
+
+This is especially useful for smart contracts because it can uncover edge cases that are easy to miss in example-based tests, including unusual call ordering, boundary values, and state-dependent failures.
+
+### Run The Echidna Suite
+
+The runner uses Docker and the official Echidna image, so you do not need a local Echidna install.
+
+```sh
+yarn echidna
+```
+
+You can override the Docker image or platform if needed:
+
+```sh
+ECHIDNA_IMAGE=ghcr.io/crytic/echidna/echidna:latest yarn echidna
+ECHIDNA_DOCKER_PLATFORM=linux/amd64 yarn echidna
+```
+
+The harnesses live in `contracts/echidna/` and the per-target Echidna configs live in `echidna/`.
+
 ## Linting
 
 This repo currently uses `solhint` as linter. It can be called through yarn:

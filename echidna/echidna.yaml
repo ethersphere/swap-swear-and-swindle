@@ -1,0 +1,20 @@
+testMode: property
+
+# More steps per sequence helps stateful protocols.
+seqLen: 100
+
+# Start small; can be increased once it's stable in CI.
+testLimit: 50000
+
+# Shrinking a counterexample can be much slower than fuzzing.
+shrinkLimit: 5000
+
+# Persist interesting inputs between runs.
+corpusDir: echidna/corpus
+
+# Useful while iterating on invariants.
+coverage: true
+
+cryticArgs:
+  - "--compile-force-framework"
+  - "hardhat"
