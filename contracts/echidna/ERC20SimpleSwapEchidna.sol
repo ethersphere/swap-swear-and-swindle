@@ -780,6 +780,149 @@ contract ERC20SimpleSwapEchidna {
         _checkTemporalInvariants();
     }
 
+    function cashChequeWithPastCumulativePayout(
+        uint256 callerSeed,
+        uint256 beneficiarySeed,
+        uint256 recipientSeed
+    ) public {
+        uint256 callerIndex = _actorIndex(callerSeed);
+        uint256 beneficiaryIndex = _actorIndex(beneficiarySeed);
+        uint256 recipientIndex = _actorIndex(recipientSeed);
+        FullStateSnapshot memory snapshot = _snapshotFullState();
+
+        if (snapshot.paidOut[beneficiaryIndex] == 0) {
+            return;
+        }
+
+        if (
+            actors[callerIndex].cashCheque(
+                IERC20SimpleSwapEchidnaTarget(address(simpleSwap)),
+                actorAddresses[beneficiaryIndex],
+                actorAddresses[recipientIndex],
+                snapshot.paidOut[beneficiaryIndex].sub(1),
+                0
+            )
+        ) {
+            invariantFailed = true;
+        }
+
+        _assertFullStateUnchanged(snapshot);
+        _checkTemporalInvariants();
+    }
+
+    function cashChequeBeneficiaryWithPastCumulativePayout(
+        uint256 beneficiarySeed,
+        uint256 recipientSeed
+    ) public {
+        uint256 beneficiaryIndex = _actorIndex(beneficiarySeed);
+        uint256 recipientIndex = _actorIndex(recipientSeed);
+        FullStateSnapshot memory snapshot = _snapshotFullState();
+
+        if (snapshot.paidOut[beneficiaryIndex] == 0) {
+            return;
+        }
+
+        if (
+            actors[beneficiaryIndex].cashChequeBeneficiary(
+                IERC20SimpleSwapEchidnaTarget(address(simpleSwap)),
+                actorAddresses[recipientIndex],
+                snapshot.paidOut[beneficiaryIndex].sub(1)
+            )
+        ) {
+            invariantFailed = true;
+        }
+
+        _assertFullStateUnchanged(snapshot);
+        _checkTemporalInvariants();
+    }
+
+    function prepareCashThenDecreaseHardDeposit(
+        uint256 beneficiarySeed,
+        uint256 recipientSeed,
+        uint256 rawDepositAmount,
+        uint256 rawCashAmount
+    ) public {
+        uint256 beneficiaryIndex = _actorIndex(beneficiarySeed);
+        uint256 recipientIndex = _actorIndex(recipientSeed);
+        uint256 depositAmount = _bounded(
+            rawDepositAmount,
+            token.balanceOf(actorAddresses[0])
+        );
+
+        if (depositAmount == 0) {
+            return;
+        }
+
+        if (
+            !actors[0].depositToken(token, address(simpleSwap), depositAmount)
+        ) {
+            invariantFailed = true;
+            return;
+        }
+
+        if (
+            !actors[0].setCustomHardDepositTimeout(
+                IERC20SimpleSwapEchidnaTarget(address(simpleSwap)),
+                actorAddresses[beneficiaryIndex],
+                0
+            )
+        ) {
+            invariantFailed = true;
+            return;
+        }
+
+        if (
+            !actors[0].increaseHardDeposit(
+                IERC20SimpleSwapEchidnaTarget(address(simpleSwap)),
+                actorAddresses[beneficiaryIndex],
+                depositAmount
+            )
+        ) {
+            invariantFailed = true;
+            return;
+        }
+
+        if (
+            !actors[0].prepareDecreaseHardDeposit(
+                IERC20SimpleSwapEchidnaTarget(address(simpleSwap)),
+                actorAddresses[beneficiaryIndex],
+                depositAmount
+            )
+        ) {
+            invariantFailed = true;
+            return;
+        }
+
+        uint256 currentPaidOut = simpleSwap.paidOut(
+            actorAddresses[beneficiaryIndex]
+        );
+        uint256 cashAmount = rawCashAmount % depositAmount;
+
+        if (cashAmount == 0) {
+            cashAmount = 1;
+        }
+
+        if (
+            !actors[beneficiaryIndex].cashChequeBeneficiary(
+                IERC20SimpleSwapEchidnaTarget(address(simpleSwap)),
+                actorAddresses[recipientIndex],
+                currentPaidOut.add(cashAmount)
+            )
+        ) {
+            invariantFailed = true;
+            return;
+        }
+
+        FullStateSnapshot memory snapshot = _snapshotFullState();
+        bool decreaseOk = actors[1].decreaseHardDeposit(
+            IERC20SimpleSwapEchidnaTarget(address(simpleSwap)),
+            actorAddresses[beneficiaryIndex]
+        );
+
+        _assertDecreaseFromSnapshot(beneficiaryIndex, snapshot, decreaseOk);
+        _checkTemporalInvariants();
+    }
+
     function cashChequeBeneficiary(
         uint256 beneficiarySeed,
         uint256 recipientSeed,
@@ -1201,6 +1344,108 @@ contract ERC20SimpleSwapEchidna {
                 invariantFailed = true;
             }
             if (token.balanceOf(actorAddresses[i]) != snapshot.actorBalances[i]) {
+                invariantFailed = true;
+            }
+        }
+    }
+
+    function _assertDecreaseFromSnapshot(
+        uint256 beneficiaryIndex,
+        FullStateSnapshot memory snapshot,
+        bool decreaseOk
+    ) internal {
+        bool shouldSucceed =
+            snapshot.canDecreaseAt[beneficiaryIndex] != 0 &&
+            block.timestamp >= snapshot.canDecreaseAt[beneficiaryIndex] &&
+            snapshot.hardAmounts[beneficiaryIndex] >=
+            snapshot.decreaseAmounts[beneficiaryIndex];
+
+        if (!shouldSucceed) {
+            if (decreaseOk) {
+                invariantFailed = true;
+            }
+            _assertFullStateUnchanged(snapshot);
+            return;
+        }
+
+        if (!decreaseOk) {
+            invariantFailed = true;
+            return;
+        }
+
+        (
+            uint256 hardAmountAfter,
+            uint256 decreaseAmountAfter,
+            uint256 timeoutAfter,
+            uint256 canDecreaseAtAfter
+        ) = simpleSwap.hardDeposits(actorAddresses[beneficiaryIndex]);
+
+        if (
+            hardAmountAfter !=
+            snapshot.hardAmounts[beneficiaryIndex].sub(
+                snapshot.decreaseAmounts[beneficiaryIndex]
+            )
+        ) {
+            invariantFailed = true;
+        }
+        if (
+            decreaseAmountAfter != snapshot.decreaseAmounts[beneficiaryIndex]
+        ) {
+            invariantFailed = true;
+        }
+        if (timeoutAfter != snapshot.timeouts[beneficiaryIndex]) {
+            invariantFailed = true;
+        }
+        if (canDecreaseAtAfter != 0) {
+            invariantFailed = true;
+        }
+        if (
+            simpleSwap.totalHardDeposit() !=
+            snapshot.totalHardDeposit.sub(
+                snapshot.decreaseAmounts[beneficiaryIndex]
+            )
+        ) {
+            invariantFailed = true;
+        }
+        if (simpleSwap.balance() != snapshot.swapBalance) {
+            invariantFailed = true;
+        }
+        if (simpleSwap.totalPaidOut() != snapshot.totalPaidOut) {
+            invariantFailed = true;
+        }
+        if (simpleSwap.bounced() != snapshot.bounced) {
+            invariantFailed = true;
+        }
+
+        for (uint256 i = 0; i < ACTOR_COUNT; i++) {
+            if (simpleSwap.paidOut(actorAddresses[i]) != snapshot.paidOut[i]) {
+                invariantFailed = true;
+            }
+            if (token.balanceOf(actorAddresses[i]) != snapshot.actorBalances[i]) {
+                invariantFailed = true;
+            }
+
+            if (i == beneficiaryIndex) {
+                continue;
+            }
+
+            (
+                uint256 hardAmount,
+                uint256 decreaseAmount,
+                uint256 timeout,
+                uint256 canDecreaseAt
+            ) = simpleSwap.hardDeposits(actorAddresses[i]);
+
+            if (hardAmount != snapshot.hardAmounts[i]) {
+                invariantFailed = true;
+            }
+            if (decreaseAmount != snapshot.decreaseAmounts[i]) {
+                invariantFailed = true;
+            }
+            if (timeout != snapshot.timeouts[i]) {
+                invariantFailed = true;
+            }
+            if (canDecreaseAt != snapshot.canDecreaseAt[i]) {
                 invariantFailed = true;
             }
         }
