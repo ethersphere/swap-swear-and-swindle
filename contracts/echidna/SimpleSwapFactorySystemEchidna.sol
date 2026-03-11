@@ -23,6 +23,12 @@ interface IFactorySystemSwapTarget {
     function decreaseHardDeposit(address beneficiary) external;
 
     function withdraw(uint256 amount) external;
+
+    function cashChequeBeneficiary(
+        address recipient,
+        uint256 cumulativePayout,
+        bytes calldata issuerSig
+    ) external;
 }
 
 contract FactorySystemActor {
@@ -99,6 +105,18 @@ contract FactorySystemActor {
         }
     }
 
+    function cashChequeBeneficiary(
+        IFactorySystemSwapTarget target,
+        address recipient,
+        uint256 cumulativePayout
+    ) external returns (bool) {
+        try target.cashChequeBeneficiary(recipient, cumulativePayout, "") {
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
     function reinitSwap(
         IFactorySystemSwapTarget target,
         address issuer,
@@ -125,7 +143,25 @@ contract SimpleSwapFactorySystemEchidna {
         uint256[8] balances;
         uint256[8] totalHardDeposits;
         uint256[8] totalPaidOut;
+        uint256[3][8] hardAmounts;
+        uint256[3][8] decreaseAmounts;
+        uint256[3][8] timeouts;
+        uint256[3][8] canDecreaseAt;
+        uint256[3][8] paidOut;
         uint256[3] actorBalances;
+    }
+
+    struct CloneCashSnapshot {
+        uint256 paidOutBefore;
+        uint256 balanceBefore;
+        uint256 totalHardBefore;
+        uint256 totalPaidBefore;
+        uint256 issuerHardDepositBefore;
+        uint256 liquidForIssuerBefore;
+        uint256 requestPayout;
+        uint256 totalPayout;
+        uint256 hardDepositUsage;
+        bool bouncedBefore;
     }
 
     TestToken private token;
@@ -474,6 +510,69 @@ contract SimpleSwapFactorySystemEchidna {
         _assertFactoryImmutable();
     }
 
+    function cashChequeBeneficiaryOnTrackedClone(
+        uint256 trackedSeed,
+        uint256 recipientSeed,
+        uint256 cumulativeDelta
+    ) public {
+        if (cloneCount == 0) {
+            return;
+        }
+
+        uint256 cloneIndex = trackedSeed % cloneCount;
+        uint256 issuerIndex = _actorIndexForAddress(cloneIssuers[cloneIndex]);
+        uint256 recipientIndex = recipientSeed % ACTOR_COUNT;
+        ERC20SimpleSwap swap = ERC20SimpleSwap(clones[cloneIndex]);
+        SystemSnapshot memory snapshot = _snapshotSystem();
+        CloneCashSnapshot memory cashSnapshot;
+        cashSnapshot.paidOutBefore = swap.paidOut(cloneIssuers[cloneIndex]);
+        cashSnapshot.balanceBefore = swap.balance();
+        cashSnapshot.totalHardBefore = swap.totalHardDeposit();
+        cashSnapshot.totalPaidBefore = swap.totalPaidOut();
+        cashSnapshot.issuerHardDepositBefore = _hardDepositAmount(
+            swap,
+            cloneIssuers[cloneIndex]
+        );
+        cashSnapshot.liquidForIssuerBefore = swap.liquidBalanceFor(
+            cloneIssuers[cloneIndex]
+        );
+        cashSnapshot.bouncedBefore = swap.bounced();
+        cashSnapshot.requestPayout = _bounded(cumulativeDelta, token.totalSupply());
+        uint256 cumulativePayout = cashSnapshot.paidOutBefore.add(
+            cashSnapshot.requestPayout
+        );
+        cashSnapshot.totalPayout = _min(
+            cashSnapshot.requestPayout,
+            cashSnapshot.liquidForIssuerBefore
+        );
+        cashSnapshot.hardDepositUsage = _min(
+            cashSnapshot.totalPayout,
+            cashSnapshot.issuerHardDepositBefore
+        );
+
+        if (
+            !actors[issuerIndex].cashChequeBeneficiary(
+                IFactorySystemSwapTarget(clones[cloneIndex]),
+                actorAddresses[recipientIndex],
+                cumulativePayout
+            )
+        ) {
+            invariantFailed = true;
+            return;
+        }
+
+        _checkCloneCashPostconditions(
+            cloneIndex,
+            recipientIndex,
+            snapshot,
+            cashSnapshot,
+            swap
+        );
+
+        _assertOtherClonesUnchanged(cloneIndex, snapshot);
+        _assertFactoryImmutable();
+    }
+
     function reinitTrackedClone(
         uint256 trackedSeed,
         uint256 issuerSeed,
@@ -614,6 +713,16 @@ contract SimpleSwapFactorySystemEchidna {
             snapshot.balances[i] = swap.balance();
             snapshot.totalHardDeposits[i] = swap.totalHardDeposit();
             snapshot.totalPaidOut[i] = swap.totalPaidOut();
+
+            for (uint256 j = 0; j < ACTOR_COUNT; j++) {
+                (
+                    snapshot.hardAmounts[i][j],
+                    snapshot.decreaseAmounts[i][j],
+                    snapshot.timeouts[i][j],
+                    snapshot.canDecreaseAt[i][j]
+                ) = swap.hardDeposits(actorAddresses[j]);
+                snapshot.paidOut[i][j] = swap.paidOut(actorAddresses[j]);
+            }
         }
 
         for (uint256 i = 0; i < ACTOR_COUNT; i++) {
@@ -641,6 +750,7 @@ contract SimpleSwapFactorySystemEchidna {
             if (swap.totalPaidOut() != snapshot.totalPaidOut[i]) {
                 invariantFailed = true;
             }
+            _assertCloneActorStateUnchanged(i, snapshot);
             _checkCloneMetadata(i);
         }
     }
@@ -664,6 +774,7 @@ contract SimpleSwapFactorySystemEchidna {
             if (swap.totalPaidOut() != snapshot.totalPaidOut[i]) {
                 invariantFailed = true;
             }
+            _assertCloneActorStateUnchanged(i, snapshot);
             _checkCloneMetadata(i);
         }
 
@@ -687,6 +798,42 @@ contract SimpleSwapFactorySystemEchidna {
             swap.defaultHardDepositTimeout() != cloneTimeouts[cloneIndex]
         ) {
             invariantFailed = true;
+        }
+    }
+
+    function _assertCloneActorStateUnchanged(
+        uint256 cloneIndex,
+        SystemSnapshot memory snapshot
+    ) internal {
+        ERC20SimpleSwap swap = ERC20SimpleSwap(clones[cloneIndex]);
+
+        for (uint256 i = 0; i < ACTOR_COUNT; i++) {
+            (
+                uint256 hardAmount,
+                uint256 decreaseAmount,
+                uint256 timeout,
+                uint256 canDecreaseAtValue
+            ) = swap.hardDeposits(actorAddresses[i]);
+
+            if (hardAmount != snapshot.hardAmounts[cloneIndex][i]) {
+                invariantFailed = true;
+            }
+            if (
+                decreaseAmount != snapshot.decreaseAmounts[cloneIndex][i]
+            ) {
+                invariantFailed = true;
+            }
+            if (timeout != snapshot.timeouts[cloneIndex][i]) {
+                invariantFailed = true;
+            }
+            if (
+                canDecreaseAtValue != snapshot.canDecreaseAt[cloneIndex][i]
+            ) {
+                invariantFailed = true;
+            }
+            if (swap.paidOut(actorAddresses[i]) != snapshot.paidOut[cloneIndex][i]) {
+                invariantFailed = true;
+            }
         }
     }
 
@@ -735,6 +882,14 @@ contract SimpleSwapFactorySystemEchidna {
         return TRACKED_CLONES;
     }
 
+    function _hardDepositAmount(ERC20SimpleSwap swap, address beneficiary)
+        internal
+        view
+        returns (uint256 amount)
+    {
+        (amount, , , ) = swap.hardDeposits(beneficiary);
+    }
+
     function _cloneIndex(address cloneAddress) internal view returns (uint256) {
         for (uint256 i = 0; i < cloneCount; i++) {
             if (clones[i] == cloneAddress) {
@@ -751,5 +906,79 @@ contract SimpleSwapFactorySystemEchidna {
         }
 
         return value % (max + 1);
+    }
+
+    function _min(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a < b ? a : b;
+    }
+
+    function _checkCloneCashPostconditions(
+        uint256 cloneIndex,
+        uint256 recipientIndex,
+        SystemSnapshot memory snapshot,
+        CloneCashSnapshot memory cashSnapshot,
+        ERC20SimpleSwap swap
+    ) internal {
+        if (
+            swap.paidOut(cloneIssuers[cloneIndex]) !=
+            cashSnapshot.paidOutBefore.add(cashSnapshot.totalPayout)
+        ) {
+            invariantFailed = true;
+        }
+        if (
+            swap.totalPaidOut() !=
+            cashSnapshot.totalPaidBefore.add(cashSnapshot.totalPayout)
+        ) {
+            invariantFailed = true;
+        }
+        if (
+            swap.balance() !=
+            cashSnapshot.balanceBefore.sub(cashSnapshot.totalPayout)
+        ) {
+            invariantFailed = true;
+        }
+        if (
+            swap.totalHardDeposit() !=
+            cashSnapshot.totalHardBefore.sub(cashSnapshot.hardDepositUsage)
+        ) {
+            invariantFailed = true;
+        }
+        if (
+            _hardDepositAmount(swap, cloneIssuers[cloneIndex]) !=
+            cashSnapshot.issuerHardDepositBefore.sub(
+                cashSnapshot.hardDepositUsage
+            )
+        ) {
+            invariantFailed = true;
+        }
+        if (
+            token.balanceOf(actorAddresses[recipientIndex]) !=
+            snapshot.actorBalances[recipientIndex].add(cashSnapshot.totalPayout)
+        ) {
+            invariantFailed = true;
+        }
+
+        for (uint256 i = 0; i < ACTOR_COUNT; i++) {
+            if (i == recipientIndex) {
+                continue;
+            }
+
+            if (token.balanceOf(actorAddresses[i]) != snapshot.actorBalances[i]) {
+                invariantFailed = true;
+            }
+        }
+
+        if (
+            cashSnapshot.requestPayout > cashSnapshot.totalPayout &&
+            !swap.bounced()
+        ) {
+            invariantFailed = true;
+        }
+        if (
+            cashSnapshot.requestPayout == cashSnapshot.totalPayout &&
+            swap.bounced() != cashSnapshot.bouncedBefore
+        ) {
+            invariantFailed = true;
+        }
     }
 }
