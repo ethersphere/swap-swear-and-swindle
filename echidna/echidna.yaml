@@ -12,6 +12,10 @@ shrinkLimit: 5000
 # Useful while iterating on invariants.
 coverage: true
 
+# Keep the harness deployment address stable so signature-aware fixtures can
+# precompute downstream contract addresses deterministically.
+contractAddr: "0x00a329c0648769A73afAc7F9381E08FB43dBEA72"
+
 cryticArgs:
   - "--compile-force-framework"
   - "hardhat"

@@ -143,6 +143,7 @@ contract SimpleSwapFactorySystemEchidna {
         uint256[8] balances;
         uint256[8] totalHardDeposits;
         uint256[8] totalPaidOut;
+        bool[8] bounced;
         uint256[3][8] hardAmounts;
         uint256[3][8] decreaseAmounts;
         uint256[3][8] timeouts;
@@ -257,12 +258,14 @@ contract SimpleSwapFactorySystemEchidna {
             return;
         }
 
-        if (
-            ERC20SimpleSwap(clones[cloneIndex]).balance() !=
-            snapshot.balances[cloneIndex].add(amount)
-        ) {
-            invariantFailed = true;
-        }
+        _assertCloneScalarState(
+            cloneIndex,
+            snapshot.balances[cloneIndex].add(amount),
+            snapshot.totalHardDeposits[cloneIndex],
+            snapshot.totalPaidOut[cloneIndex],
+            snapshot.bounced[cloneIndex]
+        );
+        _assertCloneActorStateUnchanged(cloneIndex, snapshot);
         if (
             token.balanceOf(actorAddresses[actorIndex]) !=
             snapshot.actorBalances[actorIndex].sub(amount)
@@ -308,19 +311,13 @@ contract SimpleSwapFactorySystemEchidna {
             return;
         }
 
-        (uint256 hardAmountAfter, , , ) = swap.hardDeposits(
-            actorAddresses[beneficiaryIndex]
+        _assertIncreaseHardDepositPostconditions(
+            cloneIndex,
+            beneficiaryIndex,
+            hardAmountBefore,
+            amount,
+            snapshot
         );
-
-        if (swap.totalHardDeposit() != snapshot.totalHardDeposits[cloneIndex].add(amount)) {
-            invariantFailed = true;
-        }
-        if (hardAmountAfter != hardAmountBefore.add(amount)) {
-            invariantFailed = true;
-        }
-        if (swap.balance() != snapshot.balances[cloneIndex]) {
-            invariantFailed = true;
-        }
 
         _assertOtherClonesUnchanged(cloneIndex, snapshot);
         _assertFactoryImmutable();
@@ -360,25 +357,14 @@ contract SimpleSwapFactorySystemEchidna {
             return;
         }
 
-        (
-            uint256 hardAmountAfter,
-            uint256 decreaseAmountAfter,
-            uint256 timeoutAfter,
-            uint256 canDecreaseAtAfter
-        ) = swap.hardDeposits(actorAddresses[beneficiaryIndex]);
-
-        if (hardAmountAfter != hardAmountBefore) {
-            invariantFailed = true;
-        }
-        if (decreaseAmountAfter != amount) {
-            invariantFailed = true;
-        }
-        if (timeoutAfter != timeoutBefore) {
-            invariantFailed = true;
-        }
-        if (canDecreaseAtAfter == 0) {
-            invariantFailed = true;
-        }
+        _assertPrepareDecreaseHardDepositPostconditions(
+            cloneIndex,
+            beneficiaryIndex,
+            hardAmountBefore,
+            timeoutBefore,
+            amount,
+            snapshot
+        );
 
         _assertOtherClonesUnchanged(cloneIndex, snapshot);
         _assertFactoryImmutable();
@@ -408,48 +394,27 @@ contract SimpleSwapFactorySystemEchidna {
         );
 
         if (!ok) {
-            if (
-                swap.balance() != snapshot.balances[cloneIndex] ||
-                swap.totalHardDeposit() != snapshot.totalHardDeposits[cloneIndex] ||
-                swap.totalPaidOut() != snapshot.totalPaidOut[cloneIndex]
-            ) {
-                invariantFailed = true;
-            }
+            _assertCloneScalarState(
+                cloneIndex,
+                snapshot.balances[cloneIndex],
+                snapshot.totalHardDeposits[cloneIndex],
+                snapshot.totalPaidOut[cloneIndex],
+                snapshot.bounced[cloneIndex]
+            );
+            _assertCloneActorStateUnchanged(cloneIndex, snapshot);
             _assertOtherClonesUnchanged(cloneIndex, snapshot);
             _assertFactoryImmutable();
             return;
         }
 
-        (
-            uint256 hardAmountAfter,
-            uint256 decreaseAmountAfter,
-            uint256 timeoutAfter,
-            uint256 canDecreaseAtAfter
-        ) = swap.hardDeposits(actorAddresses[beneficiaryIndex]);
-
-        if (
-            hardAmountAfter != hardAmountBefore.sub(decreaseAmountBefore)
-        ) {
-            invariantFailed = true;
-        }
-        if (decreaseAmountAfter != decreaseAmountBefore) {
-            invariantFailed = true;
-        }
-        if (timeoutAfter != timeoutBefore) {
-            invariantFailed = true;
-        }
-        if (canDecreaseAtAfter != 0) {
-            invariantFailed = true;
-        }
-        if (
-            swap.totalHardDeposit() !=
-            snapshot.totalHardDeposits[cloneIndex].sub(decreaseAmountBefore)
-        ) {
-            invariantFailed = true;
-        }
-        if (swap.balance() != snapshot.balances[cloneIndex]) {
-            invariantFailed = true;
-        }
+        _assertDecreaseHardDepositPostconditions(
+            cloneIndex,
+            beneficiaryIndex,
+            hardAmountBefore,
+            decreaseAmountBefore,
+            timeoutBefore,
+            snapshot
+        );
 
         if (
             canDecreaseAtBefore != 0 && block.timestamp < canDecreaseAtBefore
@@ -489,19 +454,17 @@ contract SimpleSwapFactorySystemEchidna {
             return;
         }
 
-        if (
-            swap.balance() != snapshot.balances[cloneIndex].sub(amount)
-        ) {
-            invariantFailed = true;
-        }
+        _assertCloneScalarState(
+            cloneIndex,
+            snapshot.balances[cloneIndex].sub(amount),
+            snapshot.totalHardDeposits[cloneIndex],
+            snapshot.totalPaidOut[cloneIndex],
+            snapshot.bounced[cloneIndex]
+        );
+        _assertCloneActorStateUnchanged(cloneIndex, snapshot);
         if (
             token.balanceOf(actorAddresses[issuerIndex]) !=
             snapshot.actorBalances[issuerIndex].add(amount)
-        ) {
-            invariantFailed = true;
-        }
-        if (
-            swap.totalHardDeposit() != snapshot.totalHardDeposits[cloneIndex]
         ) {
             invariantFailed = true;
         }
@@ -713,6 +676,7 @@ contract SimpleSwapFactorySystemEchidna {
             snapshot.balances[i] = swap.balance();
             snapshot.totalHardDeposits[i] = swap.totalHardDeposit();
             snapshot.totalPaidOut[i] = swap.totalPaidOut();
+            snapshot.bounced[i] = swap.bounced();
 
             for (uint256 j = 0; j < ACTOR_COUNT; j++) {
                 (
@@ -750,6 +714,9 @@ contract SimpleSwapFactorySystemEchidna {
             if (swap.totalPaidOut() != snapshot.totalPaidOut[i]) {
                 invariantFailed = true;
             }
+            if (swap.bounced() != snapshot.bounced[i]) {
+                invariantFailed = true;
+            }
             _assertCloneActorStateUnchanged(i, snapshot);
             _checkCloneMetadata(i);
         }
@@ -772,6 +739,9 @@ contract SimpleSwapFactorySystemEchidna {
                 invariantFailed = true;
             }
             if (swap.totalPaidOut() != snapshot.totalPaidOut[i]) {
+                invariantFailed = true;
+            }
+            if (swap.bounced() != snapshot.bounced[i]) {
                 invariantFailed = true;
             }
             _assertCloneActorStateUnchanged(i, snapshot);
@@ -805,6 +775,136 @@ contract SimpleSwapFactorySystemEchidna {
         uint256 cloneIndex,
         SystemSnapshot memory snapshot
     ) internal {
+        _assertCloneActorStateMatches(
+            cloneIndex,
+            snapshot,
+            ACTOR_COUNT,
+            0,
+            0,
+            0,
+            0,
+            0
+        );
+    }
+
+    function _assertCloneScalarState(
+        uint256 cloneIndex,
+        uint256 expectedBalance,
+        uint256 expectedTotalHardDeposit,
+        uint256 expectedTotalPaidOut,
+        bool expectedBounced
+    ) internal {
+        ERC20SimpleSwap swap = ERC20SimpleSwap(clones[cloneIndex]);
+
+        if (swap.balance() != expectedBalance) {
+            invariantFailed = true;
+        }
+        if (swap.totalHardDeposit() != expectedTotalHardDeposit) {
+            invariantFailed = true;
+        }
+        if (swap.totalPaidOut() != expectedTotalPaidOut) {
+            invariantFailed = true;
+        }
+        if (swap.bounced() != expectedBounced) {
+            invariantFailed = true;
+        }
+        _checkCloneMetadata(cloneIndex);
+    }
+
+    function _assertIncreaseHardDepositPostconditions(
+        uint256 cloneIndex,
+        uint256 beneficiaryIndex,
+        uint256 hardAmountBefore,
+        uint256 amount,
+        SystemSnapshot memory snapshot
+    ) internal {
+        _assertCloneScalarState(
+            cloneIndex,
+            snapshot.balances[cloneIndex],
+            snapshot.totalHardDeposits[cloneIndex].add(amount),
+            snapshot.totalPaidOut[cloneIndex],
+            snapshot.bounced[cloneIndex]
+        );
+        _assertCloneActorStateMatches(
+            cloneIndex,
+            snapshot,
+            beneficiaryIndex,
+            hardAmountBefore.add(amount),
+            snapshot.decreaseAmounts[cloneIndex][beneficiaryIndex],
+            snapshot.timeouts[cloneIndex][beneficiaryIndex],
+            0,
+            snapshot.paidOut[cloneIndex][beneficiaryIndex]
+        );
+    }
+
+    function _assertPrepareDecreaseHardDepositPostconditions(
+        uint256 cloneIndex,
+        uint256 beneficiaryIndex,
+        uint256 hardAmountBefore,
+        uint256 timeoutBefore,
+        uint256 amount,
+        SystemSnapshot memory snapshot
+    ) internal {
+        uint256 effectiveTimeout = timeoutBefore == 0
+            ? cloneTimeouts[cloneIndex]
+            : timeoutBefore;
+
+        _assertCloneScalarState(
+            cloneIndex,
+            snapshot.balances[cloneIndex],
+            snapshot.totalHardDeposits[cloneIndex],
+            snapshot.totalPaidOut[cloneIndex],
+            snapshot.bounced[cloneIndex]
+        );
+        _assertCloneActorStateMatches(
+            cloneIndex,
+            snapshot,
+            beneficiaryIndex,
+            hardAmountBefore,
+            amount,
+            timeoutBefore,
+            block.timestamp.add(effectiveTimeout),
+            snapshot.paidOut[cloneIndex][beneficiaryIndex]
+        );
+    }
+
+    function _assertDecreaseHardDepositPostconditions(
+        uint256 cloneIndex,
+        uint256 beneficiaryIndex,
+        uint256 hardAmountBefore,
+        uint256 decreaseAmountBefore,
+        uint256 timeoutBefore,
+        SystemSnapshot memory snapshot
+    ) internal {
+        _assertCloneScalarState(
+            cloneIndex,
+            snapshot.balances[cloneIndex],
+            snapshot.totalHardDeposits[cloneIndex].sub(decreaseAmountBefore),
+            snapshot.totalPaidOut[cloneIndex],
+            snapshot.bounced[cloneIndex]
+        );
+        _assertCloneActorStateMatches(
+            cloneIndex,
+            snapshot,
+            beneficiaryIndex,
+            hardAmountBefore.sub(decreaseAmountBefore),
+            decreaseAmountBefore,
+            timeoutBefore,
+            0,
+            snapshot.paidOut[cloneIndex][beneficiaryIndex]
+        );
+    }
+
+    function _assertCloneActorStateMatches(
+        uint256 cloneIndex,
+        SystemSnapshot memory snapshot,
+        uint256 changedActorIndex,
+        uint256 expectedHardAmount,
+        uint256 expectedDecreaseAmount,
+        uint256 expectedTimeout,
+        uint256 expectedCanDecreaseAt,
+        uint256 expectedPaidOut
+    ) internal {
         ERC20SimpleSwap swap = ERC20SimpleSwap(clones[cloneIndex]);
 
         for (uint256 i = 0; i < ACTOR_COUNT; i++) {
@@ -814,24 +914,40 @@ contract SimpleSwapFactorySystemEchidna {
                 uint256 timeout,
                 uint256 canDecreaseAtValue
             ) = swap.hardDeposits(actorAddresses[i]);
+            uint256 paidOutAmount = swap.paidOut(actorAddresses[i]);
+
+            if (i == changedActorIndex) {
+                if (hardAmount != expectedHardAmount) {
+                    invariantFailed = true;
+                }
+                if (decreaseAmount != expectedDecreaseAmount) {
+                    invariantFailed = true;
+                }
+                if (timeout != expectedTimeout) {
+                    invariantFailed = true;
+                }
+                if (canDecreaseAtValue != expectedCanDecreaseAt) {
+                    invariantFailed = true;
+                }
+                if (paidOutAmount != expectedPaidOut) {
+                    invariantFailed = true;
+                }
+                continue;
+            }
 
             if (hardAmount != snapshot.hardAmounts[cloneIndex][i]) {
                 invariantFailed = true;
             }
-            if (
-                decreaseAmount != snapshot.decreaseAmounts[cloneIndex][i]
-            ) {
+            if (decreaseAmount != snapshot.decreaseAmounts[cloneIndex][i]) {
                 invariantFailed = true;
             }
             if (timeout != snapshot.timeouts[cloneIndex][i]) {
                 invariantFailed = true;
             }
-            if (
-                canDecreaseAtValue != snapshot.canDecreaseAt[cloneIndex][i]
-            ) {
+            if (canDecreaseAtValue != snapshot.canDecreaseAt[cloneIndex][i]) {
                 invariantFailed = true;
             }
-            if (swap.paidOut(actorAddresses[i]) != snapshot.paidOut[cloneIndex][i]) {
+            if (paidOutAmount != snapshot.paidOut[cloneIndex][i]) {
                 invariantFailed = true;
             }
         }
@@ -919,38 +1035,30 @@ contract SimpleSwapFactorySystemEchidna {
         CloneCashSnapshot memory cashSnapshot,
         ERC20SimpleSwap swap
     ) internal {
-        if (
-            swap.paidOut(cloneIssuers[cloneIndex]) !=
-            cashSnapshot.paidOutBefore.add(cashSnapshot.totalPayout)
-        ) {
-            invariantFailed = true;
-        }
-        if (
-            swap.totalPaidOut() !=
-            cashSnapshot.totalPaidBefore.add(cashSnapshot.totalPayout)
-        ) {
-            invariantFailed = true;
-        }
-        if (
-            swap.balance() !=
-            cashSnapshot.balanceBefore.sub(cashSnapshot.totalPayout)
-        ) {
-            invariantFailed = true;
-        }
-        if (
-            swap.totalHardDeposit() !=
-            cashSnapshot.totalHardBefore.sub(cashSnapshot.hardDepositUsage)
-        ) {
-            invariantFailed = true;
-        }
-        if (
-            _hardDepositAmount(swap, cloneIssuers[cloneIndex]) !=
+        uint256 issuerIndex = _actorIndexForAddress(cloneIssuers[cloneIndex]);
+        bool expectedBounced = cashSnapshot.requestPayout > cashSnapshot.totalPayout
+            ? true
+            : cashSnapshot.bouncedBefore;
+
+        _assertCloneScalarState(
+            cloneIndex,
+            cashSnapshot.balanceBefore.sub(cashSnapshot.totalPayout),
+            cashSnapshot.totalHardBefore.sub(cashSnapshot.hardDepositUsage),
+            cashSnapshot.totalPaidBefore.add(cashSnapshot.totalPayout),
+            expectedBounced
+        );
+        _assertCloneActorStateMatches(
+            cloneIndex,
+            snapshot,
+            issuerIndex,
             cashSnapshot.issuerHardDepositBefore.sub(
                 cashSnapshot.hardDepositUsage
-            )
-        ) {
-            invariantFailed = true;
-        }
+            ),
+            snapshot.decreaseAmounts[cloneIndex][issuerIndex],
+            snapshot.timeouts[cloneIndex][issuerIndex],
+            snapshot.canDecreaseAt[cloneIndex][issuerIndex],
+            cashSnapshot.paidOutBefore.add(cashSnapshot.totalPayout)
+        );
         if (
             token.balanceOf(actorAddresses[recipientIndex]) !=
             snapshot.actorBalances[recipientIndex].add(cashSnapshot.totalPayout)

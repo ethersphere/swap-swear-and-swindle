@@ -19,7 +19,7 @@ To also generate coverage information use `yarn coverage` instead.
 
 ## Fuzzing
 
-This repo also includes Echidna-based, stateful fuzzing for the smart contract suite. The harnesses model multiple actors, exercise state transitions across the swap, factory, and oracle contracts, and check accounting, configuration, non-interference, and post-condition properties.
+This repo also includes Echidna-based, stateful fuzzing for the smart contract suite. The harnesses model multiple actors, exercise state transitions across the swap, factory, and oracle contracts, and check accounting, configuration, non-interference, post-condition, and signature-validation properties.
 
 Fuzz testing repeatedly calls contract functions with randomized inputs and call sequences. Instead of checking a single expected output per test, the harness defines invariants and safety properties that must always hold, and Echidna searches for counterexamples.
 
@@ -40,7 +40,7 @@ ECHIDNA_IMAGE=ghcr.io/crytic/echidna/echidna:latest yarn echidna
 ECHIDNA_DOCKER_PLATFORM=linux/amd64 yarn echidna
 ```
 
-The harnesses live in `contracts/echidna/` and the per-target Echidna configs live in `echidna/`.
+The harnesses live in `contracts/echidna/` and share the base Echidna config in `echidna/echidna.yaml`.
 
 ## Linting
 
