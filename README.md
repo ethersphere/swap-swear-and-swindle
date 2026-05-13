@@ -51,8 +51,8 @@ Swap is deployed on the following networks:
 
 | Network | Factory                                                                                                                | Token                                                                                                                            |
 | ------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Mainnet | -                                                                                                                      | [0x19062190B1925b5b6689D7073fDfC8c2976EF8Cb](https://etherscan.io/address/0x19062190b1925b5b6689d7073fdfc8c2976ef8cb)            |
-| XDai    | [0xc2d5a532cf69aa9a1378737d8ccdef884b6e7420](https://gnosisscan.io/address/0xC2d5A532cf69AA9A1378737D8ccDEF884B6E7420) | [0xdbf3ea6f5bee45c02255b2c26a16f300502f68da (bridged)](https://gnosisscan.io/address/0xdbf3ea6f5bee45c02255b2c26a16f300502f68da) |
+| Ethereum | -                                                                                                                      | [0x19062190B1925b5b6689D7073fDfC8c2976EF8Cb](https://etherscan.io/address/0x19062190b1925b5b6689d7073fdfc8c2976ef8cb)            |
+| Gnosis    | [0xc2d5a532cf69aa9a1378737d8ccdef884b6e7420](https://gnosisscan.io/address/0xC2d5A532cf69AA9A1378737D8ccDEF884B6E7420) | [0xdbf3ea6f5bee45c02255b2c26a16f300502f68da (bridged)](https://gnosisscan.io/address/0xdbf3ea6f5bee45c02255b2c26a16f300502f68da) |
 
 ## Test Deployments
 
@@ -130,7 +130,7 @@ This repo also contains the contracts and tests for the swarm S3 price oracle.
 
 | Network | Address                                                                                                                            |
 | ------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| XDai    | [0x0FDc5429C50e2a39066D8A94F3e2D2476fcc3b85](https://gnosisscan.io/address/0x0FDc5429C50e2a39066D8A94F3e2D2476fcc3b85#code)        |
+| Gnosis    | [0x0FDc5429C50e2a39066D8A94F3e2D2476fcc3b85](https://gnosisscan.io/address/0x0FDc5429C50e2a39066D8A94F3e2D2476fcc3b85#code)        |
 | Sepolia | [0xe821533d30A4250e50812Aa060EEb2E8Ef3D98f6](https://sepolia.etherscan.io/address/0xe821533d30A4250e50812Aa060EEb2E8Ef3D98f6#code) |
 
 
