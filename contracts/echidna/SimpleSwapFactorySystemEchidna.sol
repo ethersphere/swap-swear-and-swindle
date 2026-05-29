@@ -137,6 +137,7 @@ contract SimpleSwapFactorySystemEchidna {
     uint256 private constant ACTOR_COUNT = 3;
     uint256 private constant TRACKED_CLONES = 8;
     uint256 private constant INITIAL_TOKEN_BALANCE = 1_000_000;
+    uint256 private constant MAX_TIMEOUT = 7;
 
     struct SystemSnapshot {
         uint256 cloneCount;
@@ -199,12 +200,13 @@ contract SimpleSwapFactorySystemEchidna {
         uint256 callerIndex = callerSeed % ACTOR_COUNT;
         address caller = actorAddresses[callerIndex];
         address issuer = actorAddresses[issuerSeed % ACTOR_COUNT];
+        uint256 boundedTimeout = defaultHardDepositTimeout % (MAX_TIMEOUT + 1);
         bool alreadyTracked = _trackedIndex(caller, salt) != TRACKED_CLONES;
 
         (bool ok, address deployedAddress) = actors[callerIndex].deploySimpleSwap(
             factory,
             issuer,
-            defaultHardDepositTimeout,
+            boundedTimeout,
             salt
         );
 
@@ -225,11 +227,146 @@ contract SimpleSwapFactorySystemEchidna {
             cloneCallers[cloneCount] = caller;
             cloneIssuers[cloneCount] = issuer;
             cloneSalts[cloneCount] = salt;
-            cloneTimeouts[cloneCount] = defaultHardDepositTimeout;
+            cloneTimeouts[cloneCount] = boundedTimeout;
             cloneCount++;
         }
 
         _checkCloneMetadata(_cloneIndex(deployedAddress));
+    }
+
+    // Guide Echidna through the full prepare/decrease lifecycle on a fresh clone.
+    function happyDeployFundPrepareAndDecrease(
+        uint256 issuerSeed,
+        uint256 beneficiarySeed,
+        uint256 rawDepositAmount
+    ) public {
+        if (cloneCount >= TRACKED_CLONES) {
+            return;
+        }
+
+        uint256 newCloneIndex = cloneCount;
+        uint256 issuerIndex = issuerSeed % ACTOR_COUNT;
+        uint256 beneficiaryIndex = beneficiarySeed % ACTOR_COUNT;
+        uint256 depositAmount = _bounded(
+            rawDepositAmount,
+            token.balanceOf(actorAddresses[issuerIndex])
+        );
+
+        if (depositAmount == 0) {
+            return;
+        }
+
+        bytes32 salt = keccak256(
+            abi.encodePacked(
+                "happy_decrease",
+                newCloneIndex,
+                issuerIndex,
+                beneficiaryIndex,
+                depositAmount
+            )
+        );
+
+        deploySimpleSwap(issuerIndex, issuerIndex, 0, salt);
+
+        if (invariantFailed || cloneCount <= newCloneIndex) {
+            return;
+        }
+
+        depositToTrackedClone(newCloneIndex, issuerIndex, depositAmount);
+
+        if (invariantFailed) {
+            return;
+        }
+
+        increaseHardDepositOnTrackedClone(
+            newCloneIndex,
+            beneficiaryIndex,
+            depositAmount
+        );
+
+        if (invariantFailed) {
+            return;
+        }
+
+        prepareDecreaseHardDepositOnTrackedClone(
+            newCloneIndex,
+            beneficiaryIndex,
+            depositAmount
+        );
+
+        if (invariantFailed) {
+            return;
+        }
+
+        decreaseHardDepositOnTrackedClone(newCloneIndex, beneficiaryIndex);
+    }
+
+    // Guide Echidna into a valid deploy/fund/hard-deposit/cash sequence.
+    function happyDeployFundAndCashCheque(
+        uint256 issuerSeed,
+        uint256 recipientSeed,
+        uint256 rawDepositAmount,
+        uint256 rawCashAmount
+    ) public {
+        if (cloneCount >= TRACKED_CLONES) {
+            return;
+        }
+
+        uint256 newCloneIndex = cloneCount;
+        uint256 issuerIndex = issuerSeed % ACTOR_COUNT;
+        uint256 recipientIndex = recipientSeed % ACTOR_COUNT;
+        uint256 depositAmount = _bounded(
+            rawDepositAmount,
+            token.balanceOf(actorAddresses[issuerIndex])
+        );
+
+        if (depositAmount == 0) {
+            return;
+        }
+
+        bytes32 salt = keccak256(
+            abi.encodePacked(
+                "happy_cash",
+                newCloneIndex,
+                issuerIndex,
+                recipientIndex,
+                depositAmount,
+                rawCashAmount
+            )
+        );
+
+        deploySimpleSwap(issuerIndex, issuerIndex, 0, salt);
+
+        if (invariantFailed || cloneCount <= newCloneIndex) {
+            return;
+        }
+
+        depositToTrackedClone(newCloneIndex, issuerIndex, depositAmount);
+
+        if (invariantFailed) {
+            return;
+        }
+
+        increaseHardDepositOnTrackedClone(
+            newCloneIndex,
+            issuerIndex,
+            depositAmount
+        );
+
+        if (invariantFailed) {
+            return;
+        }
+
+        uint256 cashDelta = rawCashAmount % depositAmount;
+        if (cashDelta == 0) {
+            cashDelta = 1;
+        }
+
+        cashChequeBeneficiaryOnTrackedClone(
+            newCloneIndex,
+            recipientIndex,
+            cashDelta
+        );
     }
 
     function depositToTrackedClone(
@@ -658,6 +795,20 @@ contract SimpleSwapFactorySystemEchidna {
         }
 
         return true;
+    }
+
+    function echidna_token_supply_is_conserved() public view returns (bool) {
+        uint256 trackedBalance = 0;
+
+        for (uint256 i = 0; i < cloneCount; i++) {
+            trackedBalance = trackedBalance.add(ERC20SimpleSwap(clones[i]).balance());
+        }
+
+        for (uint256 i = 0; i < ACTOR_COUNT; i++) {
+            trackedBalance = trackedBalance.add(token.balanceOf(actorAddresses[i]));
+        }
+
+        return trackedBalance == token.totalSupply();
     }
 
     function echidna_no_postcondition_failures() public view returns (bool) {

@@ -1,16 +1,25 @@
 testMode: property
 
-# More steps per sequence helps stateful protocols.
-seqLen: 100
+# Longer sequences help the stateful swap/factory flows reach richer states.
+seqLen: 320
 
-# Start small; can be increased once it's stable in CI.
-testLimit: 50000
+# Stateful campaigns need enough budget to discover deploy/deposit/prepare/decrease
+# interactions across multiple actors.
+testLimit: 60000
 
 # Shrinking a counterexample can be much slower than fuzzing.
-shrinkLimit: 5000
+shrinkLimit: 1000
 
 # Useful while iterating on invariants.
 coverage: true
+
+# The swap harnesses use timestamp-based hard-deposit delays, so keep time moving
+# enough to unlock decrease paths without introducing giant jumps.
+maxTimeDelay: 16
+maxBlockDelay: 16
+
+workers: 4
+format: text
 
 # Keep the harness deployment address stable so signature-aware fixtures can
 # precompute downstream contract addresses deterministically.
@@ -19,3 +28,4 @@ contractAddr: "0x00a329c0648769A73afAc7F9381E08FB43dBEA72"
 cryticArgs:
   - "--compile-force-framework"
   - "hardhat"
+  - "--hardhat-ignore-compile"

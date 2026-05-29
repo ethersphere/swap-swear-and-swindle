@@ -33,14 +33,29 @@ The runner uses Docker and the official Echidna image, so you do not need a loca
 yarn echidna
 ```
 
-You can override the Docker image or platform if needed:
+The runner compiles on the host, deletes stale `artifacts/build-info`, auto-discovers every harness in `contracts/echidna/*Echidna.sol`, and gives each harness its own corpus under `echidna/corpus/by-contract/<HarnessName>/`. Keeping per-harness corpora separate prevents one contract's call shapes from diluting another contract's learning.
+
+For fast smoke runs, target a single harness and trim the campaign budget:
+
+```sh
+ECHIDNA_CONTRACT=SimpleSwapFactorySystemEchidna \
+ECHIDNA_TEST_LIMIT=5000 \
+ECHIDNA_SEQ_LEN=120 \
+yarn echidna
+```
+
+For longer campaigns, the runner supports these overrides:
 
 ```sh
 ECHIDNA_IMAGE=ghcr.io/crytic/echidna/echidna:latest yarn echidna
 ECHIDNA_DOCKER_PLATFORM=linux/amd64 yarn echidna
+ECHIDNA_CONTRACT=ERC20SimpleSwapEchidna yarn echidna
+ECHIDNA_TEST_LIMIT=20000 ECHIDNA_SEQ_LEN=200 yarn echidna
+ECHIDNA_WORKERS=8 yarn echidna
+ECHIDNA_MAX_TIME_DELAY=32 ECHIDNA_MAX_BLOCK_DELAY=32 yarn echidna
 ```
 
-The harnesses live in `contracts/echidna/` and share the base Echidna config in `echidna/echidna.yaml`.
+The harnesses live in `contracts/echidna/` and share the base Echidna config in `echidna/echidna.yaml`. Repo-specific notes on each harness live in `echidna/README.md`.
 
 ## Linting
 

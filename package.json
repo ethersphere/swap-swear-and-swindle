@@ -52,7 +52,7 @@
     "solhint": "^4.1.1"
   },
   "scripts": {
-    "echidna": "./scripts/echidna-docker.sh",
+    "echidna": "bash scripts/echidna.sh",
     "lint": "eslint \"**/*.{js,ts}\"",
     "lint:fix": "eslint --fix \"**/*.{js,ts}\"",
     "format": "prettier --write \"**/*.{ts,js,sol}\"",

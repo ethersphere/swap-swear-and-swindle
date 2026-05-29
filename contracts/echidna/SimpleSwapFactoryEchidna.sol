@@ -26,6 +26,7 @@ contract FactoryActor {
 contract SimpleSwapFactoryEchidna {
     uint256 private constant ACTOR_COUNT = 3;
     uint256 private constant TRACKED_DEPLOYMENTS = 16;
+    uint256 private constant MAX_TIMEOUT = 7;
 
     using Clones for address;
 
@@ -69,6 +70,7 @@ contract SimpleSwapFactoryEchidna {
         uint256 callerIndex = callerSeed % ACTOR_COUNT;
         address caller = actorAddresses[callerIndex];
         address issuer = actorAddresses[issuerSeed % ACTOR_COUNT];
+        uint256 boundedTimeout = defaultHardDepositTimeout % (MAX_TIMEOUT + 1);
         address expectedAddress = _expectedDeploymentAddress(caller, salt);
         bool alreadyDeployed = factory.deployedContracts(expectedAddress);
         uint256 deploymentsBefore = deployedSwapCount;
@@ -76,7 +78,7 @@ contract SimpleSwapFactoryEchidna {
         (bool ok, address deployedAddress) = actors[callerIndex].deploySimpleSwap(
             factory,
             issuer,
-            defaultHardDepositTimeout,
+            boundedTimeout,
             salt
         );
 
@@ -110,7 +112,7 @@ contract SimpleSwapFactoryEchidna {
         if (address(swap.token()) != address(token)) {
             invariantFailed = true;
         }
-        if (swap.defaultHardDepositTimeout() != defaultHardDepositTimeout) {
+        if (swap.defaultHardDepositTimeout() != boundedTimeout) {
             invariantFailed = true;
         }
 
@@ -124,7 +126,7 @@ contract SimpleSwapFactoryEchidna {
             swapCallers[deployedSwapCount] = caller;
             swapIssuers[deployedSwapCount] = issuer;
             swapSalts[deployedSwapCount] = salt;
-            swapTimeouts[deployedSwapCount] = defaultHardDepositTimeout;
+            swapTimeouts[deployedSwapCount] = boundedTimeout;
             deployedSwapCount++;
         }
     }
@@ -135,6 +137,7 @@ contract SimpleSwapFactoryEchidna {
         bytes32 salt
     ) public {
         uint256 callerIndex = callerSeed % ACTOR_COUNT;
+        uint256 boundedTimeout = defaultHardDepositTimeout % (MAX_TIMEOUT + 1);
         address caller = actorAddresses[callerIndex];
         address expectedAddress = _expectedDeploymentAddress(caller, salt);
         uint256 deploymentsBefore = deployedSwapCount;
@@ -143,7 +146,7 @@ contract SimpleSwapFactoryEchidna {
         (bool ok, ) = actors[callerIndex].deploySimpleSwap(
             factory,
             address(0),
-            defaultHardDepositTimeout,
+            boundedTimeout,
             salt
         );
 
