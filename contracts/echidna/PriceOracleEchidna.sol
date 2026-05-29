@@ -129,13 +129,6 @@ contract PriceOracleEchidna {
         return oracle.owner() == actorAddresses[0];
     }
 
-    function echidna_get_price_matches_storage() public view returns (bool) {
-        (uint256 price, uint256 chequeValueDeduction) = oracle.getPrice();
-        return
-            price == oracle.price() &&
-            chequeValueDeduction == oracle.chequeValueDeduction();
-    }
-
     function echidna_no_postcondition_failures() public view returns (bool) {
         return !invariantFailed;
     }

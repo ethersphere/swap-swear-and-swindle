@@ -194,6 +194,47 @@ contract SimpleSwapFactoryEchidna {
         _assertFactoryStateUnchanged(snapshot, expectedAddress, true);
     }
 
+    function happySameSaltDifferentCallers(uint256 callerSeed) public {
+        if (deployedSwapCount + 2 > TRACKED_DEPLOYMENTS) {
+            return;
+        }
+
+        uint256 firstCallerIndex = callerSeed % ACTOR_COUNT;
+        uint256 secondCallerIndex = (firstCallerIndex + 1) % ACTOR_COUNT;
+        uint256 firstTrackedIndex = deployedSwapCount;
+        uint256 secondTrackedIndex = firstTrackedIndex + 1;
+        bytes32 salt = keccak256(
+            abi.encodePacked(
+                "same_salt_diff_callers",
+                firstTrackedIndex,
+                firstCallerIndex,
+                secondCallerIndex
+            )
+        );
+
+        deploySimpleSwap(firstCallerIndex, firstCallerIndex, 0, salt);
+
+        if (invariantFailed || deployedSwapCount <= firstTrackedIndex) {
+            return;
+        }
+
+        deploySimpleSwap(secondCallerIndex, secondCallerIndex, 0, salt);
+
+        if (invariantFailed || deployedSwapCount <= secondTrackedIndex) {
+            return;
+        }
+
+        if (deployedSwaps[firstTrackedIndex] == deployedSwaps[secondTrackedIndex]) {
+            invariantFailed = true;
+        }
+        if (swapSalts[firstTrackedIndex] != swapSalts[secondTrackedIndex]) {
+            invariantFailed = true;
+        }
+        if (swapCallers[firstTrackedIndex] == swapCallers[secondTrackedIndex]) {
+            invariantFailed = true;
+        }
+    }
+
     function echidna_factory_token_is_constant() public view returns (bool) {
         return factory.ERC20Address() == address(token);
     }

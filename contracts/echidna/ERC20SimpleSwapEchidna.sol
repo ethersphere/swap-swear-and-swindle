@@ -923,6 +923,115 @@ contract ERC20SimpleSwapEchidna {
         _checkTemporalInvariants();
     }
 
+    function happyThirdPartyCashCheque(
+        uint256 callerSeed,
+        uint256 beneficiarySeed,
+        uint256 recipientSeed,
+        uint256 rawDepositAmount,
+        uint256 rawCashAmount,
+        uint256 rawCallerPayout
+    ) public {
+        uint256 callerIndex = _nonIssuerIndex(callerSeed);
+        uint256 beneficiaryIndex = _nonIssuerIndex(beneficiarySeed);
+        uint256 recipientIndex = _actorIndex(recipientSeed);
+        uint256 depositAmount = _bounded(
+            rawDepositAmount,
+            token.balanceOf(actorAddresses[0])
+        );
+
+        while (beneficiaryIndex == callerIndex) {
+            beneficiaryIndex = (beneficiaryIndex + 1) % ACTOR_COUNT;
+        }
+
+        while (
+            recipientIndex == callerIndex || recipientIndex == beneficiaryIndex
+        ) {
+            recipientIndex = (recipientIndex + 1) % ACTOR_COUNT;
+        }
+
+        if (depositAmount == 0) {
+            return;
+        }
+
+        deposit(0, depositAmount);
+
+        if (invariantFailed) {
+            return;
+        }
+
+        increaseHardDeposit(beneficiaryIndex, depositAmount);
+
+        if (invariantFailed) {
+            return;
+        }
+
+        uint256 available = simpleSwap.liquidBalanceFor(
+            actorAddresses[beneficiaryIndex]
+        );
+        uint256 cashAmount = _bounded(rawCashAmount, available);
+
+        if (cashAmount == 0) {
+            cashAmount = 1;
+        }
+
+        uint256 callerPayout = _bounded(rawCallerPayout, cashAmount);
+
+        if (callerPayout == 0) {
+            callerPayout = 1;
+        }
+
+        cashCheque(
+            callerIndex,
+            beneficiaryIndex,
+            recipientIndex,
+            cashAmount,
+            callerPayout
+        );
+    }
+
+    function happyForcedBounce(
+        uint256 beneficiarySeed,
+        uint256 recipientSeed,
+        uint256 rawDepositAmount,
+        uint256 rawShortfall
+    ) public {
+        uint256 beneficiaryIndex = _nonIssuerIndex(beneficiarySeed);
+        uint256 recipientIndex = _actorIndex(recipientSeed);
+        uint256 depositAmount = _bounded(
+            rawDepositAmount,
+            token.balanceOf(actorAddresses[0])
+        );
+
+        while (recipientIndex == beneficiaryIndex) {
+            recipientIndex = (recipientIndex + 1) % ACTOR_COUNT;
+        }
+
+        if (depositAmount == 0) {
+            return;
+        }
+
+        deposit(0, depositAmount);
+
+        if (invariantFailed) {
+            return;
+        }
+
+        uint256 available = simpleSwap.liquidBalanceFor(
+            actorAddresses[beneficiaryIndex]
+        );
+        uint256 shortfall = _bounded(rawShortfall, token.totalSupply());
+
+        if (shortfall == 0) {
+            shortfall = 1;
+        }
+
+        cashChequeBeneficiary(
+            beneficiaryIndex,
+            recipientIndex,
+            available.add(shortfall)
+        );
+    }
+
     function cashChequeBeneficiary(
         uint256 beneficiarySeed,
         uint256 recipientSeed,
