@@ -33,3 +33,11 @@ yarn-error.log
 # Misc
 contractsInfo.json
 .DS_Store
+
+# Echidna fuzzing
+echidna/.tmp/
+echidna/corpus/
+echidna/coverage/
+echidna/out/
+echidna-corpus/
+crytic-export/

@@ -17,6 +17,46 @@ yarn test
 
 To also generate coverage information use `yarn coverage` instead.
 
+## Fuzzing
+
+This repo also includes Echidna-based, stateful fuzzing for the smart contract suite. The harnesses model multiple actors, exercise state transitions across the swap, factory, and oracle contracts, and check accounting, configuration, non-interference, post-condition, and signature-validation properties.
+
+Fuzz testing repeatedly calls contract functions with randomized inputs and call sequences. Instead of checking a single expected output per test, the harness defines invariants and safety properties that must always hold, and Echidna searches for counterexamples.
+
+This is especially useful for smart contracts because it can uncover edge cases that are easy to miss in example-based tests, including unusual call ordering, boundary values, and state-dependent failures.
+
+### Run The Echidna Suite
+
+The runner uses Docker and the official Echidna image, so you do not need a local Echidna install.
+
+```sh
+yarn echidna
+```
+
+The runner compiles on the host, deletes stale `artifacts/build-info`, auto-discovers every harness in `contracts/echidna/*Echidna.sol`, and gives each harness its own corpus under `echidna/corpus/by-contract/<HarnessName>/`. Keeping per-harness corpora separate prevents one contract's call shapes from diluting another contract's learning.
+
+For fast smoke runs, target a single harness and trim the campaign budget:
+
+```sh
+ECHIDNA_CONTRACT=SimpleSwapFactorySystemEchidna \
+ECHIDNA_TEST_LIMIT=5000 \
+ECHIDNA_SEQ_LEN=120 \
+yarn echidna
+```
+
+For longer campaigns, the runner supports these overrides:
+
+```sh
+ECHIDNA_IMAGE=ghcr.io/crytic/echidna/echidna:latest yarn echidna
+ECHIDNA_DOCKER_PLATFORM=linux/amd64 yarn echidna
+ECHIDNA_CONTRACT=ERC20SimpleSwapEchidna yarn echidna
+ECHIDNA_TEST_LIMIT=20000 ECHIDNA_SEQ_LEN=200 yarn echidna
+ECHIDNA_WORKERS=8 yarn echidna
+ECHIDNA_MAX_TIME_DELAY=32 ECHIDNA_MAX_BLOCK_DELAY=32 yarn echidna
+```
+
+The harnesses live in `contracts/echidna/` and share the base Echidna config in `echidna/echidna.yaml`. Repo-specific notes on each harness live in `echidna/README.md`.
+
 ## Linting
 
 This repo currently uses `solhint` as linter. It can be called through yarn:
