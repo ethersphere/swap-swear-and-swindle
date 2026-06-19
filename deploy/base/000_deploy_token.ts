@@ -1,4 +1,4 @@
-import { verify } from '../../utils/verify';
+import verify from '../../utils/verify';
 import { DeployFunction } from 'hardhat-deploy/types';
 import { networkConfig } from '../../helper-hardhat-config';
 
@@ -10,22 +10,23 @@ const func: DeployFunction = async function ({ deployments, getNamedAccounts, ne
   const waitBlockConfirmations = networkConfig[network.name]?.blockConfirmations || 1;
 
   log('----------------------------------------------------');
-  const deployArgs: string[] = ['0x543ddb01ba47acb11de34891cd86b675f04840db'];
-  const factory = await deploy('SimpleSwapFactory', {
+  log('Deploying TestToken...');
+
+  const token = await deploy('TestToken', {
     from: deployer,
-    args: deployArgs,
+    args: [],
     log: true,
     waitConfirmations: waitBlockConfirmations,
   });
 
-  log(`Factory deployed at address ${factory.address}`);
+  log(`TestToken deployed at address ${token.address}`);
 
   // Verify the deployment
-  if (network.name === 'testnet' && process.env.ETHERSCAN_API_KEY) {
-    log('Verifying...');
-    await verify(factory.address, deployArgs);
+  if (network.name === 'base' && process.env.ETHERSCAN_API_KEY) {
+    log('Verifying TestToken...');
+    await verify(token.address, []);
   }
 };
 
-func.tags = ['factory'];
+func.tags = ['token'];
 export default func;

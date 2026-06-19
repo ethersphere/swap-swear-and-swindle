@@ -8,6 +8,7 @@ import { HardhatUserConfig } from 'hardhat/types';
 
 const PRIVATE_RPC_MAINNET: string | undefined = process.env.PRIVATE_RPC_MAINNET;
 const PRIVATE_RPC_TESTNET: string | undefined = process.env.PRIVATE_RPC_TESTNET;
+const PRIVATE_RPC_BASE: string | undefined = process.env.PRIVATE_RPC_BASE;
 
 const walletSecret: string = process.env.WALLET_SECRET === undefined ? 'undefined' : process.env.WALLET_SECRET;
 
@@ -17,8 +18,7 @@ if (walletSecret === 'undefined') {
   console.log('WALLET_SECRET must be 64 characters long.');
 }
 
-const mainnetEtherscanKey: string | undefined = process.env.MAINNET_ETHERSCAN_KEY;
-const testnetEtherscanKey: string | undefined = process.env.TESTNET_ETHERSCAN_KEY;
+const etherscanApiKey: string | undefined = process.env.ETHERSCAN_API_KEY;
 const accounts: string[] | { mnemonic: string } =
   walletSecret.length === 64 ? [walletSecret] : { mnemonic: walletSecret };
 
@@ -121,11 +121,18 @@ const config: HardhatUserConfig = {
       chainId: 100,
       deploy: ['deploy/main/'],
     },
+    base: {
+      url: PRIVATE_RPC_BASE || 'https://mainnet.base.org',
+      accounts,
+      chainId: 8453,
+      deploy: ['deploy/base/'],
+    },
   },
   etherscan: {
     apiKey: {
-      mainnet: mainnetEtherscanKey || '',
-      testnet: testnetEtherscanKey || '',
+      mainnet: etherscanApiKey || '',
+      testnet: etherscanApiKey || '',
+      base: etherscanApiKey || '',
     },
     customChains: [
       {
@@ -142,6 +149,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: 'https://api.gnosisscan.io/api',
           browserURL: 'https://gnosisscan.io/address/',
+        },
+      },
+      {
+        network: 'base',
+        chainId: 8453,
+        urls: {
+          apiURL: 'https://api.basescan.org/api',
+          browserURL: 'https://basescan.org/',
         },
       },
     ],
