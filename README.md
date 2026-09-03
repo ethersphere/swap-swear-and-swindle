@@ -57,6 +57,8 @@ ECHIDNA_MAX_TIME_DELAY=32 ECHIDNA_MAX_BLOCK_DELAY=32 yarn echidna
 
 The harnesses live in `contracts/echidna/` and share the base Echidna config in `echidna/echidna.yaml`. Repo-specific notes on each harness live in `echidna/README.md`.
 
+CI runs the full Echidna campaign on every pull request. See [echidna/README.md](./echidna/README.md#ci).
+
 ## Linting
 
 This repo currently uses `solhint` as linter. It can be called through yarn:

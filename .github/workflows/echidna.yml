@@ -1,0 +1,63 @@
+name: Echidna
+
+on:
+  pull_request:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: echidna-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODEJS_VERSION: '20'
+  ECHIDNA_IMAGE: ghcr.io/crytic/echidna/echidna:v2.3.1
+
+jobs:
+  echidna:
+    name: Echidna / ${{ matrix.contract }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        contract:
+          - ERC20SimpleSwapEchidna
+          - ERC20SimpleSwapSignatureEchidna
+          - SimpleSwapFactoryEchidna
+          - SimpleSwapFactorySystemEchidna
+          - PriceOracleEchidna
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js and Yarn
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODEJS_VERSION }}
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run Echidna
+        env:
+          ECHIDNA_CONTRACT: ${{ matrix.contract }}
+          # Stop cleanly before the 180-minute job timeout (setup + compile need headroom).
+          ECHIDNA_TIMEOUT: '10200'
+        run: yarn echidna
+
+      - name: Upload reproducers and logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: echidna-${{ matrix.contract }}
+          path: |
+            echidna/logs/
+            echidna/corpus/by-contract/
+            crytic-export/
+          if-no-files-found: warn
+          retention-days: 14
