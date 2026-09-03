@@ -38,6 +38,7 @@ contractsInfo.json
 echidna/.tmp/
 echidna/corpus/
 echidna/coverage/
+echidna/logs/
 echidna/out/
 echidna-corpus/
 crytic-export/

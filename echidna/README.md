@@ -37,4 +37,31 @@ Fast smoke campaign:
 ECHIDNA_TEST_LIMIT=5000 ECHIDNA_SEQ_LEN=120 yarn echidna
 ```
 
-Per-harness corpora are stored under `echidna/corpus/by-contract/<HarnessName>/`.
+Reproducible / time-boxed run:
+
+```sh
+ECHIDNA_SEED=1 ECHIDNA_TIMEOUT=600 yarn echidna
+```
+
+Per-harness corpora are stored under `echidna/corpus/by-contract/<HarnessName>/`. Logs go to `echidna/logs/` (gitignored).
+
+| Setting | Default | Override env |
+|---------|---------|----------------|
+| `testLimit` | 60000 | `ECHIDNA_TEST_LIMIT` |
+| `seqLen` | 320 | `ECHIDNA_SEQ_LEN` |
+| workers | yaml | `ECHIDNA_WORKERS` |
+| seed | random | `ECHIDNA_SEED` |
+| timeout (seconds) | none | `ECHIDNA_TIMEOUT` |
+
+## CI
+
+Workflow: [`.github/workflows/echidna.yml`](../.github/workflows/echidna.yml). Runs on every pull request (and manual `workflow_dispatch`).
+
+One matrix job per harness, using the same campaign as local `yarn echidna` (`echidna/echidna.yaml`: `testLimit` 60000, `seqLen` 320). Each job has a 180-minute cap and Echidna `--timeout` 10200s so the fuzzer stops cleanly. On failure the workflow uploads `echidna/logs/`, corpus reproducers under `echidna/corpus/by-contract/`, and `crytic-export/` as artifacts.
+
+Reproduce a CI counterexample locally:
+
+```sh
+ECHIDNA_CONTRACT=ERC20SimpleSwapEchidna \
+yarn echidna
+```

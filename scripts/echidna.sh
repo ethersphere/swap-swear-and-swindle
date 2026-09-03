@@ -8,6 +8,7 @@ PLATFORM="${ECHIDNA_DOCKER_PLATFORM:-}"
 CONFIG_FILE="${ECHIDNA_CONFIG:-echidna/echidna.yaml}"
 TARGET_CONTRACT="${ECHIDNA_CONTRACT:-}"
 TARGET_FILTER="${ECHIDNA_TARGET_FILTER:-}"
+LOG_DIR="${ECHIDNA_LOG_DIR:-echidna/logs}"
 TMP_CONFIG_DIR="$ROOT_DIR/echidna/.tmp"
 
 if [[ -z "$PLATFORM" ]]; then
@@ -35,7 +36,7 @@ fi
 rm -rf "$ROOT_DIR/artifacts/build-info" "$ROOT_DIR/crytic-export"
 yarn -s hardhat compile --force
 
-mkdir -p "$TMP_CONFIG_DIR"
+mkdir -p "$TMP_CONFIG_DIR" "$ROOT_DIR/$LOG_DIR"
 trap 'rm -rf "$TMP_CONFIG_DIR"' EXIT
 
 shopt -s nullglob
@@ -74,7 +75,16 @@ if [[ -n "$PLATFORM" ]]; then
 fi
 
 strip_config_keys() {
-  awk '!/^(corpusDir|testLimit|seqLen|workers|maxTimeDelay|maxBlockDelay|format):/'
+  # Always rewrite corpusDir. Only drop other yaml keys when an env override
+  # will replace them, otherwise CI/local runs would lose testLimit/seqLen.
+  local pattern="^corpusDir:"
+  [[ -n "${ECHIDNA_TEST_LIMIT:-}" ]] && pattern+="|^testLimit:"
+  [[ -n "${ECHIDNA_SEQ_LEN:-}" ]] && pattern+="|^seqLen:"
+  [[ -n "${ECHIDNA_WORKERS:-}" ]] && pattern+="|^workers:"
+  [[ -n "${ECHIDNA_MAX_TIME_DELAY:-}" ]] && pattern+="|^maxTimeDelay:"
+  [[ -n "${ECHIDNA_MAX_BLOCK_DELAY:-}" ]] && pattern+="|^maxBlockDelay:"
+  [[ -n "${ECHIDNA_FORMAT:-}" ]] && pattern+="|^format:"
+  awk -v pat="$pattern" '$0 !~ pat'
 }
 
 append_optional_yaml() {
@@ -90,6 +100,21 @@ run_contract() {
   local contract_name="$1"
   local corpus_dir="echidna/corpus/by-contract/${contract_name}"
   local temp_config="$TMP_CONFIG_DIR/${contract_name}.yaml"
+  local log_file="$ROOT_DIR/$LOG_DIR/${contract_name}.log"
+  local extra_cli=""
+  local config_path="${temp_config#"$ROOT_DIR/"}"
+  local ec
+
+  if [[ -n "${ECHIDNA_SEED:-}" ]]; then
+    corpus_dir="${corpus_dir}/seed-${ECHIDNA_SEED}"
+    extra_cli+=" --seed ${ECHIDNA_SEED}"
+  fi
+  if [[ -n "${ECHIDNA_TIMEOUT:-}" ]]; then
+    extra_cli+=" --timeout ${ECHIDNA_TIMEOUT}"
+  fi
+  if [[ -n "${ECHIDNA_ARGS:-}" ]]; then
+    extra_cli+=" ${ECHIDNA_ARGS}"
+  fi
 
   mkdir -p "$ROOT_DIR/$corpus_dir"
   mkdir -p "$ROOT_DIR/echidna/out"
@@ -106,8 +131,18 @@ run_contract() {
   } >> "$temp_config"
 
   echo "==> Running ${contract_name}"
+  # Capture the fuzzer exit code while still teeing logs for CI artifacts.
+  set +e
   docker "${DOCKER_ARGS[@]}" "$IMAGE" /bin/bash -lc \
-    "rm -rf /src/crytic-export && echidna . --contract \"$contract_name\" --config \"${temp_config#"$ROOT_DIR/"}\""
+    "rm -rf /src/crytic-export && echidna . --contract \"$contract_name\" --config \"$config_path\"${extra_cli}" \
+    2>&1 | tee "$log_file"
+  ec="${PIPESTATUS[0]}"
+  set -e
+
+  if [[ "$ec" -ne 0 ]]; then
+    echo "==> echidna: ${contract_name} failed (exit ${ec}); log: ${log_file}" >&2
+    exit "$ec"
+  fi
 }
 
 for harness_file in "${HARNESS_FILES[@]}"; do
